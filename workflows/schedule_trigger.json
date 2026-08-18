@@ -1,0 +1,113 @@
+{
+  "updatedAt": "2026-08-14T05:48:27.000Z",
+  "createdAt": "2026-08-13T17:31:12.759Z",
+  "id": "15LEv6k4R4tJpUBs",
+  "name": "schedule trigger",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "dd77878a-4c98-4a16-b20b-4bb00bdcbaaa",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"message\": \"Good Morning Team! Don't forget today's stand-up meeting at 10 AM.\"\n}\n",
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "={{ $json.timestamp }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "af6b0546-92f7-46b2-ace4-7308de557b12",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "a265dcdd-9ee6-4388-885c-2884a3b8e295",
+      "name": "Send a message",
+      "webhookId": "98a764f3-fa3b-463a-b034-47ae6da005ae",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "F5z6AHiKXmOwTrwS",
+          "name": "Gmail account 2"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "07b2c59d-9587-446f-ade1-bf97e6508602",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-08-13T17:31:13.078Z",
+      "createdAt": "2026-08-13T17:31:13.078Z",
+      "role": "workflow:owner",
+      "workflowId": "15LEv6k4R4tJpUBs",
+      "projectId": "2qHCdIvoXHur7xyh"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
