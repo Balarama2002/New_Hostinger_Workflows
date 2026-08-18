@@ -1,0 +1,769 @@
+{
+  "updatedAt": "2026-08-14T05:49:45.000Z",
+  "createdAt": "2026-08-13T17:31:13.168Z",
+  "id": "3kvDSZkWaxsu2NDe",
+  "name": "FINVI Time Sheets",
+  "active": false,
+  "isArchived": true,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "xls",
+        "binaryPropertyName": "={{ Object.keys($binary)[0] }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        672
+      ],
+      "id": "4ea09479-ff4d-4119-9dea-41594770d36d",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = [];\n\nitems.forEach(item => {\n\n  const row = item.json;\n\n  Object.keys(row).forEach(key => {\n\n    if (/^\\d{2}\\/[A-Za-z]{3}\\/\\d{2}$/.test(key)) {\n\n      const hours = row[key];\n\n      if (!hours || hours === \"0\") return;\n\n      if (row.Worklog && row.Worklog.trim() !== \"\") {\n\n        output.push({\n          json: {\n            Date: key,\n            Key: row.Key || \"\",\n            Issue: row.Issue || \"\",\n            Worklog: row.Worklog,\n            Hours: hours\n          }\n        });\n\n      }\n\n    }\n\n  });\n\n});\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        256
+      ],
+      "id": "39d32726-0bed-4285-b490-765c1c7005ae",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Date\": \"{{ $json.Date }}\",\n\"Task Start Date\":\"{{ $json.Date }}\",\n\"Task End Date\":\"{{ $json.Date }}\",\n\"Environment\":\"Boomi\",\n\"Admin\\Dev\\Support\": \"Development\",\n  \"Task Description\": \"{{ $json.Key }} - {{ $json.Worklog }}\",\n\"Complexity\": \"complex\",\n\"Actual Efforts(hrs)\": \"8\",\n\"Status\": \"Completed\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        256
+      ],
+      "id": "6e839446-c2c3-4d51-825b-6b76d0a97623",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst currentYear = new Date().getFullYear();\n\n\n\nconst groupedByDate = {};\nconst result = [];\n\n\n\n// Month names\nconst monthNames = [\n  \"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\n  \"Jul\",\"Aug\",\"Sep\",\"Oct\",\"Nov\",\"Dec\"\n];\n\n\n\n// Month map\nconst monthMap = {\n  Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6,\n  Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12\n};\n\n\n\n\n\n// Normalize date: 04/Mar/26 → 04-03-2026\nfunction normalizeDate(rawDate) {\n\n\n\n  if (!rawDate) return null;\n\n\n\n  rawDate = rawDate.trim();\n\n\n\n  const parts = rawDate.split(\"/\");\n\n\n\n  if (parts.length !== 3) return null;\n\n\n\n  let [dd, mon, yy] = parts;\n\n\n\n  const mm = monthMap[mon];\n\n\n\n  if (!mm) return null;\n\n\n\n  const yyyy = yy.length === 2 ? `20${yy}` : yy;\n\n\n\n  const finalDD = String(dd).padStart(2,\"0\");\n  const finalMM = String(mm).padStart(2,\"0\");\n\n\n\n  return `${finalDD}-${finalMM}-${yyyy}`;\n}\n\n\n\n\n\n// STEP 1 — Group records by date\nfor (const item of items) {\n\n\n\n  const rawDate = item.json.Date?.trim();\n\n\n\n  if (!rawDate) continue;\n\n\n\n  const normalized = normalizeDate(rawDate);\n\n\n\n  if (!normalized) continue;\n\n\n\n  if (!groupedByDate[normalized]) {\n    groupedByDate[normalized] = {\n      descriptions: [],\n      base: item.json\n    };\n  }\n\n\n\n  const taskDesc = item.json[\"Task Description\"]?.trim();\n\n\n\n  // 🔹 Ignore duplicate tasks for the same date\n  if (\n    taskDesc &&\n    !groupedByDate[normalized].descriptions.includes(taskDesc)\n  ) {\n    groupedByDate[normalized].descriptions.push(taskDesc);\n  }\n}\n\n\n\n\n\n// Detect month\nconst firstKey = Object.keys(groupedByDate)[0];\n\n\n\nif (!firstKey) {\n  return [];\n}\n\n\n\nconst parts = firstKey.split(\"-\");\nconst month = parseInt(parts[1],10) - 1;\nconst year = parseInt(parts[2],10);\n\n\n\n\n\n// Build month range\nconst start = new Date(year, month, 1);\nconst end = new Date(year, month + 1, 0);\n\n\n\n\n\n// STEP 2 — Generate full month dataset\nfor (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {\n\n\n\n  const dd = String(d.getDate()).padStart(2,\"0\");\n  const mm = String(d.getMonth()+1).padStart(2,\"0\");\n  const yyyy = d.getFullYear();\n\n\n\n  const key = `${dd}-${mm}-${yyyy}`;\n  const monthName = monthNames[d.getMonth()];\n\n\n\n  const day = d.getDay();\n  const isWeekend = (day === 0 || day === 6);\n\n\n\n\n\n  if (groupedByDate[key]) {\n\n\n\n    const base = groupedByDate[key].base;\n\n\n\n    let comment = base.Comments || \"\";\n\n\n\n    if (isWeekend) {\n      comment = \"Weekend\";\n    }\n\n\n\n    const numberedTasks = groupedByDate[key].descriptions\n      .map((desc,i) => `${i+1}. ${desc}`)\n      .join(\"\\n\");\n\n\n\n    result.push({\n      json: {\n        ...base,\n        Month: monthName,\n        Date: key,\n        \"Task Start Date\": key,\n        \"Task End Date\": key,\n        \"Task Description\": (isWeekend || comment === \"Holiday/Leave\")\n          ? \"\"\n          : numberedTasks,\n        Comments: comment\n      }\n    });\n\n\n\n  } \n  else {\n\n\n\n    const comment = isWeekend ? \"Weekend\" : \"Holiday/Leave\";\n\n\n\n    result.push({\n      json: {\n        Month: monthName,\n        Date: key,\n        \"Task Start Date\": key,\n        \"Task End Date\": key,\n        Environment: \"Boomi\",\n        AdminDevSupport: \"Development\",\n        \"Task Description\": \"\",\n        Complexity: \"\",\n        \"Actual Efforts(hrs)\": \"8\",\n        Status: \"\",\n        Comments: comment\n      }\n    });\n\n\n\n  }\n\n\n\n}\n\n\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        256
+      ],
+      "id": "52011ab1-2fd3-4e64-b07a-d8b2989e2be1",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "fileName": "Test_email.xlsx"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        256
+      ],
+      "id": "ac98e052-5c2c-4c13-8dd0-0db39a6c5039",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "cac65612-29e3-463e-b1f2-3318f684466f",
+              "leftValue": "={{ $json.Worklog }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        672
+      ],
+      "id": "fa91d8d4-e15f-41c1-9a2d-76f9ef0877f4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "527f6f18-5805-43dd-88f1-a13d28d67466",
+              "name": "Worklog",
+              "value": "={{ $json.Key }} - {{ $json.Issue }} - {{ $json.Worklog }}",
+              "type": "string"
+            },
+            {
+              "id": "16f4d931-ff14-4474-adb4-4910d085de33",
+              "name": "Hours Logged",
+              "value": "={{ $json.Logged }}",
+              "type": "number"
+            },
+            {
+              "id": "48d1cd12-a592-4dcb-8a75-54081b2ca827",
+              "name": "Date",
+              "value": "={{ Object.keys($json).find(k => k.includes('/')) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        672
+      ],
+      "id": "2e2ad341-45f3-4487-bbbc-8a768cb98092",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "Worklog",
+              "separateBy": "\n"
+            }
+          ]
+        },
+        "fieldsToSplitBy": "Date",
+        "options": {
+          "outputFormat": "separateItems"
+        }
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        1120,
+        672
+      ],
+      "id": "31e31339-5109-44a5-a286-5ecf7bbd403f",
+      "name": "Summarize",
+      "notesInFlow": true,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "Worklog, Date",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        896,
+        672
+      ],
+      "id": "17aeb660-e5e1-426a-8940-ac354e1f97fd",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "Date"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        2464,
+        672
+      ],
+      "id": "48b095e0-8640-4d9a-a54d-7d88bbf7ad19",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2016,
+        656
+      ],
+      "id": "563079e8-e4a3-44e6-9824-3a8adf0f7a27",
+      "name": "Merge",
+      "alwaysOutputData": false,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "fileName": "={{ $('Webhook').first().json.headers.key }}_{{ $('Webhook').first().json.headers.month }}{{ $('Webhook').first().json.headers.year }}.xlsx"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2896,
+        672
+      ],
+      "id": "f343b2c6-8de3-47a8-8864-4db5ff72ede6",
+      "name": "Convert to File1"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.concatenated_Worklog }}",
+                    "rightValue": "/(FTO|Sick)/gi",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    },
+                    "id": "40d53966-152c-4a64-98e7-6e12243aa37e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Leaves"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3d6dccbb-2ee1-442c-896f-3a3dbb42ec12",
+                    "leftValue": "={{ $json.concatenated_Worklog }}",
+                    "rightValue": "/Public Holiday/i",
+                    "operator": {
+                      "type": "string",
+                      "operation": "regex"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Holiday"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "872a29a9-8095-46ee-b9da-0a96010061f3",
+      "name": "Switch",
+      "alwaysOutputData": true,
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "duplicateItem": true,
+        "duplicateCount": 1,
+        "jsonOutput": "={\n  \"Date\": \"{{ $json.Date }}\",\n\"Task Start Date\":\"{{ $json.Date }}\",\n\"Task End Date\":\"{{ $json.Date }}\",\n\"Environment\":\"Boomi\",\n\"Admin\\Dev\\Support\": \"Development\",\n  \"Task Description\": \"{{ $json.concatenated_Worklog }}\",\n\"Complexity\": \"\",\n\"Actual Efforts(hrs)\": \"\",\n\"Status\": \"\"\n\"Comments\": \"HOLIDAY\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        672
+      ],
+      "id": "52b74f74-ccab-4221-a65c-0110d6476280",
+      "name": "Holiday",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Date\": \"{{ $json.Date }}\",\n\"Task Start Date\":\"{{ $json.Date }}\",\n\"Task End Date\":\"{{ $json.Date }}\",\n\"Environment\":\"Boomi\",\n\"Admin\\Dev\\Support\": \"Development\",\n  \"Task Description\": \"{{ $json.concatenated_Worklog }}\",\n\"Complexity\": \"complex\",\n\"Actual Efforts(hrs)\": \"8\",\n\"Status\": \"Completed\"\n\"Comments\": \"\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        864
+      ],
+      "id": "88021f52-b2f7-48cc-8840-7a3d3f390136",
+      "name": "Success",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Date\": \"{{ $json.Date }}\",\n\"Task Start Date\":\"{{ $json.Date }}\",\n\"Task End Date\":\"{{ $json.Date }}\",\n\"Environment\":\"Boomi\",\n\"Admin\\Dev\\Support\": \"Development\",\n  \"Task Description\": \"{{ $json.concatenated_Worklog }}\",\n\"Complexity\": \"\",\n\"Actual Efforts(hrs)\": \"\",\n\"Status\": \"\"\n\"Comments\" : \"LEAVE\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        480
+      ],
+      "id": "5d6573e7-0f88-42c9-8ed1-7a7172df5215",
+      "name": "Leave",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5b8eb6a2-175c-4bab-bf84-37d17dcab460",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        672
+      ],
+      "id": "d7f177f8-d7c7-4260-b064-148ff38988a1",
+      "name": "Webhook",
+      "webhookId": "5b8eb6a2-175c-4bab-bf84-37d17dcab460"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "77427c9f-76f0-4ca1-84d7-57416961d67a",
+              "leftValue": "={{ $json.concatenated_Worklog }}",
+              "rightValue": "=/(FTO|Sick)/gi",
+              "operator": {
+                "type": "string",
+                "operation": "regex"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1344,
+        672
+      ],
+      "id": "5392cc02-bb0a-45c0-895b-b262c36193a5",
+      "name": "Sick leave check",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "192e43a3-e6b7-44e6-97be-71ffd320ab52",
+              "leftValue": "={{ $json.concatenated_Worklog }}",
+              "rightValue": "/Public Holiday/i",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1568,
+        768
+      ],
+      "id": "4ffefaba-5c31-44ef-8b61-bd8dde1df012",
+      "name": "Public Holiday check",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "dc3aadb2-6aae-47e5-a517-18486a61ac5d",
+              "leftValue": "={{ $json.Date }}",
+              "rightValue": "undefined",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        2240,
+        672
+      ],
+      "id": "e0755771-b040-4fa7-bc15-53d97a2ebf95",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node[\"Webhook\"].json.headers.to_email}}",
+        "subject": "FINVI Timesheets",
+        "message": "Hi PFA Timesheets ",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        3104,
+        672
+      ],
+      "id": "bd7141ef-fc7a-4b69-8c7b-b38904225d42",
+      "name": "Send a message",
+      "webhookId": "19445b9a-8ca4-4b12-863f-e2f7903e6965",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "06VJ1qyU0Dc5HSFT",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst result = [];\n\n// 1. Try to get Month/Year from Headers\nconst webhookNode = $('Webhook').first();\nlet month = Number(webhookNode.json.headers?.month);\nlet year = Number(webhookNode.json.headers?.year);\n\n// 2. FALLBACK: If headers are missing, guess from the first Boomi record\nif (!month || !year) {\n  const firstDate = items[0]?.json.Date; // e.g. \"02/Feb/26\"\n  if (firstDate) {\n    const parts = firstDate.split('/');\n    const monthMap = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };\n    month = monthMap[parts[1]];\n    year = Number(\"20\" + parts[2]);\n  }\n}\n\n// 3. Map existing data\nconst existingDataMap = {};\nitems.forEach(item => {\n  if (item.json.Date) existingDataMap[item.json.Date] = item.json;\n});\n\n// 4. Generate the Month\nif (month && year) {\n  const daysInMonth = new Date(year, month, 0).getDate();\n\n  for (let day = 1; day <= daysInMonth; day++) {\n    const dateObj = new Date(year, month - 1, day);\n    const dd = String(day).padStart(2, '0');\n    const mmm = dateObj.toLocaleString('en-GB', { month: 'short' });\n    const yy = String(year).slice(-2);\n    const dateString = `${dd}/${mmm}/${yy}`;\n\n    const dayOfWeek = dateObj.getDay(); // 0=Sun, 6=Sat\n    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);\n\n    if (existingDataMap[dateString]) {\n      result.push({ json: existingDataMap[dateString] });\n    } else if (isWeekend) {\n      result.push({\n        json: {\n          \"Date\": dateString,\n          \"Task Start Date\": dateString,\n          \"Task End Date\": dateString,\n          \"Environment\": \"Boomi\",\n          \"AdminDevSupport\": \"Development\",\n          \"Task Description\": \"\",\n          \"Complexity\": \"\",\n          \"Actual Efforts(hrs)\": \"8\",\n          \"Status\": \"\",\n          \"Comments\": \"Weekend\"\n        }\n      });\n    }\n  }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2672,
+        672
+      ],
+      "id": "a6841bff-780e-4d2f-bef0-8267bb373c2d",
+      "name": "Code in JavaScript2"
+    }
+  ],
+  "connections": {
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Sick leave check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Leave": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Holiday": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Convert to File1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sick leave check": {
+      "main": [
+        [
+          {
+            "node": "Leave",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Public Holiday check",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Public Holiday check": {
+      "main": [
+        [
+          {
+            "node": "Holiday",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "Convert to File1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "meta": null,
+  "nodeGroups": [],
+  "pinData": null,
+  "versionId": "7a81df66-43dd-484f-a61b-e2790809686f",
+  "activeVersionId": null,
+  "triggerCount": 0,
+  "shared": [
+    {
+      "updatedAt": "2026-08-13T17:31:13.171Z",
+      "createdAt": "2026-08-13T17:31:13.171Z",
+      "role": "workflow:owner",
+      "workflowId": "3kvDSZkWaxsu2NDe",
+      "projectId": "2qHCdIvoXHur7xyh"
+    }
+  ],
+  "activeVersion": null,
+  "tags": []
+}
