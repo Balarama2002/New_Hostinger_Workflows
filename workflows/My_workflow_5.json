@@ -1,0 +1,32 @@
+{
+  "id": "J0o9NgnfGBfKjovY",
+  "name": "My workflow 5",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-24T08:58:30.091Z",
+  "updatedAt": "2026-10-24T09:03:28.693Z",
+  "isArchived": false,
+  "versionId": "b6b75462-34ba-45f9-80f8-71f84dafc247",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "J0o9NgnfGBfKjovY",
+      "projectId": "JsvwmzNWOafa3NcM",
+      "createdAt": "2026-10-24T08:58:30.093Z",
+      "updatedAt": "2026-10-24T08:58:30.093Z"
+    }
+  ],
+  "activeVersion": null
+}
