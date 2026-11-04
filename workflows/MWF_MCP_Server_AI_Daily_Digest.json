@@ -1,0 +1,235 @@
+{
+  "id": "ElzTJgN8U5SDzyK5",
+  "name": "MWF_MCP_Server_AI_Daily_Digest",
+  "active": true,
+  "activeVersionId": "cfa65ab3-f1e6-4e47-99ab-743bc7a50dc5",
+  "createdAt": "2026-09-21T14:38:48.060Z",
+  "updatedAt": "2026-10-13T14:02:34.027Z",
+  "isArchived": false,
+  "versionId": "cfa65ab3-f1e6-4e47-99ab-743bc7a50dc5",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "AI_Daily_Digest"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        -352,
+        -160
+      ],
+      "id": "cce3b3ef-acd5-4a3a-97de-9539a50123c2",
+      "name": "MCP Server Trigger",
+      "webhookId": "167c9163-dc8f-4bbf-a281-e7f2a23bca5e"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "NbN7lfJ4V3PG3QSD",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/NbN7lfJ4V3PG3QSD",
+          "cachedResultName": "SWF_MCP_Server"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -720,
+        64
+      ],
+      "id": "b5d58ab3-9278-49ea-93ff-eff3d9454291",
+      "name": "Call n8n Workflow Tool"
+    },
+    {
+      "parameters": {
+        "description": "Call this tool when user wants to send the message to all the reportees via Teams",
+        "workflowId": {
+          "__rl": true,
+          "value": "9Ze9HSYzQgrqyiPy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/9Ze9HSYzQgrqyiPy",
+          "cachedResultName": "Teams MCP"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -352,
+        96
+      ],
+      "id": "8dc9d07a-9dda-4eb3-8f80-9e36a1dece0c",
+      "name": "Call 'Teams MCP'"
+    }
+  ],
+  "connections": {
+    "Call n8n Workflow Tool": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'Teams MCP'": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true,
+    "errorWorkflow": "vtN1JQvH45zQjAiD"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "ElzTJgN8U5SDzyK5",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-09-21T14:38:48.063Z",
+      "updatedAt": "2026-09-21T14:38:48.063Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "cfa65ab3-f1e6-4e47-99ab-743bc7a50dc5",
+    "workflowId": "ElzTJgN8U5SDzyK5",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "AI_Daily_Digest"
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+        "typeVersion": 2.1,
+        "position": [
+          -352,
+          -160
+        ],
+        "id": "cce3b3ef-acd5-4a3a-97de-9539a50123c2",
+        "name": "MCP Server Trigger",
+        "webhookId": "167c9163-dc8f-4bbf-a281-e7f2a23bca5e"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "NbN7lfJ4V3PG3QSD",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/NbN7lfJ4V3PG3QSD",
+            "cachedResultName": "SWF_MCP_Server"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -720,
+          64
+        ],
+        "id": "b5d58ab3-9278-49ea-93ff-eff3d9454291",
+        "name": "Call n8n Workflow Tool"
+      },
+      {
+        "parameters": {
+          "description": "Call this tool when user wants to send the message to all the reportees via Teams",
+          "workflowId": {
+            "__rl": true,
+            "value": "9Ze9HSYzQgrqyiPy",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/9Ze9HSYzQgrqyiPy",
+            "cachedResultName": "Teams MCP"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -352,
+          96
+        ],
+        "id": "8dc9d07a-9dda-4eb3-8f80-9e36a1dece0c",
+        "name": "Call 'Teams MCP'"
+      }
+    ],
+    "connections": {
+      "Call n8n Workflow Tool": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call 'Teams MCP'": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version cfa65ab3",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-13T14:02:34.028Z",
+    "updatedAt": "2026-10-13T14:02:37.000Z"
+  }
+}
