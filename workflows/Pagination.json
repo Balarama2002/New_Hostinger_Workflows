@@ -1,0 +1,206 @@
+{
+  "id": "Jk32oOaI6xFLdU3U",
+  "name": "Pagination",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:13.138Z",
+  "updatedAt": "2026-08-14T05:49:19.000Z",
+  "isArchived": true,
+  "versionId": "e10203e0-6e81-4d5c-984c-d6c772d34e39",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -176,
+        -32
+      ],
+      "id": "a4113b23-1364-40d6-84fd-6b8b078cf4eb",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://jsonplaceholder.typicode.com/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        128,
+        -128
+      ],
+      "id": "33e1f186-f882-43a7-911e-d592a91b9114",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "url": "https://api.ukhsa-dashboard.data.gov.uk/themes/infectious_disease/sub_themes/respiratory/topics/COVID-19/geography_types/Nation/geographies/England/metrics/COVID-19_cases_casesByDay",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true
+            }
+          },
+          "pagination": {
+            "pagination": {
+              "paginationMode": "responseContainsNextURL",
+              "nextURL": "={{ $response.body.next }}",
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body.next }}"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        112,
+        128
+      ],
+      "id": "5da7c5c3-fa4a-466b-8204-af3c19f0dc81",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "body.results",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "headers",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        320,
+        128
+      ],
+      "id": "88c620e1-7d67-4d10-9b70-96039ca40a70",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"theme\": \"{{ $json[\"body.results\"].theme }}\",\n  \"sub_theme\": \"{{$json['body.results'].sub_theme}}\",\n  \"topic\": \"{{$json['body.results'].topic}}\",\n  \"geography_type\": \"{{$json['body.results'].geography_type}}\",\n  \"geography\": \"{{$json['body.results'].geography}}\",\n  \"metric_value\": {{$json['body.results'].metric_value}}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        528,
+        128
+      ],
+      "id": "fdef777c-4ed0-4590-bf58-0825b94f99dc",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "WAO1b2DosSZG3bd3",
+          "mode": "list",
+          "cachedResultName": "Pagination_DB",
+          "cachedResultUrl": "/projects/ELx3XzH9AoiQyc0g/datatables/WAO1b2DosSZG3bd3"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "optimizeBulk": true
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        128
+      ],
+      "id": "4f0c7478-c020-4a7d-ad7c-7adc2c7da09a",
+      "name": "Insert row"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Jk32oOaI6xFLdU3U",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.139Z",
+      "updatedAt": "2026-08-13T17:31:13.139Z"
+    }
+  ],
+  "activeVersion": null
+}
