@@ -1,0 +1,2307 @@
+{
+  "id": "GuI8UYxAAclHw56u",
+  "name": "MWF_Boomi Release Notes",
+  "active": true,
+  "activeVersionId": "005e2da7-9bd3-4772-a741-9a18f0453d43",
+  "createdAt": "2026-08-24T05:30:57.590Z",
+  "updatedAt": "2026-10-23T14:46:26.626Z",
+  "isArchived": false,
+  "versionId": "005e2da7-9bd3-4772-a741-9a18f0453d43",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        768
+      ],
+      "id": "29f4855b-7a80-4a47-b7bf-aea3ce4f765e",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "https://help.boomi.com/docs/Atomsphere/Release_Notes/summary",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "text"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -352,
+        864
+      ],
+      "id": "66e8b817-ccbd-421d-af93-76651dbadc04",
+      "name": "HTTP Request",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        544,
+        864
+      ],
+      "id": "01586f21-4ce6-4b25-b618-777beb3f2c83",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "url": "={{ `https://help.boomi.com${$json.link.replace(/\\/$/, '')}/${$json.link.replace(/\\/$/, '').split('/').pop().toLowerCase()}_${$json.formattedDate}` }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        1344
+      ],
+      "id": "0ae9c3ac-0450-4c88-bd2b-e7f693962ea4",
+      "name": "HTTP Request1",
+      "alwaysOutputData": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const html = $json.data || '';\n\nif (!html) {\n  return {\n    json: {\n      error: 'No HTML received'\n    }\n  };\n}\n\n// 1. Dynamically extract the category from the HTML <title> tag\n// Your input has: <title data-rh=true>Task Automation Release Notes...\nlet categoryName = 'releaseNotes'; // Default fallback\nconst titleMatch = html.match(/<title[^>]*>(.*?)\\s+Release Notes/i);\n\nif (titleMatch) {\n  // Extracts \"Task Automation\", trims spaces, and replaces inner spaces with underscores\n  categoryName = titleMatch[1].trim().replace(/\\s+/g, '_');\n}\n\n// 2. Extract the actual article content\nconst articleMatch = html.match(\n  /<article[^>]*>([\\s\\S]*?)<\\/article>/i\n);\n\nif (!articleMatch) {\n  return {\n    json: {\n      error: 'Article content not found'\n    }\n  };\n}\n\nlet content = articleMatch[1];\n\n// 3. Remove feedback/navigation/unwanted elements\ncontent = content\n  .replace(/<nav[\\s\\S]*?<\\/nav>/gi, '')\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<div[^>]*class=[\"'][^\"']*doc-page-bottom-feedback-wrapper[^\"']*[\"'][^>]*>[\\s\\S]*?<\\/div>/gi, '');\n\n// 4. Convert headings to readable text\ncontent = content\n  .replace(/<h1[^>]*>([\\s\\S]*?)<\\/h1>/gi, '\\n\\n$1\\n\\n')\n  .replace(/<h2[^>]*>([\\s\\S]*?)<\\/h2>/gi, '\\n\\n$1\\n\\n')\n  .replace(/<h3[^>]*>([\\s\\S]*?)<\\/h3>/gi, '\\n\\n$1\\n\\n')\n  .replace(/<h4[^>]*>([\\s\\S]*?)<\\/h4>/gi, '\\n\\n$1\\n\\n');\n\n// 5. Format lists and paragraphs\ncontent = content\n  .replace(/<li[^>]*>([\\s\\S]*?)<\\/li>/gi, '\\n• $1')\n  .replace(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi, '\\n$1\\n')\n  .replace(/<br\\s*\\/?>/gi, '\\n');\n\n// 6. Remove all remaining HTML tags\ncontent = content.replace(/<[^>]+>/g, ' ');\n\n// 7. Decode common HTML entities\ncontent = content\n  .replace(/&nbsp;/gi, ' ')\n  .replace(/&amp;/gi, '&')\n  .replace(/&lt;/gi, '<')\n  .replace(/&gt;/gi, '>')\n  .replace(/&quot;/gi, '\"')\n  .replace(/&#39;/gi, \"'\")\n  .replace(/&#x27;/gi, \"'\");\n\n// 8. Clean up extra whitespace\ncontent = content\n  .replace(/[ \\t]+/g, ' ')\n  .replace(/[ \\t]*\\n[ \\t]*/g, '\\n')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\n// 9. Return the output using the dynamic key generated in Step 1\nreturn {\n  json: {\n    releasenotes: content\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        352
+      ],
+      "id": "36876815-f978-4916-8e96-509017f79aef",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "extractHtmlContent",
+        "extractionValues": {
+          "values": [
+            {
+              "key": "link",
+              "cssSelector": "a.menu__link",
+              "returnValue": "attribute",
+              "attribute": "href",
+              "returnArray": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        -128,
+        864
+      ],
+      "id": "48a23da3-4f67-486c-8f5e-a07841ccf645",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "link",
+        "include": "selectedOtherFields",
+        "fieldsToInclude": "formattedDate",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        320,
+        864
+      ],
+      "id": "0a96f0ef-4b81-4569-ab10-051a47448bdd",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "db821ffc-ff50-4a75-b770-746aaca01afe",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "summary",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "d278b2fa-f853-4b5b-ae59-d51ed478a1ca",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "B2B_EDI",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "deddacc6-3984-447a-8d7d-aecc4dc78ba9",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "Labs",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "bb255dab-6878-433e-9716-75d1ab6f9834",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "Connectivity_Development",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "317f8995-d386-4e0b-9868-321eced83669",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "Hub",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "ebff8665-99e5-48e7-9337-3a7e8c485654",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "Event_Streams",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "70adbcf9-4ab5-437a-9450-fb27cc26a79d",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "Knowledge_Hub",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            },
+            {
+              "id": "9025db92-f2a3-4582-bec5-7dd1a3253739",
+              "leftValue": "={{ $json.link }}",
+              "rightValue": "Platform_API_and_Partner_API",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -576,
+        -432
+      ],
+      "id": "c7c9c8d2-33ec-4063-b4a7-9fd66f428b49",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "url": "=https://help.boomi.com{{ $json.link.replace(/\\/([^/]+)$/, (_, last) => '/' + last.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase()) }}_{{ $json.formattedDate }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        288
+      ],
+      "id": "18ac6682-625f-4d9f-ad05-1fb3778c6141",
+      "name": "HTTP Request2",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "summary",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    },
+                    "id": "ffe2c660-f3c3-441d-9a3b-12459ca85c67"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Summary"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "19c745c2-e83c-4cee-a73c-1affd2974868",
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "Labs",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Labs"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7bd70210-ad70-4c98-8b48-4889f9b35746",
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "Event_Streams",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Event_Streams"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "2577c6a8-6378-4c2c-a816-a3a16600f9e5",
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "B2B_EDI",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "EDI"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "a662ebd7-e3d8-4f5c-a45b-b1b140613a8e",
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "Connectivity_Development",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Connectivity_Development"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "9be55591-5736-4a06-843e-a22ee04648f6",
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "Hub",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Hub"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8830a0ad-1a38-42fa-af73-ac8a3002ee9c",
+                    "leftValue": "={{ $json.link }}",
+                    "rightValue": "Platform_API_and_Partner_API",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Platform_API_and_Partner_API"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        768
+      ],
+      "id": "678faf80-fe27-4b61-ba12-afe8a664e58e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "url": "=https://help.boomi.com{{ $json.link }}b2b_edi_{{ $json.formattedDate }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        576
+      ],
+      "id": "c5c393ab-6f30-4102-8ad8-30f5406559eb",
+      "name": "HTTP Request3",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://help.boomi.com{{ $json.link }}_{{ $json.formattedDate }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        1152
+      ],
+      "id": "dd800bf9-0fb0-430e-bc46-a1d2717693d1",
+      "name": "HTTP Request4",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://help.boomi.com{{ $json.link.replace(/\\/[^/]+$/, '') }}/connectivity_dev_{{ $json.formattedDate }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        768
+      ],
+      "id": "c58e0f98-0082-44ee-9f20-72e354b84c77",
+      "name": "HTTP Request5",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "url": "=https://help.boomi.com{{ $json.link.substring(0, $json.link.lastIndexOf('/')) }}/platform_api_partner_api_{{ $json.formattedDate }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        992,
+        960
+      ],
+      "id": "b6146821-d49c-4e31-bf24-47d56815f953",
+      "name": "HTTP Request6",
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "releasenotes"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        768,
+        16
+      ],
+      "id": "a82bab32-2a7b-4993-93a1-cdf92c47cafc",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $json;\n\nconst releaseNotes = Array.isArray(input.releasenotes)\n  ? input.releasenotes\n  : [];\n\nfunction cleanText(text) {\n  return String(text || '')\n    .replace(/\\r\\n/g, '\\n')\n    .replace(/\\r/g, '\\n')\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<\\/p>/gi, '\\n')\n    .replace(/<[^>]+>/g, '')\n    .replace(/&nbsp;/gi, ' ')\n    .replace(/&amp;/gi, '&')\n    .replace(/&lt;/gi, '<')\n    .replace(/&gt;/gi, '>')\n    .replace(/&quot;/gi, '\"')\n    .replace(/&#39;/gi, \"'\")\n    .trim();\n}\n\nconst notes = releaseNotes\n  .map(cleanText)\n  .filter(Boolean);\n\nconst fullSource = notes.join('\\n\\n');\n\n// Dynamically determine month/year\nlet month = input.month || '';\nlet year = input.year || '';\n\nif (!month || !year) {\n  const url = input.url || input.link || '';\n\n  const monthMatch = url.match(/[?&]month=([^&]+)/i);\n  const yearMatch = url.match(/[?&]year=(\\d{4})/i);\n\n  if (monthMatch) {\n    month = decodeURIComponent(monthMatch[1]);\n  }\n\n  if (yearMatch) {\n    year = yearMatch[1];\n  }\n}\n\n// If still unavailable, detect from source\nif (!month || !year) {\n  const dateMatch = fullSource.match(\n    /\\b(January|February|March|April|May|June|July|August|September|October|November|December)\\s+20\\d{2}\\b/i\n  );\n\n  if (dateMatch) {\n    const parts = dateMatch[0].split(/\\s+/);\n    month = month || parts[0];\n    year = year || parts[1];\n  }\n}\n\nconst releasePeriod = [month, year]\n  .filter(Boolean)\n  .join(' ');\n\nreturn {\n  json: {\n    title: 'Boomi Enterprise Platform',\n    releasePeriod,\n    sourceReleaseNotes: fullSource,\n    releaseNotes: notes\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        16
+      ],
+      "id": "63b1f42e-7d77-46d0-9ee0-daf5e527e897",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "documentTitle": "=Boomi_Release_Document_{{ $('Date & Time').item.json.formattedDate }}",
+        "documentCreator": "BalaRama Krishna"
+      },
+      "type": "n8n-nodes-docx-ooxml.docxOoxml",
+      "typeVersion": 1,
+      "position": [
+        1664,
+        16
+      ],
+      "id": "fc1b7ca1-25d4-4c46-b52a-41da597bd4d2",
+      "name": "DOCX OOXML",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "releaseNotes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1216,
+        16
+      ],
+      "id": "34b33ae9-4ed2-435d-8d24-a46aeb70bf89",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.all();\n\nconst FONT = 'Times New Roman';\n\nconst output = {\n  sections: []\n};\n\nconst section = {\n  paragraphs: []\n};\n\n// =====================================================\n// STATE\n// =====================================================\n\nlet lastHeading = '';\nlet lastWasContent = false;\n\n// =====================================================\n// CLEANING FUNCTIONS\n// =====================================================\n\nfunction cleanText(value) {\n  return String(value || '')\n    .replace(/\\r/g, '')\n    .replace(/\\u00a0/g, ' ')\n    // Remove anything inside parentheses\n    .replace(/\\s*\\([^)]*\\)/g, ' ')\n    // Normalize spaces\n    .replace(/[ \\t]+/g, ' ')\n    .trim();\n}\n\nfunction cleanLine(value) {\n  return cleanText(value)\n    .replace(/^[-–—]\\s*/, '')\n    .trim();\n}\n\n// =====================================================\n// REFER TO DETECTION\n// =====================================================\n\nfunction isReferToLine(line) {\n  const value = String(line || '')\n    .trim()\n    .replace(/^[•●▪◦]\\s*/, '')\n    .replace(/^[-–—]\\s*/, '')\n    .trim();\n\n  return /^refer\\s+to\\b/i.test(value);\n}\n\n// =====================================================\n// READ MORE DETECTION & SPLITTING\n// =====================================================\n\nfunction containsReadMore(text) {\n  return /read[\\s\\u00a0]+more(?:[\\s\\u00a0]*[›>»])?/i.test(String(text || ''));\n}\n\nfunction splitReadMore(text) {\n  return String(text || '')\n    .split(/read[\\s\\u00a0]+more(?:[\\s\\u00a0]*[›>»])?/gi)\n    .map(part => cleanText(part))\n    .filter(Boolean);\n}\n\n// =====================================================\n// PARAGRAPH HELPER\n// =====================================================\n\nfunction addParagraph(text, options = {}) {\n  const value = cleanText(text);\n\n  if (!value) {\n    return;\n  }\n\n  section.paragraphs.push({\n    children: [\n      {\n        text: value,\n        font: FONT,\n        ...options\n      }\n    ]\n  });\n}\n\n// =====================================================\n// MAIN STATIC DOCUMENT HEADING\n// =====================================================\n\nfunction addMainDocumentHeading() {\n  addParagraph('Boomi Platform Release updates', {\n    font: FONT,\n    size: 32,\n    bold: true,\n    alignment: 'center'\n  });\n\n  lastHeading = 'Boomi Platform Release updates';\n  lastWasContent = false;\n\n  addSpacing(12);\n}\n\n// =====================================================\n// DOCUMENT ELEMENTS\n// =====================================================\n\nfunction addProductHeading(text) {\n  const value = cleanText(text);\n  if (!value || lastHeading === value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 32,\n    bold: true,\n    alignment: 'left'\n  });\n\n  lastHeading = value;\n  lastWasContent = false;\n}\n\nfunction addSectionHeading(text) {\n  const value = cleanText(text);\n  if (!value || lastHeading === value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 24,\n    bold: true,\n    alignment: 'left'\n  });\n\n  lastHeading = value;\n  lastWasContent = false;\n}\n\nfunction addSubHeading(text) {\n  const value = cleanText(text);\n  if (!value || lastHeading === value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 28,\n    bold: true,\n    alignment: 'left'\n  });\n\n  lastHeading = value;\n  lastWasContent = false;\n}\n\nfunction addBody(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 22,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = true;\n}\n\nfunction addBullet(text) {\n  let value = cleanText(text);\n  if (!value) return;\n\n  // Remove existing bullet symbol\n  value = value.replace(/^[•●▪◦]\\s*/, '').trim();\n  if (!value) return;\n\n  addParagraph(`• ${value}`, {\n    font: FONT,\n    size: 22,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = true;\n}\n\nfunction addNote(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 22,\n    italic: true,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = false;\n}\n\nfunction addUpdated(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 18,\n    italic: true,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = false;\n}\n\nfunction addReleaseDate(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 22,\n    // bold: true,\n    alignment: 'left'\n  });\n\n  lastWasContent = false;\n}\n\nfunction addSpacing(size = 10) {\n  if (section.paragraphs.length === 0) return;\n\n  section.paragraphs.push({\n    children: [\n      {\n        text: '',\n        font: FONT,\n        size\n      }\n    ]\n  });\n\n  lastWasContent = false;\n}\n\n// =====================================================\n// CHECK FUNCTIONS\n// =====================================================\n\nfunction isBullet(line) {\n  const value = String(line || '').trim();\n  return (\n    value.startsWith('•') ||\n    value.startsWith('●') ||\n    value.startsWith('▪') ||\n    value.startsWith('◦')\n  );\n}\n\nfunction isEmptyBullet(line) {\n  const value = String(line || '').trim();\n  return (\n    value === '•' ||\n    value === '●' ||\n    value === '▪' ||\n    value === '◦'\n  );\n}\n\nfunction isNoUpdates(line) {\n  const value = cleanText(line).toLowerCase();\n  return (\n    value === 'no updates' ||\n    value === 'no update' ||\n    value === 'no changes' ||\n    value === 'none'\n  );\n}\n\nfunction isSectionHeading(line) {\n  const value = cleanText(line).toLowerCase();\n  const headings = new Set([\n    'new feature',\n    'new features',\n    'enhancement',\n    'enhancements',\n    'fix',\n    'fixes',\n    'known issue',\n    'known issues',\n    'observability enhancements',\n    'java and docker updates',\n    'other updates',\n    'enhancement and fixes',\n    'enhancements and fixes'\n  ]);\n\n  return headings.has(value);\n}\n\nfunction isPlatformRelease(line) {\n  return /^platform release$/i.test(cleanText(line));\n}\n\nfunction isReleaseDate(line) {\n  return /^([A-Z][a-z]+)\\s+\\d{1,2}\\s+\\d{4}$/i.test(cleanText(line));\n}\n\nfunction isUpdated(line) {\n  return /^updated\\s+/i.test(cleanText(line));\n}\n\nfunction isGlobalTitle(line) {\n  const value = cleanText(line);\n  return (\n    /^boomi enterprise platform$/i.test(value) ||\n    /^(january|february|march|april|may|june|july|august|september|october|november|december)\\s+\\d{4}$/i.test(value) ||\n    /^boomi enterprise platform\\s+.+\\s+release notes?/i.test(value)\n  );\n}\n\nfunction isProductHeading(lines, index) {\n  const line = cleanText(lines[index]);\n  if (!line) return false;\n  if (/release notes?\\s+for/i.test(line)) return true;\n\n  if (\n    isGlobalTitle(line) ||\n    isSectionHeading(line) ||\n    isPlatformRelease(line) ||\n    isReleaseDate(line) ||\n    isUpdated(line) ||\n    isNoUpdates(line) ||\n    isReferToLine(line)\n  ) {\n    return false;\n  }\n\n  if (line.length > 100) return false;\n\n  for (let i = index + 1; i < Math.min(index + 5, lines.length); i++) {\n    const next = cleanText(lines[i]);\n    if (!next) continue;\n    if (isSectionHeading(next) || isPlatformRelease(next) || isReleaseDate(next)) {\n      return true;\n    }\n    break;\n  }\n\n  return false;\n}\n\nfunction isSubHeading(lines, index) {\n  const line = cleanText(lines[index]);\n  if (!line) return false;\n\n  if (\n    isGlobalTitle(line) ||\n    isSectionHeading(line) ||\n    isPlatformRelease(line) ||\n    isReleaseDate(line) ||\n    isUpdated(line) ||\n    isNoUpdates(line) ||\n    isReferToLine(line)\n  ) {\n    return false;\n  }\n\n  if (/release notes?\\s+for/i.test(line)) return false;\n  if (line.length > 100) return false;\n\n  for (let i = index + 1; i < Math.min(index + 4, lines.length); i++) {\n    const next = cleanText(lines[i]);\n    if (!next) continue;\n    if (isSectionHeading(next)) return true;\n    break;\n  }\n\n  return false;\n}\n\nfunction extractCategory(text) {\n  const value = cleanText(text);\n  const match = value.match(/^(.+?)\\s+Release Notes?\\s+for\\s+/i);\n  return match ? cleanText(match[1]) : '';\n}\n\nfunction getReleaseTitleCategory(line) {\n  const category = extractCategory(line);\n  return category || cleanText(line);\n}\n\n// =====================================================\n// SUMMARY DOCUMENT\n// =====================================================\n\nfunction processSummaryDocument(data) {\n  const releaseNotes = String(data.releaseNotes || '')\n    .replace(/\\r/g, '')\n    .trim();\n\n  if (!releaseNotes) return;\n\n  const lines = releaseNotes.split('\\n');\n  let currentBullet = '';\n\n  function flushBullet() {\n    if (!currentBullet) return;\n\n    if (containsReadMore(currentBullet)) {\n      const parts = splitReadMore(currentBullet);\n      for (const part of parts) {\n        addBullet(part);\n      }\n    } else {\n      addBullet(currentBullet);\n    }\n\n    currentBullet = '';\n  }\n\n  for (let i = 0; i < lines.length; i++) {\n    const rawLine = lines[i];\n    const line = cleanLine(rawLine);\n\n    if (!line) continue;\n\n    if (isReferToLine(rawLine)) {\n      flushBullet();\n      continue;\n    }\n\n    if (isGlobalTitle(line)) continue;\n\n    if (isUpdated(line)) {\n      flushBullet();\n      addUpdated(line);\n      continue;\n    }\n\n    if (isPlatformRelease(line) || isReleaseDate(line)) {\n  flushBullet();\n\n  if (isReleaseDate(line)) {\n    addReleaseDate(line);\n  }\n\n  continue;\n}\n\n    if (isSectionHeading(line)) {\n      flushBullet();\n      addSectionHeading(line);\n      continue;\n    }\n\n    if (isEmptyBullet(rawLine)) {\n      flushBullet();\n      continue;\n    }\n\n    // Line containing \"Read more ›\" -> flush and output each section as a bullet\n    if (containsReadMore(line)) {\n      flushBullet();\n      const parts = splitReadMore(line);\n      for (const part of parts) {\n        addBullet(part);\n      }\n      continue;\n    }\n\n    if (isBullet(rawLine)) {\n      flushBullet();\n      currentBullet = cleanText(line.replace(/^[•●▪◦]\\s*/, ''));\n      continue;\n    }\n\n    if (currentBullet) {\n      currentBullet += ' ' + line;\n      continue;\n    }\n\n    // Introductory body paragraphs\n    addBody(line);\n  }\n\n  flushBullet();\n}\n\n// =====================================================\n// NORMAL RELEASE NOTE DOCUMENT\n// =====================================================\n\nfunction processNormalDocument(data) {\n  const releaseNotes = String(data.releaseNotes || '')\n    .replace(/\\r/g, '')\n    .trim();\n\n  if (!releaseNotes) return;\n\n  const lines = releaseNotes.split('\\n');\n\n  let currentBullet = '';\n  let currentParagraph = '';\n  let firstParagraphProcessed = false;\n\n  function flushBullet() {\n    if (!currentBullet) return;\n\n    if (containsReadMore(currentBullet)) {\n      const parts = splitReadMore(currentBullet);\n      for (const part of parts) {\n        addBullet(part);\n      }\n    } else {\n      addBullet(currentBullet);\n    }\n\n    currentBullet = '';\n  }\n\n  function flushParagraph() {\n    if (!currentParagraph) return;\n\n    if (containsReadMore(currentParagraph)) {\n      const parts = splitReadMore(currentParagraph);\n      for (const part of parts) {\n        addBullet(part);\n      }\n    } else {\n      if (!firstParagraphProcessed) {\n        addBody(currentParagraph);\n        firstParagraphProcessed = true;\n      } else {\n        addBullet(currentParagraph);\n      }\n    }\n\n    currentParagraph = '';\n  }\n\n  for (let i = 0; i < lines.length; i++) {\n    const rawLine = lines[i];\n    const line = cleanLine(rawLine);\n\n    if (!line) {\n      flushParagraph();\n      continue;\n    }\n\n    if (isReferToLine(rawLine)) {\n      flushBullet();\n      flushParagraph();\n      continue;\n    }\n\n    if (isGlobalTitle(line)) continue;\n\n    if (/release notes?\\s+for/i.test(line)) {\n      flushBullet();\n      flushParagraph();\n      const category = getReleaseTitleCategory(line);\n      addProductHeading(category);\n      continue;\n    }\n\n    if (isUpdated(line)) {\n      flushBullet();\n      flushParagraph();\n      continue;\n    }\n\nif (isPlatformRelease(line) || isReleaseDate(line)) {\n  flushBullet();\n  flushParagraph();\n\n  if (isReleaseDate(line)) {\n    addReleaseDate(line);\n  }\n\n  continue;\n}\n\n    if (isSectionHeading(line)) {\n      flushBullet();\n      flushParagraph();\n      addSectionHeading(line);\n      continue;\n    }\n\n    if (isNoUpdates(line)) {\n      flushBullet();\n      flushParagraph();\n      addBullet(line);\n      continue;\n    }\n\n    if (isEmptyBullet(rawLine)) {\n      flushBullet();\n      flushParagraph();\n      continue;\n    }\n\n    if (isBullet(rawLine)) {\n      flushParagraph();\n      flushBullet();\n      currentBullet = cleanText(line.replace(/^[•●▪◦]\\s*/, ''));\n      continue;\n    }\n\n    if (isSubHeading(lines, i)) {\n      flushBullet();\n      flushParagraph();\n      addSubHeading(line);\n      continue;\n    }\n\n    if (isProductHeading(lines, i)) {\n      flushBullet();\n      flushParagraph();\n      addProductHeading(line);\n      continue;\n    }\n\n    if (currentBullet) {\n      currentBullet += ' ' + line;\n      continue;\n    }\n\n    if (currentParagraph) {\n      currentParagraph += ' ' + line;\n    } else {\n      currentParagraph = line;\n    }\n  }\n\n  flushParagraph();\n  flushBullet();\n}\n\n// =====================================================\n// BUILD DOCUMENT\n// =====================================================\n\naddMainDocumentHeading();\n\nfor (const item of input) {\n  const data = item.json;\n\n  const releaseNotes = String(data.releaseNotes || '')\n    .replace(/\\r/g, '')\n    .trim();\n\n  if (!releaseNotes) continue;\n\n  const firstLine = releaseNotes\n    .split('\\n')\n    .map(line => cleanLine(line))\n    .find(Boolean) || '';\n\n  const isSummary =\n    /Boomi Enterprise Platform\\s+September\\s+2026\\s+Release\\s+Notes/i.test(firstLine);\n\n  if (isSummary) {\n    processSummaryDocument(data);\n  } else {\n    processNormalDocument(data);\n  }\n\n  addSpacing(10);\n}\n\n// Remove trailing spacing\nwhile (\n  section.paragraphs.length > 0 &&\n  section.paragraphs[section.paragraphs.length - 1].children?.[0]?.text === ''\n) {\n  section.paragraphs.pop();\n}\n\n// =====================================================\n// FINAL OUTPUT\n// =====================================================\n\noutput.sections.push(section);\n\nreturn [\n  {\n    json: output\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1440,
+        16
+      ],
+      "id": "c5fcdd0e-8545-4676-b1d2-dee9b178937d",
+      "name": "Code in JavaScript2",
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "sendTo": "cbala.ramakrishna@techygeekhub.com",
+        "subject": "Error Occured While Executing the N8N Flow",
+        "message": "=Error Message: {{ $json.execution.error.message }}  \nFailed Node: {{ $json.execution.lastNodeExecuted }}  \nExecution URL: {{ $json.execution.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2416,
+        416
+      ],
+      "id": "31af6c19-9f3d-4eff-a6c6-a9b5150af4d3",
+      "name": "Send a message",
+      "webhookId": "55ae3051-afef-464c-99ee-d332f94b600d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "cb64fm81qdwwKgxM",
+          "name": "Bala Ram Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $now }}",
+        "format": "custom",
+        "customFormat": "MMM_yyyy",
+        "options": {
+          "includeInputFields": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        96,
+        864
+      ],
+      "id": "7b94c6b3-2bfb-4f25-b2fc-4d40b58ef54f",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "months",
+              "triggerAtDayOfMonth": 11,
+              "triggerAtHour": 12
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -576,
+        960
+      ],
+      "id": "5d097562-8126-422f-879b-1df1dfaf8f56",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "cbala.ramakrishna@techygeekhub.com",
+        "subject": "=Boomi Release Documnet - {{ $('Date & Time').item.json.formattedDate }}",
+        "message": "=Please Find the Attachement of Boomi Release Document - {{ $('Date & Time').item.json.formattedDate }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1904,
+        16
+      ],
+      "id": "d4af34a3-ab9a-4513-b6a5-4a62e6080993",
+      "name": "Send a message1",
+      "webhookId": "e2fe93e5-b6ed-4773-bb81-2a5ecb10553a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "cb64fm81qdwwKgxM",
+          "name": "Bala Ram Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2b052c4d-7623-4cd5-a1a6-fb1f465dc577",
+              "name": "releasenotes",
+              "value": "={{ $json.link.split(\"/\")[4] }} \n\nNo Updates Available ",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1664,
+        576
+      ],
+      "id": "600e8d7a-e784-42da-bb40-cd9e49bdf377",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "9f708819-0508-4a06-a699-58cb96cfdb1a",
+              "leftValue": "={{ $json.error }}",
+              "rightValue": "No HTML received",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1440,
+        352
+      ],
+      "id": "74ea1e83-bace-4366-8020-1e0a93e4daf0",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1664,
+        960
+      ],
+      "id": "c9d8315c-2e55-45d7-9f16-d5f4b5fa7e83",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1888,
+        912
+      ],
+      "id": "c91b6c15-51b5-416f-9411-47c1002de4e5",
+      "name": "Merge"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        []
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request6": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "DOCX OOXML": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2": {
+      "main": [
+        [
+          {
+            "node": "DOCX OOXML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        null
+      ],
+      "recurrenceRuleSignatures": [
+        null
+      ]
+    }
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-10-11T12:00:18.032+02:00",
+          "Readable date": "October 11th 2026, 12:00:18 pm",
+          "Readable time": "12:00:18 pm",
+          "Day of week": "Sunday",
+          "Year": "2026",
+          "Month": "October",
+          "Day of month": "11",
+          "Hour": "12",
+          "Minute": "00",
+          "Second": "18",
+          "Timezone": "Europe/Berlin (UTC+02:00)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "GuI8UYxAAclHw56u",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-24T05:30:57.593Z",
+      "updatedAt": "2026-08-24T05:30:57.593Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "005e2da7-9bd3-4772-a741-9a18f0453d43",
+    "workflowId": "GuI8UYxAAclHw56u",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          -576,
+          768
+        ],
+        "id": "29f4855b-7a80-4a47-b7bf-aea3ce4f765e",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "url": "https://help.boomi.com/docs/Atomsphere/Release_Notes/summary",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Accept",
+                "value": "text"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          -352,
+          864
+        ],
+        "id": "66e8b817-ccbd-421d-af93-76651dbadc04",
+        "name": "HTTP Request",
+        "retryOnFail": false
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          544,
+          864
+        ],
+        "id": "01586f21-4ce6-4b25-b618-777beb3f2c83",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {
+          "url": "={{ `https://help.boomi.com${$json.link.replace(/\\/$/, '')}/${$json.link.replace(/\\/$/, '').split('/').pop().toLowerCase()}_${$json.formattedDate}` }}",
+          "options": {
+            "response": {
+              "response": {
+                "responseFormat": "text"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          992,
+          1344
+        ],
+        "id": "0ae9c3ac-0450-4c88-bd2b-e7f693962ea4",
+        "name": "HTTP Request1",
+        "alwaysOutputData": false,
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "jsCode": "const html = $json.data || '';\n\nif (!html) {\n  return {\n    json: {\n      error: 'No HTML received'\n    }\n  };\n}\n\n// 1. Dynamically extract the category from the HTML <title> tag\n// Your input has: <title data-rh=true>Task Automation Release Notes...\nlet categoryName = 'releaseNotes'; // Default fallback\nconst titleMatch = html.match(/<title[^>]*>(.*?)\\s+Release Notes/i);\n\nif (titleMatch) {\n  // Extracts \"Task Automation\", trims spaces, and replaces inner spaces with underscores\n  categoryName = titleMatch[1].trim().replace(/\\s+/g, '_');\n}\n\n// 2. Extract the actual article content\nconst articleMatch = html.match(\n  /<article[^>]*>([\\s\\S]*?)<\\/article>/i\n);\n\nif (!articleMatch) {\n  return {\n    json: {\n      error: 'Article content not found'\n    }\n  };\n}\n\nlet content = articleMatch[1];\n\n// 3. Remove feedback/navigation/unwanted elements\ncontent = content\n  .replace(/<nav[\\s\\S]*?<\\/nav>/gi, '')\n  .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n  .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n  .replace(/<div[^>]*class=[\"'][^\"']*doc-page-bottom-feedback-wrapper[^\"']*[\"'][^>]*>[\\s\\S]*?<\\/div>/gi, '');\n\n// 4. Convert headings to readable text\ncontent = content\n  .replace(/<h1[^>]*>([\\s\\S]*?)<\\/h1>/gi, '\\n\\n$1\\n\\n')\n  .replace(/<h2[^>]*>([\\s\\S]*?)<\\/h2>/gi, '\\n\\n$1\\n\\n')\n  .replace(/<h3[^>]*>([\\s\\S]*?)<\\/h3>/gi, '\\n\\n$1\\n\\n')\n  .replace(/<h4[^>]*>([\\s\\S]*?)<\\/h4>/gi, '\\n\\n$1\\n\\n');\n\n// 5. Format lists and paragraphs\ncontent = content\n  .replace(/<li[^>]*>([\\s\\S]*?)<\\/li>/gi, '\\n• $1')\n  .replace(/<p[^>]*>([\\s\\S]*?)<\\/p>/gi, '\\n$1\\n')\n  .replace(/<br\\s*\\/?>/gi, '\\n');\n\n// 6. Remove all remaining HTML tags\ncontent = content.replace(/<[^>]+>/g, ' ');\n\n// 7. Decode common HTML entities\ncontent = content\n  .replace(/&nbsp;/gi, ' ')\n  .replace(/&amp;/gi, '&')\n  .replace(/&lt;/gi, '<')\n  .replace(/&gt;/gi, '>')\n  .replace(/&quot;/gi, '\"')\n  .replace(/&#39;/gi, \"'\")\n  .replace(/&#x27;/gi, \"'\");\n\n// 8. Clean up extra whitespace\ncontent = content\n  .replace(/[ \\t]+/g, ' ')\n  .replace(/[ \\t]*\\n[ \\t]*/g, '\\n')\n  .replace(/\\n{3,}/g, '\\n\\n')\n  .trim();\n\n// 9. Return the output using the dynamic key generated in Step 1\nreturn {\n  json: {\n    releasenotes: content\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1216,
+          352
+        ],
+        "id": "36876815-f978-4916-8e96-509017f79aef",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "operation": "extractHtmlContent",
+          "extractionValues": {
+            "values": [
+              {
+                "key": "link",
+                "cssSelector": "a.menu__link",
+                "returnValue": "attribute",
+                "attribute": "href",
+                "returnArray": true
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          -128,
+          864
+        ],
+        "id": "48a23da3-4f67-486c-8f5e-a07841ccf645",
+        "name": "HTML"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "link",
+          "include": "selectedOtherFields",
+          "fieldsToInclude": "formattedDate",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          320,
+          864
+        ],
+        "id": "0a96f0ef-4b81-4569-ab10-051a47448bdd",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "db821ffc-ff50-4a75-b770-746aaca01afe",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "summary",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "d278b2fa-f853-4b5b-ae59-d51ed478a1ca",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "B2B_EDI",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "deddacc6-3984-447a-8d7d-aecc4dc78ba9",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "Labs",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "bb255dab-6878-433e-9716-75d1ab6f9834",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "Connectivity_Development",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "317f8995-d386-4e0b-9868-321eced83669",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "Hub",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "ebff8665-99e5-48e7-9337-3a7e8c485654",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "Event_Streams",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "70adbcf9-4ab5-437a-9450-fb27cc26a79d",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "Knowledge_Hub",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              },
+              {
+                "id": "9025db92-f2a3-4582-bec5-7dd1a3253739",
+                "leftValue": "={{ $json.link }}",
+                "rightValue": "Platform_API_and_Partner_API",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          -576,
+          -432
+        ],
+        "id": "c7c9c8d2-33ec-4063-b4a7-9fd66f428b49",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "url": "=https://help.boomi.com{{ $json.link.replace(/\\/([^/]+)$/, (_, last) => '/' + last.replace(/([a-z])([A-Z])/g, '$1_$2').toLowerCase()) }}_{{ $json.formattedDate }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          992,
+          288
+        ],
+        "id": "18ac6682-625f-4d9f-ad05-1fb3778c6141",
+        "name": "HTTP Request2",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "summary",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      },
+                      "id": "ffe2c660-f3c3-441d-9a3b-12459ca85c67"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Summary"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "19c745c2-e83c-4cee-a73c-1affd2974868",
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "Labs",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Labs"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "7bd70210-ad70-4c98-8b48-4889f9b35746",
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "Event_Streams",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Event_Streams"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "2577c6a8-6378-4c2c-a816-a3a16600f9e5",
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "B2B_EDI",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "EDI"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "a662ebd7-e3d8-4f5c-a45b-b1b140613a8e",
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "Connectivity_Development",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Connectivity_Development"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "9be55591-5736-4a06-843e-a22ee04648f6",
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "Hub",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Hub"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "8830a0ad-1a38-42fa-af73-ac8a3002ee9c",
+                      "leftValue": "={{ $json.link }}",
+                      "rightValue": "Platform_API_and_Partner_API",
+                      "operator": {
+                        "type": "string",
+                        "operation": "contains"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Platform_API_and_Partner_API"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          768,
+          768
+        ],
+        "id": "678faf80-fe27-4b61-ba12-afe8a664e58e",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "url": "=https://help.boomi.com{{ $json.link }}b2b_edi_{{ $json.formattedDate }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          992,
+          576
+        ],
+        "id": "c5c393ab-6f30-4102-8ad8-30f5406559eb",
+        "name": "HTTP Request3",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://help.boomi.com{{ $json.link }}_{{ $json.formattedDate }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          992,
+          1152
+        ],
+        "id": "dd800bf9-0fb0-430e-bc46-a1d2717693d1",
+        "name": "HTTP Request4",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://help.boomi.com{{ $json.link.replace(/\\/[^/]+$/, '') }}/connectivity_dev_{{ $json.formattedDate }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          992,
+          768
+        ],
+        "id": "c58e0f98-0082-44ee-9f20-72e354b84c77",
+        "name": "HTTP Request5",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "url": "=https://help.boomi.com{{ $json.link.substring(0, $json.link.lastIndexOf('/')) }}/platform_api_partner_api_{{ $json.formattedDate }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          992,
+          960
+        ],
+        "id": "b6146821-d49c-4e31-bf24-47d56815f953",
+        "name": "HTTP Request6",
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "fieldsToAggregate": {
+            "fieldToAggregate": [
+              {
+                "fieldToAggregate": "releasenotes"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          768,
+          16
+        ],
+        "id": "a82bab32-2a7b-4993-93a1-cdf92c47cafc",
+        "name": "Aggregate"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $json;\n\nconst releaseNotes = Array.isArray(input.releasenotes)\n  ? input.releasenotes\n  : [];\n\nfunction cleanText(text) {\n  return String(text || '')\n    .replace(/\\r\\n/g, '\\n')\n    .replace(/\\r/g, '\\n')\n    .replace(/<br\\s*\\/?>/gi, '\\n')\n    .replace(/<\\/p>/gi, '\\n')\n    .replace(/<[^>]+>/g, '')\n    .replace(/&nbsp;/gi, ' ')\n    .replace(/&amp;/gi, '&')\n    .replace(/&lt;/gi, '<')\n    .replace(/&gt;/gi, '>')\n    .replace(/&quot;/gi, '\"')\n    .replace(/&#39;/gi, \"'\")\n    .trim();\n}\n\nconst notes = releaseNotes\n  .map(cleanText)\n  .filter(Boolean);\n\nconst fullSource = notes.join('\\n\\n');\n\n// Dynamically determine month/year\nlet month = input.month || '';\nlet year = input.year || '';\n\nif (!month || !year) {\n  const url = input.url || input.link || '';\n\n  const monthMatch = url.match(/[?&]month=([^&]+)/i);\n  const yearMatch = url.match(/[?&]year=(\\d{4})/i);\n\n  if (monthMatch) {\n    month = decodeURIComponent(monthMatch[1]);\n  }\n\n  if (yearMatch) {\n    year = yearMatch[1];\n  }\n}\n\n// If still unavailable, detect from source\nif (!month || !year) {\n  const dateMatch = fullSource.match(\n    /\\b(January|February|March|April|May|June|July|August|September|October|November|December)\\s+20\\d{2}\\b/i\n  );\n\n  if (dateMatch) {\n    const parts = dateMatch[0].split(/\\s+/);\n    month = month || parts[0];\n    year = year || parts[1];\n  }\n}\n\nconst releasePeriod = [month, year]\n  .filter(Boolean)\n  .join(' ');\n\nreturn {\n  json: {\n    title: 'Boomi Enterprise Platform',\n    releasePeriod,\n    sourceReleaseNotes: fullSource,\n    releaseNotes: notes\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          992,
+          16
+        ],
+        "id": "63b1f42e-7d77-46d0-9ee0-daf5e527e897",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "documentTitle": "=Boomi_Release_Document_{{ $('Date & Time').item.json.formattedDate }}",
+          "documentCreator": "BalaRama Krishna"
+        },
+        "type": "n8n-nodes-docx-ooxml.docxOoxml",
+        "typeVersion": 1,
+        "position": [
+          1664,
+          16
+        ],
+        "id": "fc1b7ca1-25d4-4c46-b52a-41da597bd4d2",
+        "name": "DOCX OOXML",
+        "executeOnce": false
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "releaseNotes",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1216,
+          16
+        ],
+        "id": "34b33ae9-4ed2-435d-8d24-a46aeb70bf89",
+        "name": "Split Out1"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $input.all();\n\nconst FONT = 'Times New Roman';\n\nconst output = {\n  sections: []\n};\n\nconst section = {\n  paragraphs: []\n};\n\n// =====================================================\n// STATE\n// =====================================================\n\nlet lastHeading = '';\nlet lastWasContent = false;\n\n// =====================================================\n// CLEANING FUNCTIONS\n// =====================================================\n\nfunction cleanText(value) {\n  return String(value || '')\n    .replace(/\\r/g, '')\n    .replace(/\\u00a0/g, ' ')\n    // Remove anything inside parentheses\n    .replace(/\\s*\\([^)]*\\)/g, ' ')\n    // Normalize spaces\n    .replace(/[ \\t]+/g, ' ')\n    .trim();\n}\n\nfunction cleanLine(value) {\n  return cleanText(value)\n    .replace(/^[-–—]\\s*/, '')\n    .trim();\n}\n\n// =====================================================\n// REFER TO DETECTION\n// =====================================================\n\nfunction isReferToLine(line) {\n  const value = String(line || '')\n    .trim()\n    .replace(/^[•●▪◦]\\s*/, '')\n    .replace(/^[-–—]\\s*/, '')\n    .trim();\n\n  return /^refer\\s+to\\b/i.test(value);\n}\n\n// =====================================================\n// READ MORE DETECTION & SPLITTING\n// =====================================================\n\nfunction containsReadMore(text) {\n  return /read[\\s\\u00a0]+more(?:[\\s\\u00a0]*[›>»])?/i.test(String(text || ''));\n}\n\nfunction splitReadMore(text) {\n  return String(text || '')\n    .split(/read[\\s\\u00a0]+more(?:[\\s\\u00a0]*[›>»])?/gi)\n    .map(part => cleanText(part))\n    .filter(Boolean);\n}\n\n// =====================================================\n// PARAGRAPH HELPER\n// =====================================================\n\nfunction addParagraph(text, options = {}) {\n  const value = cleanText(text);\n\n  if (!value) {\n    return;\n  }\n\n  section.paragraphs.push({\n    children: [\n      {\n        text: value,\n        font: FONT,\n        ...options\n      }\n    ]\n  });\n}\n\n// =====================================================\n// MAIN STATIC DOCUMENT HEADING\n// =====================================================\n\nfunction addMainDocumentHeading() {\n  addParagraph('Boomi Platform Release updates', {\n    font: FONT,\n    size: 32,\n    bold: true,\n    alignment: 'center'\n  });\n\n  lastHeading = 'Boomi Platform Release updates';\n  lastWasContent = false;\n\n  addSpacing(12);\n}\n\n// =====================================================\n// DOCUMENT ELEMENTS\n// =====================================================\n\nfunction addProductHeading(text) {\n  const value = cleanText(text);\n  if (!value || lastHeading === value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 32,\n    bold: true,\n    alignment: 'left'\n  });\n\n  lastHeading = value;\n  lastWasContent = false;\n}\n\nfunction addSectionHeading(text) {\n  const value = cleanText(text);\n  if (!value || lastHeading === value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 24,\n    bold: true,\n    alignment: 'left'\n  });\n\n  lastHeading = value;\n  lastWasContent = false;\n}\n\nfunction addSubHeading(text) {\n  const value = cleanText(text);\n  if (!value || lastHeading === value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 28,\n    bold: true,\n    alignment: 'left'\n  });\n\n  lastHeading = value;\n  lastWasContent = false;\n}\n\nfunction addBody(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 22,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = true;\n}\n\nfunction addBullet(text) {\n  let value = cleanText(text);\n  if (!value) return;\n\n  // Remove existing bullet symbol\n  value = value.replace(/^[•●▪◦]\\s*/, '').trim();\n  if (!value) return;\n\n  addParagraph(`• ${value}`, {\n    font: FONT,\n    size: 22,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = true;\n}\n\nfunction addNote(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 22,\n    italic: true,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = false;\n}\n\nfunction addUpdated(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 18,\n    italic: true,\n    alignment: 'Justify'\n  });\n\n  lastWasContent = false;\n}\n\nfunction addReleaseDate(text) {\n  const value = cleanText(text);\n  if (!value) return;\n\n  addParagraph(value, {\n    font: FONT,\n    size: 22,\n    // bold: true,\n    alignment: 'left'\n  });\n\n  lastWasContent = false;\n}\n\nfunction addSpacing(size = 10) {\n  if (section.paragraphs.length === 0) return;\n\n  section.paragraphs.push({\n    children: [\n      {\n        text: '',\n        font: FONT,\n        size\n      }\n    ]\n  });\n\n  lastWasContent = false;\n}\n\n// =====================================================\n// CHECK FUNCTIONS\n// =====================================================\n\nfunction isBullet(line) {\n  const value = String(line || '').trim();\n  return (\n    value.startsWith('•') ||\n    value.startsWith('●') ||\n    value.startsWith('▪') ||\n    value.startsWith('◦')\n  );\n}\n\nfunction isEmptyBullet(line) {\n  const value = String(line || '').trim();\n  return (\n    value === '•' ||\n    value === '●' ||\n    value === '▪' ||\n    value === '◦'\n  );\n}\n\nfunction isNoUpdates(line) {\n  const value = cleanText(line).toLowerCase();\n  return (\n    value === 'no updates' ||\n    value === 'no update' ||\n    value === 'no changes' ||\n    value === 'none'\n  );\n}\n\nfunction isSectionHeading(line) {\n  const value = cleanText(line).toLowerCase();\n  const headings = new Set([\n    'new feature',\n    'new features',\n    'enhancement',\n    'enhancements',\n    'fix',\n    'fixes',\n    'known issue',\n    'known issues',\n    'observability enhancements',\n    'java and docker updates',\n    'other updates',\n    'enhancement and fixes',\n    'enhancements and fixes'\n  ]);\n\n  return headings.has(value);\n}\n\nfunction isPlatformRelease(line) {\n  return /^platform release$/i.test(cleanText(line));\n}\n\nfunction isReleaseDate(line) {\n  return /^([A-Z][a-z]+)\\s+\\d{1,2}\\s+\\d{4}$/i.test(cleanText(line));\n}\n\nfunction isUpdated(line) {\n  return /^updated\\s+/i.test(cleanText(line));\n}\n\nfunction isGlobalTitle(line) {\n  const value = cleanText(line);\n  return (\n    /^boomi enterprise platform$/i.test(value) ||\n    /^(january|february|march|april|may|june|july|august|september|october|november|december)\\s+\\d{4}$/i.test(value) ||\n    /^boomi enterprise platform\\s+.+\\s+release notes?/i.test(value)\n  );\n}\n\nfunction isProductHeading(lines, index) {\n  const line = cleanText(lines[index]);\n  if (!line) return false;\n  if (/release notes?\\s+for/i.test(line)) return true;\n\n  if (\n    isGlobalTitle(line) ||\n    isSectionHeading(line) ||\n    isPlatformRelease(line) ||\n    isReleaseDate(line) ||\n    isUpdated(line) ||\n    isNoUpdates(line) ||\n    isReferToLine(line)\n  ) {\n    return false;\n  }\n\n  if (line.length > 100) return false;\n\n  for (let i = index + 1; i < Math.min(index + 5, lines.length); i++) {\n    const next = cleanText(lines[i]);\n    if (!next) continue;\n    if (isSectionHeading(next) || isPlatformRelease(next) || isReleaseDate(next)) {\n      return true;\n    }\n    break;\n  }\n\n  return false;\n}\n\nfunction isSubHeading(lines, index) {\n  const line = cleanText(lines[index]);\n  if (!line) return false;\n\n  if (\n    isGlobalTitle(line) ||\n    isSectionHeading(line) ||\n    isPlatformRelease(line) ||\n    isReleaseDate(line) ||\n    isUpdated(line) ||\n    isNoUpdates(line) ||\n    isReferToLine(line)\n  ) {\n    return false;\n  }\n\n  if (/release notes?\\s+for/i.test(line)) return false;\n  if (line.length > 100) return false;\n\n  for (let i = index + 1; i < Math.min(index + 4, lines.length); i++) {\n    const next = cleanText(lines[i]);\n    if (!next) continue;\n    if (isSectionHeading(next)) return true;\n    break;\n  }\n\n  return false;\n}\n\nfunction extractCategory(text) {\n  const value = cleanText(text);\n  const match = value.match(/^(.+?)\\s+Release Notes?\\s+for\\s+/i);\n  return match ? cleanText(match[1]) : '';\n}\n\nfunction getReleaseTitleCategory(line) {\n  const category = extractCategory(line);\n  return category || cleanText(line);\n}\n\n// =====================================================\n// SUMMARY DOCUMENT\n// =====================================================\n\nfunction processSummaryDocument(data) {\n  const releaseNotes = String(data.releaseNotes || '')\n    .replace(/\\r/g, '')\n    .trim();\n\n  if (!releaseNotes) return;\n\n  const lines = releaseNotes.split('\\n');\n  let currentBullet = '';\n\n  function flushBullet() {\n    if (!currentBullet) return;\n\n    if (containsReadMore(currentBullet)) {\n      const parts = splitReadMore(currentBullet);\n      for (const part of parts) {\n        addBullet(part);\n      }\n    } else {\n      addBullet(currentBullet);\n    }\n\n    currentBullet = '';\n  }\n\n  for (let i = 0; i < lines.length; i++) {\n    const rawLine = lines[i];\n    const line = cleanLine(rawLine);\n\n    if (!line) continue;\n\n    if (isReferToLine(rawLine)) {\n      flushBullet();\n      continue;\n    }\n\n    if (isGlobalTitle(line)) continue;\n\n    if (isUpdated(line)) {\n      flushBullet();\n      addUpdated(line);\n      continue;\n    }\n\n    if (isPlatformRelease(line) || isReleaseDate(line)) {\n  flushBullet();\n\n  if (isReleaseDate(line)) {\n    addReleaseDate(line);\n  }\n\n  continue;\n}\n\n    if (isSectionHeading(line)) {\n      flushBullet();\n      addSectionHeading(line);\n      continue;\n    }\n\n    if (isEmptyBullet(rawLine)) {\n      flushBullet();\n      continue;\n    }\n\n    // Line containing \"Read more ›\" -> flush and output each section as a bullet\n    if (containsReadMore(line)) {\n      flushBullet();\n      const parts = splitReadMore(line);\n      for (const part of parts) {\n        addBullet(part);\n      }\n      continue;\n    }\n\n    if (isBullet(rawLine)) {\n      flushBullet();\n      currentBullet = cleanText(line.replace(/^[•●▪◦]\\s*/, ''));\n      continue;\n    }\n\n    if (currentBullet) {\n      currentBullet += ' ' + line;\n      continue;\n    }\n\n    // Introductory body paragraphs\n    addBody(line);\n  }\n\n  flushBullet();\n}\n\n// =====================================================\n// NORMAL RELEASE NOTE DOCUMENT\n// =====================================================\n\nfunction processNormalDocument(data) {\n  const releaseNotes = String(data.releaseNotes || '')\n    .replace(/\\r/g, '')\n    .trim();\n\n  if (!releaseNotes) return;\n\n  const lines = releaseNotes.split('\\n');\n\n  let currentBullet = '';\n  let currentParagraph = '';\n  let firstParagraphProcessed = false;\n\n  function flushBullet() {\n    if (!currentBullet) return;\n\n    if (containsReadMore(currentBullet)) {\n      const parts = splitReadMore(currentBullet);\n      for (const part of parts) {\n        addBullet(part);\n      }\n    } else {\n      addBullet(currentBullet);\n    }\n\n    currentBullet = '';\n  }\n\n  function flushParagraph() {\n    if (!currentParagraph) return;\n\n    if (containsReadMore(currentParagraph)) {\n      const parts = splitReadMore(currentParagraph);\n      for (const part of parts) {\n        addBullet(part);\n      }\n    } else {\n      if (!firstParagraphProcessed) {\n        addBody(currentParagraph);\n        firstParagraphProcessed = true;\n      } else {\n        addBullet(currentParagraph);\n      }\n    }\n\n    currentParagraph = '';\n  }\n\n  for (let i = 0; i < lines.length; i++) {\n    const rawLine = lines[i];\n    const line = cleanLine(rawLine);\n\n    if (!line) {\n      flushParagraph();\n      continue;\n    }\n\n    if (isReferToLine(rawLine)) {\n      flushBullet();\n      flushParagraph();\n      continue;\n    }\n\n    if (isGlobalTitle(line)) continue;\n\n    if (/release notes?\\s+for/i.test(line)) {\n      flushBullet();\n      flushParagraph();\n      const category = getReleaseTitleCategory(line);\n      addProductHeading(category);\n      continue;\n    }\n\n    if (isUpdated(line)) {\n      flushBullet();\n      flushParagraph();\n      continue;\n    }\n\nif (isPlatformRelease(line) || isReleaseDate(line)) {\n  flushBullet();\n  flushParagraph();\n\n  if (isReleaseDate(line)) {\n    addReleaseDate(line);\n  }\n\n  continue;\n}\n\n    if (isSectionHeading(line)) {\n      flushBullet();\n      flushParagraph();\n      addSectionHeading(line);\n      continue;\n    }\n\n    if (isNoUpdates(line)) {\n      flushBullet();\n      flushParagraph();\n      addBullet(line);\n      continue;\n    }\n\n    if (isEmptyBullet(rawLine)) {\n      flushBullet();\n      flushParagraph();\n      continue;\n    }\n\n    if (isBullet(rawLine)) {\n      flushParagraph();\n      flushBullet();\n      currentBullet = cleanText(line.replace(/^[•●▪◦]\\s*/, ''));\n      continue;\n    }\n\n    if (isSubHeading(lines, i)) {\n      flushBullet();\n      flushParagraph();\n      addSubHeading(line);\n      continue;\n    }\n\n    if (isProductHeading(lines, i)) {\n      flushBullet();\n      flushParagraph();\n      addProductHeading(line);\n      continue;\n    }\n\n    if (currentBullet) {\n      currentBullet += ' ' + line;\n      continue;\n    }\n\n    if (currentParagraph) {\n      currentParagraph += ' ' + line;\n    } else {\n      currentParagraph = line;\n    }\n  }\n\n  flushParagraph();\n  flushBullet();\n}\n\n// =====================================================\n// BUILD DOCUMENT\n// =====================================================\n\naddMainDocumentHeading();\n\nfor (const item of input) {\n  const data = item.json;\n\n  const releaseNotes = String(data.releaseNotes || '')\n    .replace(/\\r/g, '')\n    .trim();\n\n  if (!releaseNotes) continue;\n\n  const firstLine = releaseNotes\n    .split('\\n')\n    .map(line => cleanLine(line))\n    .find(Boolean) || '';\n\n  const isSummary =\n    /Boomi Enterprise Platform\\s+September\\s+2026\\s+Release\\s+Notes/i.test(firstLine);\n\n  if (isSummary) {\n    processSummaryDocument(data);\n  } else {\n    processNormalDocument(data);\n  }\n\n  addSpacing(10);\n}\n\n// Remove trailing spacing\nwhile (\n  section.paragraphs.length > 0 &&\n  section.paragraphs[section.paragraphs.length - 1].children?.[0]?.text === ''\n) {\n  section.paragraphs.pop();\n}\n\n// =====================================================\n// FINAL OUTPUT\n// =====================================================\n\noutput.sections.push(section);\n\nreturn [\n  {\n    json: output\n  }\n];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1440,
+          16
+        ],
+        "id": "c5fcdd0e-8545-4676-b1d2-dee9b178937d",
+        "name": "Code in JavaScript2",
+        "retryOnFail": false
+      },
+      {
+        "parameters": {
+          "sendTo": "cbala.ramakrishna@techygeekhub.com",
+          "subject": "Error Occured While Executing the N8N Flow",
+          "message": "=Error Message: {{ $json.execution.error.message }}  \nFailed Node: {{ $json.execution.lastNodeExecuted }}  \nExecution URL: {{ $json.execution.url }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2416,
+          416
+        ],
+        "id": "31af6c19-9f3d-4eff-a6c6-a9b5150af4d3",
+        "name": "Send a message",
+        "webhookId": "55ae3051-afef-464c-99ee-d332f94b600d",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "cb64fm81qdwwKgxM",
+            "name": "Bala Ram Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "formatDate",
+          "date": "={{ $now }}",
+          "format": "custom",
+          "customFormat": "MMM_yyyy",
+          "options": {
+            "includeInputFields": true
+          }
+        },
+        "type": "n8n-nodes-base.dateTime",
+        "typeVersion": 2,
+        "position": [
+          96,
+          864
+        ],
+        "id": "7b94c6b3-2bfb-4f25-b2fc-4d40b58ef54f",
+        "name": "Date & Time"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "months",
+                "triggerAtDayOfMonth": 11,
+                "triggerAtHour": 12
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          -576,
+          960
+        ],
+        "id": "5d097562-8126-422f-879b-1df1dfaf8f56",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "sendTo": "cbala.ramakrishna@techygeekhub.com",
+          "subject": "=Boomi Release Documnet - {{ $('Date & Time').item.json.formattedDate }}",
+          "message": "=Please Find the Attachement of Boomi Release Document - {{ $('Date & Time').item.json.formattedDate }}",
+          "options": {
+            "attachmentsUi": {
+              "attachmentsBinary": [
+                {}
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          1904,
+          16
+        ],
+        "id": "d4af34a3-ab9a-4513-b6a5-4a62e6080993",
+        "name": "Send a message1",
+        "webhookId": "e2fe93e5-b6ed-4773-bb81-2a5ecb10553a",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "cb64fm81qdwwKgxM",
+            "name": "Bala Ram Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "2b052c4d-7623-4cd5-a1a6-fb1f465dc577",
+                "name": "releasenotes",
+                "value": "={{ $json.link.split(\"/\")[4] }} \n\nNo Updates Available ",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1664,
+          576
+        ],
+        "id": "600e8d7a-e784-42da-bb40-cd9e49bdf377",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "9f708819-0508-4a06-a699-58cb96cfdb1a",
+                "leftValue": "={{ $json.error }}",
+                "rightValue": "No HTML received",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1440,
+          352
+        ],
+        "id": "74ea1e83-bace-4366-8020-1e0a93e4daf0",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1664,
+          960
+        ],
+        "id": "c9d8315c-2e55-45d7-9f16-d5f4b5fa7e83",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1888,
+          912
+        ],
+        "id": "c91b6c15-51b5-416f-9411-47c1002de4e5",
+        "name": "Merge"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "HTML",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          []
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML": {
+        "main": [
+          [
+            {
+              "node": "Date & Time",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [],
+          []
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request5",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request4",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request6",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request3": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request5": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request6": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Aggregate": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "Split Out1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "DOCX OOXML": {
+        "main": [
+          [
+            {
+              "node": "Send a message1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript2": {
+        "main": [
+          [
+            {
+              "node": "DOCX OOXML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Date & Time": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send a message": {
+        "main": [
+          []
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 005e2da7",
+    "description": "",
+    "autosaved": false,
+    "createdAt": "2026-10-23T14:46:26.627Z",
+    "updatedAt": "2026-10-23T14:47:51.000Z"
+  }
+}
