@@ -1,0 +1,718 @@
+{
+  "id": "ahwAUj8iiJXv2egu",
+  "name": "SWF_Fetch_Order-Details",
+  "active": true,
+  "activeVersionId": "2b62a860-1c27-4396-a294-ff157d163a97",
+  "createdAt": "2026-10-30T17:35:00.257Z",
+  "updatedAt": "2026-10-31T09:46:54.210Z",
+  "isArchived": false,
+  "versionId": "2b62a860-1c27-4396-a294-ff157d163a97",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_id",
+              "type": "any"
+            },
+            {
+              "name": "status"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -176,
+        -48
+      ],
+      "id": "295b843d-bfa2-438d-a334-edc3460764f3",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        272,
+        48
+      ],
+      "id": "229dbadf-f001-46f0-9ec6-cadc46eaf878",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "nBIZhBJ0GFaP90bZ",
+          "name": "Databricks account -Prashanth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "order_id, customer_id, item, size, amount, status",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        48
+      ],
+      "id": "dc522198-a1d7-4ad2-9c32-4ec7283049e7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "ab0caadd-a80f-4cb1-820c-0baec7e32eaa",
+                    "leftValue": "={{ $json.order_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "empty",
+                      "singleValue": true
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Empty"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "4b2a54d3-1795-4add-94a5-3073936e52ef",
+                    "leftValue": "={{ $input.all().length }}",
+                    "rightValue": "1",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Only One"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $input.all().length }}",
+                    "rightValue": 1,
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "id": "41d718cf-2097-4806-9954-f6cdfdaf870b"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Multiple Items"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        496,
+        -64
+      ],
+      "id": "2c33a01e-1694-4005-b20d-283c4fa29051",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "03579541-9c96-42d5-ba0c-927991cf13f5",
+              "name": "Output",
+              "value": "No Orders Available for this Customer ID Can you try with Different ID",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        720,
+        -144
+      ],
+      "id": "949ea57f-a40d-4374-bd10-d4fe033f87af",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "fc656b46-383b-4fe6-9e03-735d2114aebd",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "58d194db-1391-47bb-8a04-e8bb546834fe",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        48,
+        -48
+      ],
+      "id": "00158b7b-e3fa-441e-83f8-8ceaca2d42b1",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}' and o.status = '{{ $json.status.toLowerCase() }}' "
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        272,
+        -144
+      ],
+      "id": "3c7916a7-0d28-43a4-9f55-0bea6c979edd",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "nBIZhBJ0GFaP90bZ",
+          "name": "Databricks account -Prashanth"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_id": "C059"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "ahwAUj8iiJXv2egu",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-30T17:35:00.272Z",
+      "updatedAt": "2026-10-30T17:35:00.272Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "2b62a860-1c27-4396-a294-ff157d163a97",
+    "workflowId": "ahwAUj8iiJXv2egu",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "customer_id",
+                "type": "any"
+              },
+              {
+                "name": "status"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -176,
+          -48
+        ],
+        "id": "295b843d-bfa2-438d-a334-edc3460764f3",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          272,
+          48
+        ],
+        "id": "229dbadf-f001-46f0-9ec6-cadc46eaf878",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "nBIZhBJ0GFaP90bZ",
+            "name": "Databricks account -Prashanth"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": []
+          },
+          "includeOtherFields": true,
+          "include": "selected",
+          "includeFields": "order_id, customer_id, item, size, amount, status",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          720,
+          48
+        ],
+        "id": "dc522198-a1d7-4ad2-9c32-4ec7283049e7",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 4
+                  },
+                  "conditions": [
+                    {
+                      "id": "ab0caadd-a80f-4cb1-820c-0baec7e32eaa",
+                      "leftValue": "={{ $json.order_id }}",
+                      "rightValue": "",
+                      "operator": {
+                        "type": "string",
+                        "operation": "empty",
+                        "singleValue": true
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Empty"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 4
+                  },
+                  "conditions": [
+                    {
+                      "id": "4b2a54d3-1795-4add-94a5-3073936e52ef",
+                      "leftValue": "={{ $input.all().length }}",
+                      "rightValue": "1",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Only One"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "loose",
+                    "version": 4
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $input.all().length }}",
+                      "rightValue": 1,
+                      "operator": {
+                        "type": "number",
+                        "operation": "gt"
+                      },
+                      "id": "41d718cf-2097-4806-9954-f6cdfdaf870b"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Multiple Items"
+              }
+            ]
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.5,
+        "position": [
+          496,
+          -64
+        ],
+        "id": "2c33a01e-1694-4005-b20d-283c4fa29051",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "03579541-9c96-42d5-ba0c-927991cf13f5",
+                "name": "Output",
+                "value": "No Orders Available for this Customer ID Can you try with Different ID",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          720,
+          -144
+        ],
+        "id": "949ea57f-a40d-4374-bd10-d4fe033f87af",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "fc656b46-383b-4fe6-9e03-735d2114aebd",
+                "leftValue": "={{ $json.customer_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "58d194db-1391-47bb-8a04-e8bb546834fe",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          48,
+          -48
+        ],
+        "id": "00158b7b-e3fa-441e-83f8-8ceaca2d42b1",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}' and o.status = '{{ $json.status.toLowerCase() }}' "
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          272,
+          -144
+        ],
+        "id": "3c7916a7-0d28-43a4-9f55-0bea6c979edd",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "nBIZhBJ0GFaP90bZ",
+            "name": "Databricks account -Prashanth"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query1": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 2b62a860",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-30T20:35:10.026Z",
+    "updatedAt": "2026-10-30T20:35:19.000Z"
+  }
+}
