@@ -1,10 +1,13 @@
 {
-  "updatedAt": "2026-08-17T09:30:03.689Z",
-  "createdAt": "2026-08-17T06:10:28.401Z",
   "id": "2QOSPExb5tPTOIzv",
   "name": "PDF-Details Extraction",
   "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-17T06:10:28.401Z",
+  "updatedAt": "2026-08-17T09:30:03.689Z",
   "isArchived": false,
+  "versionId": "9d1c319e-7b7f-4d73-b5aa-2f77f9e0211b",
+  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -279,27 +282,24 @@
       ]
     }
   },
+  "nodeGroups": [],
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
   },
   "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
   "pinData": {},
-  "versionId": "9d1c319e-7b7f-4d73-b5aa-2f77f9e0211b",
-  "activeVersionId": null,
-  "triggerCount": 0,
+  "meta": null,
+  "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-08-17T06:10:28.403Z",
-      "createdAt": "2026-08-17T06:10:28.403Z",
       "role": "workflow:owner",
       "workflowId": "2QOSPExb5tPTOIzv",
-      "projectId": "2qHCdIvoXHur7xyh"
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-17T06:10:28.403Z",
+      "updatedAt": "2026-08-17T06:10:28.403Z"
     }
   ],
-  "activeVersion": null,
-  "tags": []
+  "activeVersion": null
 }
