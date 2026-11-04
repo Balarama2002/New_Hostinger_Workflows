@@ -1,0 +1,1158 @@
+{
+  "id": "HP9Vd37SCIG4CGW9",
+  "name": "SWF_cancel_order_Vyshnavi",
+  "active": true,
+  "activeVersionId": "1902e5af-2e68-495d-970e-6885e989eaf4",
+  "createdAt": "2026-10-26T12:45:21.186Z",
+  "updatedAt": "2026-11-03T17:37:41.598Z",
+  "isArchived": false,
+  "versionId": "f992ee27-6517-4f40-874d-0a9aa22330a3",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT o.order_id, o.customer_id, o.country, o.currency, o.amount, o.shipping_fee, o.payment_method,\n       o.status AS order_status, o.refunded,\n       s.status AS ship_status, s.estimated_delivery, s.delivered_date, s.claim_status,\n       datediff(c.asof, CAST(s.delivered_date AS DATE)) AS days_since_delivery,\n       CASE WHEN s.status = 'delivered' THEN 0 ELSE GREATEST(0, datediff(c.asof, s.estimated_delivery)) END AS days_late,\n       p.return_window_days, p.delay_threshold_days, p.auto_limit, p.approval_limit,\n       p.max_auto_actions_30d, p.refund_method, p.version AS policy_version,\n       (SELECT COUNT(*) FROM workspace.agentic_support.returns r WHERE r.order_id = o.order_id) +\n       (SELECT COUNT(*) FROM workspace.agentic_support.refunds f WHERE f.order_id = o.order_id) AS prior_actions,\n       (SELECT COUNT(*) FROM workspace.agentic_support.audit_log a WHERE a.customer_id = o.customer_id AND a.route = 'auto'\n          AND a.decision = 'Executed' AND a.event_time >= date_sub(c.asof, 30)) AS auto_actions_30d,\n       (SELECT CAST(config_value AS INT) FROM workspace.agentic_support.config WHERE config_key = 'risk_score_escalate') AS risk_score_escalate,\n       (SELECT CAST(config_value AS INT) FROM workspace.agentic_support.config WHERE config_key = 'serial_refund_threshold') AS serial_refund_threshold,\n       (SELECT CAST(config_value AS INT) FROM workspace.agentic_support.config WHERE config_key = 'damage_report_days') AS damage_report_days\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s ON s.order_id = o.order_id\nJOIN workspace.agentic_support.policies p ON p.country = o.country\nCROSS JOIN (SELECT CAST(config_value AS DATE) AS asof FROM workspace.agentic_support.config WHERE config_key = 'as_of_date') c\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        464,
+        80
+      ],
+      "id": "ddbb7581-4122-4e6a-9a9e-1930cc99e564",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_id"
+            },
+            {
+              "name": "order_id"
+            },
+            {
+              "name": "reason_code"
+            },
+            {
+              "name": "reason_text"
+            },
+            {
+              "name": "risk_score",
+              "type": "number"
+            },
+            {
+              "name": "refunds_last_90d",
+              "type": "number"
+            },
+            {
+              "name": "tier"
+            },
+            {
+              "name": "confirmed",
+              "type": "boolean"
+            },
+            {
+              "name": "conversation_id"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "be9d35bf-11f5-47da-9621-2033f439e50a",
+      "name": "Trigger"
+    },
+    {
+      "parameters": {
+        "jsCode": "const i = $('Trigger').first().json;\nconst r = $input.first().json;\nconst row = r && r.order_id ? r : null;  \n\nconst risk = Number(i.risk_score || 0);\nconst refunds90 = Number(i.refunds_last_90d || 0);\nconst confirmed = String(i.confirmed) === 'true';\nconst approved = false;                  \n\nlet d = { decision: 'decline', route: 'decline', refund_amount: 0, reasons: '' };\n\nif (!row) {\n  d.reasons = 'Order or customer not found. Please check the order ID and customer ID.';\n} else if (row.refunded === 'yes' || Number(row.prior_actions) > 0) {\n  d.reasons = 'Already refunded or returned';\n} else if (row.order_status === 'cancelled') {\n  d.reasons = 'Order is already cancelled';\n} else if (risk >= Number(row.risk_score_escalate) || refunds90 >= Number(row.serial_refund_threshold)) {\n  d = { decision: 'human', route: 'human', refund_amount: 0, reasons: 'Risk gate: customer needs human review' };\n} else if (!['payment_pending', 'packed'].includes(row.order_status)) {\n  d.reasons = 'Already shipped or delivered; cannot cancel';\n} else {\n  const refund = row.payment_method === 'cod' ? 0 : Number(row.amount) + Number(row.shipping_fee);\n  let route = 'human';\n  const reasons = ['Cancellation'];\n  if (refund <= Number(row.auto_limit)) {\n    if (Number(row.auto_actions_30d) >= Number(row.max_auto_actions_30d)) {\n      route = 'approval';\n      reasons.push('Auto-action limit reached');\n    } else {\n      route = 'auto';\n    }\n  } else if (refund <= Number(row.approval_limit)) {\n    route = 'approval';\n  }\n  d = {\n    decision: route === 'human' ? 'human' : 'eligible',\n    route,\n    refund_amount: refund,\n    reasons: reasons.join('; ')\n  };\n}\n\n\nlet allowed = false, already_done = false, message = 'OK';\nif (!confirmed) {\n  message = 'The customer has not confirmed yet.';\n} else if (d.decision !== 'eligible') {\n  already_done = d.reasons.toLowerCase().includes('already');\n  message = 'Not allowed: ' + d.reasons;\n} else if (d.route === 'auto' || (d.route === 'approval' && approved)) {\n  allowed = true;\n} else {\n  message = 'This needs approval or a person. Escalate instead.';\n}\n\nreturn [{\n  json: {\n    ...d,\n    allowed,\n    already_done,\n    message,\n    currency: row ? row.currency : '',\n    policy_version: row ? row.policy_version : ''\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        272
+      ],
+      "id": "f5800b4b-f513-4449-bf9c-b9e57800d07c",
+      "name": "Decide"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "ee130b6e-f5fc-4256-a8a0-89390e0a0846",
+              "leftValue": "={{ $json.allowed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        880,
+        304
+      ],
+      "id": "cde4f506-beca-4920-a488-1f69f4b849fa",
+      "name": "Check Allowed"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=UPDATE workspace.agentic_support.orders\nSET status = 'cancelled',\n    cancelled_at = current_timestamp(),\n    cancel_reason_code = NULLIF('{{ ($('Trigger').first().json.reason_code || '').replace(/'/g, \"''\") }}', ''),\n    cancel_reason_text = NULLIF('{{ ($('Trigger').first().json.reason_text || '').replace(/'/g, \"''\") }}', ''),\n    cancelled_by = 'agent'\nWHERE order_id = '{{ $('Trigger').first().json.order_id }}'\n  AND customer_id = '{{ $('Trigger').first().json.customer_id }}'\n  AND status IN ('payment_pending', 'packed')"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        192
+      ],
+      "id": "09d3284d-4af7-4c64-90e3-3706e7c7c2fb",
+      "name": "Cancel Order in DB",
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "37ede22f-472d-45f3-ab26-54c1e896eca1",
+              "leftValue": "={{ $('Decide').first().json.refund_amount }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1312,
+        -80
+      ],
+      "id": "e87eb509-6dee-419d-b3e3-9aad9ccf2c9c",
+      "name": "Refund Needed?"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.audit_log\n  (customer_id, order_id, agent, decision, amount, currency, route, approved_by, policy_version, reason)\nVALUES (\n  '{{ $('Trigger').first().json.customer_id }}',\n  NULLIF('{{ $('Trigger').first().json.order_id }}', ''),\n  'WatchMate Genie',\n  'Executed',\n  NULLIF({{ Number($('Decide').first().json.refund_amount) }}, 0),\n  NULLIF('{{ $('Decide').first().json.currency }}', ''),\n  NULLIF('{{ $('Decide').first().json.route }}', ''),\n  NULL,\n  NULLIF('{{ $('Decide').first().json.policy_version }}', ''),\n  NULLIF('{{ $('Decide').first().json.reasons }}', '')\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        64
+      ],
+      "id": "7e2321d8-dfc8-457e-a3dd-06756c3d5a85",
+      "name": "Log to Audit",
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\": true,\n  \"already_done\": false,\n  \"refund_amount\": {{ Number($('Decide').first().json.refund_amount) }},\n  \"currency\": {{ JSON.stringify($('Decide').first().json.currency) }},\n  \"message\": {{ JSON.stringify(\n    Number($('Decide').first().json.refund_amount) > 0\n      ? `Order cancelled. A refund of ${$('Decide').first().json.refund_amount} ${$('Decide').first().json.currency} will be processed.`\n      : 'Order cancelled. No refund is due because this was a cash on delivery order.'\n  ) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1840,
+        64
+      ],
+      "id": "6b875f44-cee4-4eb3-a3a5-b2b7dfb0ff0d",
+      "name": "Return Success"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\": false,\n  \"already_done\": {{ $json.already_done }},\n  \"refund_amount\": 0,\n  \"currency\": {{ JSON.stringify($json.currency || '') }},\n  \"message\": {{ JSON.stringify($json.message) }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1104,
+        576
+      ],
+      "id": "a9a7f876-631e-4754-8bdd-eee6972830ef",
+      "name": "Return Failure"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "SELECT CONCAT('RF', LPAD(CAST(COALESCE(MAX(TRY_CAST(SUBSTRING(refund_id, 3) AS INT)), 0) + 1 AS STRING), 4, '0')) AS next_id\nFROM workspace.agentic_support.refunds\nWHERE refund_id RLIKE '^RF[0-9]{4}$'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1552,
+        -176
+      ],
+      "id": "a9b2d568-25be-4346-9b44-a658aa39b441",
+      "name": "Generate Refund ID",
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.refunds\n  (refund_id, order_id, return_id, refund_type, amount, currency, method, status, route, approved_by, created_at)\nSELECT\n  '{{ $('Generate Refund ID').first().json.next_id }}',\n  o.order_id,\n  NULL,\n  'cancel',\n  {{ Number($('Decide').first().json.refund_amount) }},\n  o.currency,\n  IF(o.payment_method = 'cod', 'bank_upi', 'original_payment'),\n  'completed',\n  '{{ $('Decide').first().json.route }}',\n  NULL,\n  current_date()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '{{ $('Trigger').first().json.order_id }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        -160
+      ],
+      "id": "3489f092-a518-4d22-a74c-fb623dae56b4",
+      "name": "Insert Refund",
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=UPDATE workspace.agentic_support.orders\nSET refunded = 'yes'\nWHERE order_id = '{{ $('Trigger').first().json.order_id }}'\n  AND customer_id = '{{ $('Trigger').first().json.customer_id }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2000,
+        -160
+      ],
+      "id": "d41a0654-8472-42f2-a4ed-9caa9ad3ae8a",
+      "name": "Mark Refunded",
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "11c2200f-f065-43cc-a2dc-8b8ad923cbbe",
+              "leftValue": "={{ $json.confirmed }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "7ca3c725-517f-458a-851e-35b1c3776d56",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT o.order_id, o.customer_id, o.country, o.currency, o.amount,\n       o.shipping_fee, o.payment_method, o.status AS order_status,\n       o.refunded\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s ON s.order_id = o.order_id\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "e51450b5-4b66-49a9-ba4c-c794e7a51e6a",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "jWRdqVaWvJdVeuJf",
+          "name": "Databricks account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=={\n  \"success\": {{ !!$json.order_id }},\n  \"found\": {{ !!$json.order_id }},\n  \"order\": {{ JSON.stringify($json.order_id ? $json : null) }},\n  \"message\": {{ JSON.stringify($json.order_id ? 'Order found' : 'Order or customer not found. Please check the order ID and customer ID.') }}\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        912,
+        144
+      ],
+      "id": "fb113784-b75a-4ca4-a5cf-50d164b44923",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Decide",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decide": {
+      "main": [
+        [
+          {
+            "node": "Check Allowed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Allowed": {
+      "main": [
+        [
+          {
+            "node": "Cancel Order in DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Cancel Order in DB": {
+      "main": [
+        [
+          {
+            "node": "Refund Needed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Refund Needed?": {
+      "main": [
+        [
+          {
+            "node": "Generate Refund ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log to Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log to Audit": {
+      "main": [
+        [
+          {
+            "node": "Return Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Refund ID": {
+      "main": [
+        [
+          {
+            "node": "Insert Refund",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Refund": {
+      "main": [
+        [
+          {
+            "node": "Mark Refunded",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Refunded": {
+      "main": [
+        [
+          {
+            "node": "Log to Audit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Failure": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "Trigger": [
+      {
+        "json": {
+          "customer_id": "C005",
+          "order_id": "O1227",
+          "reason_code": "changed_mind",
+          "reason_text": "Customer no longer needs the item",
+          "risk_score": 10,
+          "refunds_last_90d": 0,
+          "tier": "gold",
+          "confirmed": false,
+          "conversation_id": "conv-002"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "HP9Vd37SCIG4CGW9",
+      "projectId": "JsvwmzNWOafa3NcM",
+      "createdAt": "2026-10-26T12:45:21.187Z",
+      "updatedAt": "2026-10-26T12:45:21.187Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "1902e5af-2e68-495d-970e-6885e989eaf4",
+    "workflowId": "HP9Vd37SCIG4CGW9",
+    "nodes": [
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT o.order_id, o.customer_id, o.country, o.currency, o.amount, o.shipping_fee, o.payment_method,\n       o.status AS order_status, o.refunded,\n       s.status AS ship_status, s.estimated_delivery, s.delivered_date, s.claim_status,\n       datediff(c.asof, CAST(s.delivered_date AS DATE)) AS days_since_delivery,\n       CASE WHEN s.status = 'delivered' THEN 0 ELSE GREATEST(0, datediff(c.asof, s.estimated_delivery)) END AS days_late,\n       p.return_window_days, p.delay_threshold_days, p.auto_limit, p.approval_limit,\n       p.max_auto_actions_30d, p.refund_method, p.version AS policy_version,\n       (SELECT COUNT(*) FROM workspace.agentic_support.returns r WHERE r.order_id = o.order_id) +\n       (SELECT COUNT(*) FROM workspace.agentic_support.refunds f WHERE f.order_id = o.order_id) AS prior_actions,\n       (SELECT COUNT(*) FROM workspace.agentic_support.audit_log a WHERE a.customer_id = o.customer_id AND a.route = 'auto'\n          AND a.decision = 'Executed' AND a.event_time >= date_sub(c.asof, 30)) AS auto_actions_30d,\n       (SELECT CAST(config_value AS INT) FROM workspace.agentic_support.config WHERE config_key = 'risk_score_escalate') AS risk_score_escalate,\n       (SELECT CAST(config_value AS INT) FROM workspace.agentic_support.config WHERE config_key = 'serial_refund_threshold') AS serial_refund_threshold,\n       (SELECT CAST(config_value AS INT) FROM workspace.agentic_support.config WHERE config_key = 'damage_report_days') AS damage_report_days\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s ON s.order_id = o.order_id\nJOIN workspace.agentic_support.policies p ON p.country = o.country\nCROSS JOIN (SELECT CAST(config_value AS DATE) AS asof FROM workspace.agentic_support.config WHERE config_key = 'as_of_date') c\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          464,
+          80
+        ],
+        "id": "ddbb7581-4122-4e6a-9a9e-1930cc99e564",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "customer_id"
+              },
+              {
+                "name": "order_id"
+              },
+              {
+                "name": "reason_code"
+              },
+              {
+                "name": "reason_text"
+              },
+              {
+                "name": "risk_score",
+                "type": "number"
+              },
+              {
+                "name": "refunds_last_90d",
+                "type": "number"
+              },
+              {
+                "name": "tier"
+              },
+              {
+                "name": "confirmed",
+                "type": "boolean"
+              },
+              {
+                "name": "conversation_id"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "be9d35bf-11f5-47da-9621-2033f439e50a",
+        "name": "Trigger"
+      },
+      {
+        "parameters": {
+          "jsCode": "const i = $('Trigger').first().json;\nconst r = $input.first().json;\nconst row = r && r.order_id ? r : null;  \n\nconst risk = Number(i.risk_score || 0);\nconst refunds90 = Number(i.refunds_last_90d || 0);\nconst confirmed = String(i.confirmed) === 'true';\nconst approved = false;                  \n\nlet d = { decision: 'decline', route: 'decline', refund_amount: 0, reasons: '' };\n\nif (!row) {\n  d.reasons = 'Order or customer not found. Please check the order ID and customer ID.';\n} else if (row.refunded === 'yes' || Number(row.prior_actions) > 0) {\n  d.reasons = 'Already refunded or returned';\n} else if (row.order_status === 'cancelled') {\n  d.reasons = 'Order is already cancelled';\n} else if (risk >= Number(row.risk_score_escalate) || refunds90 >= Number(row.serial_refund_threshold)) {\n  d = { decision: 'human', route: 'human', refund_amount: 0, reasons: 'Risk gate: customer needs human review' };\n} else if (!['payment_pending', 'packed'].includes(row.order_status)) {\n  d.reasons = 'Already shipped or delivered; cannot cancel';\n} else {\n  const refund = row.payment_method === 'cod' ? 0 : Number(row.amount) + Number(row.shipping_fee);\n  let route = 'human';\n  const reasons = ['Cancellation'];\n  if (refund <= Number(row.auto_limit)) {\n    if (Number(row.auto_actions_30d) >= Number(row.max_auto_actions_30d)) {\n      route = 'approval';\n      reasons.push('Auto-action limit reached');\n    } else {\n      route = 'auto';\n    }\n  } else if (refund <= Number(row.approval_limit)) {\n    route = 'approval';\n  }\n  d = {\n    decision: route === 'human' ? 'human' : 'eligible',\n    route,\n    refund_amount: refund,\n    reasons: reasons.join('; ')\n  };\n}\n\n\nlet allowed = false, already_done = false, message = 'OK';\nif (!confirmed) {\n  message = 'The customer has not confirmed yet.';\n} else if (d.decision !== 'eligible') {\n  already_done = d.reasons.toLowerCase().includes('already');\n  message = 'Not allowed: ' + d.reasons;\n} else if (d.route === 'auto' || (d.route === 'approval' && approved)) {\n  allowed = true;\n} else {\n  message = 'This needs approval or a person. Escalate instead.';\n}\n\nreturn [{\n  json: {\n    ...d,\n    allowed,\n    already_done,\n    message,\n    currency: row ? row.currency : '',\n    policy_version: row ? row.policy_version : ''\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          704,
+          272
+        ],
+        "id": "f5800b4b-f513-4449-bf9c-b9e57800d07c",
+        "name": "Decide"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "ee130b6e-f5fc-4256-a8a0-89390e0a0846",
+                "leftValue": "={{ $json.allowed }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          880,
+          304
+        ],
+        "id": "cde4f506-beca-4920-a488-1f69f4b849fa",
+        "name": "Check Allowed"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=UPDATE workspace.agentic_support.orders\nSET status = 'cancelled',\n    cancelled_at = current_timestamp(),\n    cancel_reason_code = NULLIF('{{ ($('Trigger').first().json.reason_code || '').replace(/'/g, \"''\") }}', ''),\n    cancel_reason_text = NULLIF('{{ ($('Trigger').first().json.reason_text || '').replace(/'/g, \"''\") }}', ''),\n    cancelled_by = 'agent'\nWHERE order_id = '{{ $('Trigger').first().json.order_id }}'\n  AND customer_id = '{{ $('Trigger').first().json.customer_id }}'\n  AND status IN ('payment_pending', 'packed')"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1136,
+          192
+        ],
+        "id": "09d3284d-4af7-4c64-90e3-3706e7c7c2fb",
+        "name": "Cancel Order in DB",
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "37ede22f-472d-45f3-ab26-54c1e896eca1",
+                "leftValue": "={{ $('Decide').first().json.refund_amount }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1312,
+          -80
+        ],
+        "id": "e87eb509-6dee-419d-b3e3-9aad9ccf2c9c",
+        "name": "Refund Needed?"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.audit_log\n  (customer_id, order_id, agent, decision, amount, currency, route, approved_by, policy_version, reason)\nVALUES (\n  '{{ $('Trigger').first().json.customer_id }}',\n  NULLIF('{{ $('Trigger').first().json.order_id }}', ''),\n  'WatchMate Genie',\n  'Executed',\n  NULLIF({{ Number($('Decide').first().json.refund_amount) }}, 0),\n  NULLIF('{{ $('Decide').first().json.currency }}', ''),\n  NULLIF('{{ $('Decide').first().json.route }}', ''),\n  NULL,\n  NULLIF('{{ $('Decide').first().json.policy_version }}', ''),\n  NULLIF('{{ $('Decide').first().json.reasons }}', '')\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1568,
+          64
+        ],
+        "id": "7e2321d8-dfc8-457e-a3dd-06756c3d5a85",
+        "name": "Log to Audit",
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"success\": true,\n  \"already_done\": false,\n  \"refund_amount\": {{ Number($('Decide').first().json.refund_amount) }},\n  \"currency\": {{ JSON.stringify($('Decide').first().json.currency) }},\n  \"message\": {{ JSON.stringify(\n    Number($('Decide').first().json.refund_amount) > 0\n      ? `Order cancelled. A refund of ${$('Decide').first().json.refund_amount} ${$('Decide').first().json.currency} will be processed.`\n      : 'Order cancelled. No refund is due because this was a cash on delivery order.'\n  ) }}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1840,
+          64
+        ],
+        "id": "6b875f44-cee4-4eb3-a3a5-b2b7dfb0ff0d",
+        "name": "Return Success"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"success\": false,\n  \"already_done\": {{ $json.already_done }},\n  \"refund_amount\": 0,\n  \"currency\": {{ JSON.stringify($json.currency || '') }},\n  \"message\": {{ JSON.stringify($json.message) }}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1104,
+          576
+        ],
+        "id": "a9a7f876-631e-4754-8bdd-eee6972830ef",
+        "name": "Return Failure"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "SELECT CONCAT('RF', LPAD(CAST(COALESCE(MAX(TRY_CAST(SUBSTRING(refund_id, 3) AS INT)), 0) + 1 AS STRING), 4, '0')) AS next_id\nFROM workspace.agentic_support.refunds\nWHERE refund_id RLIKE '^RF[0-9]{4}$'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1552,
+          -176
+        ],
+        "id": "a9b2d568-25be-4346-9b44-a658aa39b441",
+        "name": "Generate Refund ID",
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.refunds\n  (refund_id, order_id, return_id, refund_type, amount, currency, method, status, route, approved_by, created_at)\nSELECT\n  '{{ $('Generate Refund ID').first().json.next_id }}',\n  o.order_id,\n  NULL,\n  'cancel',\n  {{ Number($('Decide').first().json.refund_amount) }},\n  o.currency,\n  IF(o.payment_method = 'cod', 'bank_upi', 'original_payment'),\n  'completed',\n  '{{ $('Decide').first().json.route }}',\n  NULL,\n  current_date()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '{{ $('Trigger').first().json.order_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1776,
+          -160
+        ],
+        "id": "3489f092-a518-4d22-a74c-fb623dae56b4",
+        "name": "Insert Refund",
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=UPDATE workspace.agentic_support.orders\nSET refunded = 'yes'\nWHERE order_id = '{{ $('Trigger').first().json.order_id }}'\n  AND customer_id = '{{ $('Trigger').first().json.customer_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2000,
+          -160
+        ],
+        "id": "d41a0654-8472-42f2-a4ed-9caa9ad3ae8a",
+        "name": "Mark Refunded",
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "11c2200f-f065-43cc-a2dc-8b8ad923cbbe",
+                "leftValue": "={{ $json.confirmed }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          224,
+          0
+        ],
+        "id": "7ca3c725-517f-458a-851e-35b1c3776d56",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT o.order_id, o.customer_id, o.country, o.currency, o.amount,\n       o.shipping_fee, o.payment_method, o.status AS order_status,\n       o.refunded\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s ON s.order_id = o.order_id\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          448,
+          -96
+        ],
+        "id": "e51450b5-4b66-49a9-ba4c-c794e7a51e6a",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "jWRdqVaWvJdVeuJf",
+            "name": "Databricks account 4"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "=={\n  \"success\": {{ !!$json.order_id }},\n  \"found\": {{ !!$json.order_id }},\n  \"order\": {{ JSON.stringify($json.order_id ? $json : null) }},\n  \"message\": {{ JSON.stringify($json.order_id ? 'Order found' : 'Order or customer not found. Please check the order ID and customer ID.') }}\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          912,
+          144
+        ],
+        "id": "fb113784-b75a-4ca4-a5cf-50d164b44923",
+        "name": "Edit Fields"
+      }
+    ],
+    "connections": {
+      "Trigger": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Decide",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Decide": {
+        "main": [
+          [
+            {
+              "node": "Check Allowed",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Allowed": {
+        "main": [
+          [
+            {
+              "node": "Cancel Order in DB",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Cancel Order in DB": {
+        "main": [
+          [
+            {
+              "node": "Refund Needed?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Refund Needed?": {
+        "main": [
+          [
+            {
+              "node": "Generate Refund ID",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Log to Audit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Log to Audit": {
+        "main": [
+          [
+            {
+              "node": "Return Success",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Refund ID": {
+        "main": [
+          [
+            {
+              "node": "Insert Refund",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Insert Refund": {
+        "main": [
+          [
+            {
+              "node": "Mark Refunded",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mark Refunded": {
+        "main": [
+          [
+            {
+              "node": "Log to Audit",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Return Failure": {
+        "main": [
+          []
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Vyshnavi Mule",
+    "name": "v10",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-03T17:17:48.885Z",
+    "updatedAt": "2026-11-03T17:18:01.000Z"
+  }
+}
