@@ -1,0 +1,329 @@
+{
+  "id": "AxvnWx7hkAvS2VT2",
+  "name": "MWF_First_LLM",
+  "active": true,
+  "activeVersionId": "ad0213ed-d7f2-4c36-8550-16828d5e7519",
+  "createdAt": "2026-10-24T05:51:55.421Z",
+  "updatedAt": "2026-10-24T09:07:08.190Z",
+  "isArchived": false,
+  "versionId": "614a244a-c74b-4e73-a035-98d75e5b4e09",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowFileUploads": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "f26463fb-605d-4e3e-b968-ccc9dd0b15be",
+      "name": "When chat message received",
+      "webhookId": "72f5e0fa-8a1b-41b6-bd0e-c0a787c41078"
+    },
+    {
+      "parameters": {
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "1cc470ca-4808-4d46-8056-4d0c7e7164ad",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        96,
+        208
+      ],
+      "id": "cab12058-8f94-455f-8e18-52e99e87502d",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GPn2XaCPMrZqFdme",
+          "name": "N8NWSCharan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        176,
+        304
+      ],
+      "id": "2741cebe-9d8a-4a2c-9cbb-81f9b6b13e55",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GPn2XaCPMrZqFdme",
+          "name": "N8NWSCharan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Northwind Solar Inc. Employee Benefits and Policy Handbook, 2026 Edition. A fictional 5-page employee handbook for a solar software company. It covers working hours and remote work, leave entitlements, health and insurance benefits, expense limits, information security, performance reviews, learning budgets, the product release process, offboarding, and a glossary of terms. Contains tables for leave, expenses, and glossary definitions. Effective 1 January 2026, version 3.2.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-hr-rag-v2",
+          "mode": "list",
+          "cachedResultName": "n8n-hr-rag-v2"
+        },
+        "topK": 1,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        592,
+        16
+      ],
+      "id": "9f1ffe21-8348-4ff6-bf30-9d22acae9ca5",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "05D6y5sQcJykgIio",
+          "name": "Pinecone-charan"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        688,
+        224
+      ],
+      "id": "2121355f-a0be-4604-a3b8-72fe96c6f2b0",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GPn2XaCPMrZqFdme",
+          "name": "N8NWSCharan"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "AxvnWx7hkAvS2VT2",
+      "projectId": "1ocY0ktVpZfOfhAg",
+      "createdAt": "2026-10-24T05:51:55.423Z",
+      "updatedAt": "2026-10-24T05:51:55.423Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "ad0213ed-d7f2-4c36-8550-16828d5e7519",
+    "workflowId": "AxvnWx7hkAvS2VT2",
+    "nodes": [
+      {
+        "parameters": {
+          "public": true,
+          "options": {
+            "allowFileUploads": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "typeVersion": 1.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "f26463fb-605d-4e3e-b968-ccc9dd0b15be",
+        "name": "When chat message received",
+        "webhookId": "72f5e0fa-8a1b-41b6-bd0e-c0a787c41078"
+      },
+      {
+        "parameters": {
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "You are a helpful assistant"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "1cc470ca-4808-4d46-8056-4d0c7e7164ad",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.1-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          96,
+          208
+        ],
+        "id": "cab12058-8f94-455f-8e18-52e99e87502d",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GPn2XaCPMrZqFdme",
+            "name": "N8NWSCharan"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.5-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          176,
+          304
+        ],
+        "id": "2741cebe-9d8a-4a2c-9cbb-81f9b6b13e55",
+        "name": "Google Gemini Chat Model1",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "GPn2XaCPMrZqFdme",
+            "name": "N8NWSCharan"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "charan v",
+    "name": "V1.0",
+    "description": "First version LLM configured",
+    "autosaved": true,
+    "createdAt": "2026-10-24T06:11:05.520Z",
+    "updatedAt": "2026-10-24T06:16:41.000Z"
+  }
+}
