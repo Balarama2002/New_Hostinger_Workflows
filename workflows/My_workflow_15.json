@@ -1,12 +1,12 @@
 {
-  "id": "HfyFa9i5TznUHb87",
+  "id": "ZthkO3T7c6ZsVmP3",
   "name": "My workflow 15",
   "active": false,
   "activeVersionId": null,
-  "createdAt": "2026-10-31T06:36:30.891Z",
-  "updatedAt": "2026-10-31T08:06:29.829Z",
+  "createdAt": "2026-10-31T06:36:27.595Z",
+  "updatedAt": "2026-10-31T07:26:18.954Z",
   "isArchived": false,
-  "versionId": "53b5aebd-7a86-4c14-930c-74a761297832",
+  "versionId": "90641423-b2ea-4269-98ef-5777c1088135",
   "triggerCount": 0,
   "nodes": [
     {
@@ -15,9 +15,9 @@
       "typeVersion": 1,
       "position": [
         0,
-        0
+        1.5
       ],
-      "id": "56648b7d-1350-496e-8e12-d1919449ea7a",
+      "id": "bc1d15e0-ba40-4012-b532-030923d5c0c7",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -25,10 +25,8 @@
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "1J9_mtZMJnfD4ExPgPpi7EDxaSmVMzH3o",
-          "mode": "list",
-          "cachedResultName": "Insides Sales Representative (1) (1).pdf",
-          "cachedResultUrl": "https://drive.google.com/file/d/1J9_mtZMJnfD4ExPgPpi7EDxaSmVMzH3o/view?usp=drivesdk"
+          "mode": "id",
+          "value": "1CGaI2hmHZe3315B_wAgmE5JaIqRvhyOc"
         },
         "options": {}
       },
@@ -36,14 +34,14 @@
       "typeVersion": 3,
       "position": [
         224,
-        0
+        16
       ],
-      "id": "199110f2-fab9-4e6c-a3b0-eb40a9598bec",
+      "id": "2743985c-db7d-4b3b-b0c8-c1778a79291f",
       "name": "Download file",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "73TbThLFuDu565QK",
-          "name": "n8n-google-drive-surya"
+          "id": "DYhsSchTA1afdzus",
+          "name": "Bala Ram Google Drive account"
         }
       }
     },
@@ -56,9 +54,9 @@
       "typeVersion": 1.2,
       "position": [
         448,
-        0
+        16
       ],
-      "id": "b8e0e670-5220-488d-8d33-3f40b589e445",
+      "id": "b6806793-6f1e-4a44-82c4-c256ea2b1b2f",
       "name": "Extract from File"
     },
     {
@@ -66,27 +64,26 @@
         "mode": "insert",
         "pineconeIndex": {
           "__rl": true,
-          "value": "n8n-workshop-rag",
+          "value": "n8n-hr-rag-v2",
           "mode": "list",
-          "cachedResultName": "n8n-workshop-rag",
-          "cachedResultUrl": ""
+          "cachedResultName": "n8n-hr-rag-v2"
         },
         "options": {
-          "pineconeNamespace": "n8n-initial"
+          "pineconeNamespace": "initial"
         }
       },
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
         672,
-        0
+        16
       ],
-      "id": "10e726ed-d9c9-4af3-80c8-f94d4c65e33f",
+      "id": "04727c90-8f85-4e05-82d9-801bf866923a",
       "name": "Pinecone Vector Store",
       "credentials": {
         "pineconeApi": {
-          "id": "NNVKmy36peEgFBrA",
-          "name": "n8n-pinecone-surya"
+          "id": "ubFhaw4xfNfUylOC",
+          "name": "Pinecone account"
         }
       }
     },
@@ -95,15 +92,15 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        720,
-        208
+        640,
+        496
       ],
-      "id": "179d7d06-e9bd-4fba-a991-0d41cbdb4201",
+      "id": "a2e709ed-2a1c-42e0-9d73-6e29d3829a5d",
       "name": "Embeddings Google Gemini",
       "credentials": {
         "googlePalmApi": {
-          "id": "NYZXBhv291Dom20O",
-          "name": "n8n-google-gemini-surya"
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
     },
@@ -118,24 +115,25 @@
       "typeVersion": 1.1,
       "position": [
         816,
-        208
+        224
       ],
-      "id": "917d000d-627c-4211-bd0f-c2e0d09824e2",
+      "id": "c146dd95-02c9-4a3e-972e-173ac011e0ce",
       "name": "Default Data Loader"
     },
     {
       "parameters": {
-        "chunkSize": 100,
-        "chunkOverlap": 20
+        "chunkSize": 500,
+        "chunkOverlap": 300,
+        "options": {}
       },
-      "type": "@n8n/n8n-nodes-langchain.textSplitterTokenSplitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
         912,
-        272
+        432
       ],
-      "id": "757138c9-269e-410c-bd89-54411c8369cc",
-      "name": "Token Splitter"
+      "id": "8a3f9d1b-b575-4e16-9f49-6b8c15c7d88c",
+      "name": "Recursive Character Text Splitter"
     }
   ],
   "connections": {
@@ -172,6 +170,11 @@
         ]
       ]
     },
+    "Pinecone Vector Store": {
+      "main": [
+        []
+      ]
+    },
     "Embeddings Google Gemini": {
       "ai_embedding": [
         [
@@ -194,7 +197,7 @@
         ]
       ]
     },
-    "Token Splitter": {
+    "Recursive Character Text Splitter": {
       "ai_textSplitter": [
         [
           {
@@ -220,10 +223,10 @@
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "HfyFa9i5TznUHb87",
-      "projectId": "rbwfCfx34F7iplHU",
-      "createdAt": "2026-10-31T06:36:30.892Z",
-      "updatedAt": "2026-10-31T06:36:30.892Z"
+      "workflowId": "ZthkO3T7c6ZsVmP3",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-31T06:36:27.597Z",
+      "updatedAt": "2026-10-31T06:36:27.597Z"
     }
   ],
   "activeVersion": null
