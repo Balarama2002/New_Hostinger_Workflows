@@ -1,0 +1,253 @@
+{
+  "id": "aVoP1L3ctvY16iaf",
+  "name": "Resume_Extract",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:13.244Z",
+  "updatedAt": "2026-08-14T05:50:02.000Z",
+  "isArchived": true,
+  "versionId": "2cf37e84-71a9-4411-9cb2-bd903b8c8891",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8c422871-3d34-4e8f-972f-7135fe3d874a",
+      "name": "When chat message received",
+      "webhookId": "c87deb90-4e53-405d-81ca-88c4756c0e1a"
+    },
+    {
+      "parameters": {
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are a Resume Image Extractor AI Agent.\n\nYour task is to process one or more resume images and extract the candidate's basic contact information.\n\nInstructions:\n\n1. Analyze all uploaded resume images.\n2. Use OCR and document understanding techniques to identify the candidate's details.\n3. Extract the following fields:\n\n   * Name\n   * Email Address\n   * Phone Number\n4. If multiple resumes are uploaded, process each resume separately.\n5. Return only the extracted information in a structured JSON format.\n6. If any field is not found, return null for that field.\n7. If multiple phone numbers or email addresses are present, return the primary contact details mentioned in the resume header or contact section.\n8. Do not return any additional text, explanations, or summaries.\n\nOutput Format:\n\n{\n\"candidates\": [\n{\n\"name\": \"John Doe\",\n\"email\": \"[john.doe@email.com](mailto:john.doe@email.com)\",\n\"phone_number\": \"+1 1234567890\"\n}\n]\n}\n\nRules:\n\n* Extract exactly as written in the resume.\n* Preserve country codes in phone numbers if available.\n* Validate email format before returning.\n* Remove spaces, special characters, or OCR artifacts that do not belong to the actual email or phone number.\n* If multiple resumes are detected, create a separate object for each candidate in the candidates array.\n"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "101541be-be1d-4587-b699-fd48c913a79e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        128,
+        208
+      ],
+      "id": "85fb2d6e-5009-4a32-a6cc-e9da35375ebb",
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "knsjg1Onu3STzOAL",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const output = $input.first().json.output;\n\n// Remove markdown code blocks\nconst cleaned = output\n  .replace(/```json\\s*/i, '')\n  .replace(/```/g, '')\n  .trim();\n\n// Parse JSON\nconst parsed = JSON.parse(cleaned);\n\n// Return each candidate as a separate item\nreturn parsed.candidates.map(candidate => ({\n  json: candidate\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        576,
+        0
+      ],
+      "id": "4f3fea87-ed5d-47cc-8e88-a7c8da200db2",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1kxjuigvgGo0a7mBk54_wlCnWwEs8S1SeiBZvGPxcOiY",
+          "mode": "list",
+          "cachedResultName": "User_Details",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1kxjuigvgGo0a7mBk54_wlCnWwEs8S1SeiBZvGPxcOiY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1gXw7pOkiwn8BCJuYzYsG52Urs8ROLvrkW6F110YUI8A/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Phone num": "={{ \"'\" + $json.phone_number }}",
+            "Email": "={{ $json.email }}",
+            "Name": "={{ $json.name }}"
+          },
+          "matchingColumns": [
+            "Email"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Phone num",
+              "displayName": "Phone num",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        800,
+        0
+      ],
+      "id": "3596e8f9-25c3-4a9e-8b1c-02ab01018983",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "kk1SEueF5LpLJBDW",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        272,
+        208
+      ],
+      "id": "156018bf-4c2d-42f0-8e73-a6c42884b32f",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "TiWs8zFFrUOl81gq",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "aVoP1L3ctvY16iaf",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.247Z",
+      "updatedAt": "2026-08-13T17:31:13.247Z"
+    }
+  ],
+  "activeVersion": null
+}
