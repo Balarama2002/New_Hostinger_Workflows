@@ -1,0 +1,395 @@
+{
+  "id": "3EWzxWXhae2iw1oZ",
+  "name": "MWF_MCP-Server-Common",
+  "active": true,
+  "activeVersionId": "ca84f82b-b34c-4b47-9232-3d968ef20bfc",
+  "createdAt": "2026-10-13T14:14:07.122Z",
+  "updatedAt": "2026-10-14T13:58:47.928Z",
+  "isArchived": false,
+  "versionId": "b34ae1c9-0712-4b8f-8f3c-b72e2c651305",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "Common-MCP-Tool"
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+      "typeVersion": 2.1,
+      "position": [
+        -32,
+        -80
+      ],
+      "id": "7b5e279e-64ed-4ecb-8008-c632d67e83ac",
+      "name": "MCP Server Trigger",
+      "webhookId": "4140a094-6b24-407d-bab9-f1b351e2bdc7"
+    },
+    {
+      "parameters": {
+        "description": "Adds two numbers.\n\n**Input requirements:**\n- Accept two numeric inputs: `a` and `b`.\n- The inputs must be provided as a JSON object with numeric values.\n- Example: `{\"a\": 25, \"b\": 75}`.\n- Do not pass the JSON object as an escaped JSON string or wrap it inside another object under a `query` property, unless the tool's input interface explicitly requires that format.\n\n**Expected result:** Return the sum of `a` and `b`. For example, inputs `25` and `75` should return `100`.",
+        "workflowId": {
+          "__rl": true,
+          "value": "VVgjPAu4NQM5pk8i",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/VVgjPAu4NQM5pk8i",
+          "cachedResultName": "MCP - Calculator Tool"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "a": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('a', ``, 'string') }}",
+            "b": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('b', ``, 'string') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "a",
+              "displayName": "a",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "b",
+              "displayName": "b",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        -128,
+        208
+      ],
+      "id": "5a3c68fc-c8aa-4e6b-b2e8-bd5e1d28e9ab",
+      "name": "Add-Numbers"
+    },
+    {
+      "parameters": {
+        "description": "**Tool Name:** `teams_message_and_followup`\n\n**Tool Description:**\n\nThis tool sends individual Microsoft Teams messages based on the user's natural-language instructions and manages follow-ups only when explicitly requested.\n\n### Primary Responsibility\nAnalyze the user's input, identify the intended recipients and exact message content, and execute the requested Microsoft Teams actions using the connected tools.\n\n### 1. Extract the Actual Message Content (CRITICAL)\n- Always distinguish between the user's operational instructions and the actual message intended for the recipient.\n- Extract only the recipient-facing message text that must be sent through Microsoft Teams.\n- Never send the complete user input, JSON object, array, `User Inputs` field, task description, or execution instructions as the message body.\n- Exclude instructions such as recipient lists, reporting relationships, follow-up rules, validation requirements, and expected output formats from the message body.\n- If the user provides a message template, use only the text inside that template.\n- Replace placeholders such as `<first name>` with the appropriate recipient's first name when requested.\n- Preserve the intended meaning, wording, and tone of the original message. Correct minor spelling or grammatical errors only when necessary.\n- Do not add explanations, summaries, JSON formatting, metadata, or additional text to the recipient-facing message unless explicitly requested.\n\n### 2. Identify and Resolve Recipients\n- Extract each recipient's name, email address, or employee ID from the user's instructions.\n- If multiple recipients are specified for individual messages, process each recipient separately.\n- Resolve each recipient against the available Microsoft Teams or employee directory data.\n- Send a message only when the recipient can be confidently identified.\n- If a recipient cannot be confidently resolved, skip that recipient and report the reason. Never guess the recipient's identity.\n- Respect the user's specified recipient list and never message additional people.\n\n### 3. Microsoft Teams Message Execution\n- Send each requested message using the connected Microsoft Teams messaging tool.\n- If the user explicitly requests individual one-to-one messages, send a separate message to each recipient. Do not create a group chat.\n- Use the exact extracted message body for the corresponding recipient.\n- If the user requests personalization, replace the relevant placeholders for each recipient.\n- Do not include the manager's name, task instructions, or other contextual information in the message unless that information is explicitly part of the message template.\n- Confirm successful execution using the actual tool response.\n\n### 4. Follow-up Management\n- Schedule a follow-up only when the user explicitly requests one.\n- If the user states not to schedule a follow-up, do not create a reminder, scheduled task, or follow-up message.\n- Do not infer a follow-up deadline or create additional actions automatically.\n\n### 5. Input and Execution Rules\n- Accept natural-language instructions, JSON objects, arrays, and nested input fields.\n- When the input contains a field such as `User Inputs`, parse its string value and extract the actionable instructions and recipient-facing message.\n- Treat the input structure as data to interpret, not as the message to forward.\n- Do not invent recipient IDs, chat IDs, message IDs, or execution results.\n- Do not claim an action succeeded unless the connected tool confirms it.\n\n### 6. Expected Output\nReturn a concise, structured JSON result containing:\n- `action`\n- `recipient`\n- `message`\n- `message_id`\n- `follow_up_required`\n- `follow_up_deadline`\n- `status`\n- `details`\n\nReturn one result per recipient. Populate the message ID and status from the actual tool response. Use `null` for unavailable values and explain any skipped recipients or failures in `details`.\n\n**Final validation before sending:** Verify that the outgoing message contains only the intended recipient-facing text and does not contain the original task instructions, JSON wrappers, field names, or unrelated content.",
+        "workflowId": {
+          "__rl": true,
+          "value": "9Ze9HSYzQgrqyiPy",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/9Ze9HSYzQgrqyiPy",
+          "cachedResultName": "Teams MCP"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "User Inputs": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('User_Inputs', ``, 'string') }}"
+          },
+          "matchingColumns": [
+            "User Inputs"
+          ],
+          "schema": [
+            {
+              "id": "User Inputs",
+              "displayName": "User Inputs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        208
+      ],
+      "id": "a68998eb-dff7-4a2f-84b7-3f47e9a885ee",
+      "name": "Teams MCP"
+    },
+    {
+      "parameters": {
+        "description": "**Tool Name:** Fetch Manager Reportees\n\n**Tool Description:**\n\nFetch the list of employees who report directly to a specified manager. Based on the user's input, identify the manager using the available details, such as manager name, email address, or employee ID, and retrieve the corresponding reportee information from the connected data source.\n\nReturn the list of reportees along with the available employee details, such as employee name, employee ID, email address, designation, department, and reporting manager.\n\nIf the user asks for reportees under a specific manager, use the provided manager details to fetch the relevant records. If the user requests reportees for multiple managers, fetch the data separately for each manager and organize the results accordingly.\n\nIf the manager's identity is ambiguous or insufficient information is provided to identify the correct manager, ask the user for clarification before fetching the data. Do not assume or fabricate employee details. Return only the information available from the connected data source.",
+        "workflowId": {
+          "__rl": true,
+          "value": "r5Sh1gpey6m2evnd",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/r5Sh1gpey6m2evnd",
+          "cachedResultName": "My workflow"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        32,
+        176
+      ],
+      "id": "2b2ecd15-4dd0-4690-a86b-40d0fa67579d",
+      "name": "Reportees Data"
+    }
+  ],
+  "connections": {
+    "Add-Numbers": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Teams MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reportees Data": {
+      "ai_tool": [
+        [
+          {
+            "node": "MCP Server Trigger",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "vtN1JQvH45zQjAiD",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "3EWzxWXhae2iw1oZ",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-13T14:14:07.124Z",
+      "updatedAt": "2026-10-13T14:14:07.124Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "ca84f82b-b34c-4b47-9232-3d968ef20bfc",
+    "workflowId": "3EWzxWXhae2iw1oZ",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "Common-MCP-Tool"
+        },
+        "type": "@n8n/n8n-nodes-langchain.mcpTrigger",
+        "typeVersion": 2.1,
+        "position": [
+          -32,
+          -80
+        ],
+        "id": "7b5e279e-64ed-4ecb-8008-c632d67e83ac",
+        "name": "MCP Server Trigger",
+        "webhookId": "4140a094-6b24-407d-bab9-f1b351e2bdc7"
+      },
+      {
+        "parameters": {
+          "description": "Adds two numbers.\n\n**Input requirements:**\n- Accept two numeric inputs: `a` and `b`.\n- The inputs must be provided as a JSON object with numeric values.\n- Example: `{\"a\": 25, \"b\": 75}`.\n- Do not pass the JSON object as an escaped JSON string or wrap it inside another object under a `query` property, unless the tool's input interface explicitly requires that format.\n\n**Expected result:** Return the sum of `a` and `b`. For example, inputs `25` and `75` should return `100`.",
+          "workflowId": {
+            "__rl": true,
+            "value": "VVgjPAu4NQM5pk8i",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/VVgjPAu4NQM5pk8i",
+            "cachedResultName": "MCP - Calculator Tool"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "a": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('a', ``, 'string') }}",
+              "b": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('b', ``, 'string') }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "a",
+                "displayName": "a",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "b",
+                "displayName": "b",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          -128,
+          208
+        ],
+        "id": "5a3c68fc-c8aa-4e6b-b2e8-bd5e1d28e9ab",
+        "name": "Add-Numbers"
+      },
+      {
+        "parameters": {
+          "description": "**Tool Name:** `teams_message_and_followup`\n\n**Tool Description:**\n\nThis tool sends individual Microsoft Teams messages based on the user's natural-language instructions and manages follow-ups only when explicitly requested.\n\n### Primary Responsibility\nAnalyze the user's input, identify the intended recipients and exact message content, and execute the requested Microsoft Teams actions using the connected tools.\n\n### 1. Extract the Actual Message Content (CRITICAL)\n- Always distinguish between the user's operational instructions and the actual message intended for the recipient.\n- Extract only the recipient-facing message text that must be sent through Microsoft Teams.\n- Never send the complete user input, JSON object, array, `User Inputs` field, task description, or execution instructions as the message body.\n- Exclude instructions such as recipient lists, reporting relationships, follow-up rules, validation requirements, and expected output formats from the message body.\n- If the user provides a message template, use only the text inside that template.\n- Replace placeholders such as `<first name>` with the appropriate recipient's first name when requested.\n- Preserve the intended meaning, wording, and tone of the original message. Correct minor spelling or grammatical errors only when necessary.\n- Do not add explanations, summaries, JSON formatting, metadata, or additional text to the recipient-facing message unless explicitly requested.\n\n### 2. Identify and Resolve Recipients\n- Extract each recipient's name, email address, or employee ID from the user's instructions.\n- If multiple recipients are specified for individual messages, process each recipient separately.\n- Resolve each recipient against the available Microsoft Teams or employee directory data.\n- Send a message only when the recipient can be confidently identified.\n- If a recipient cannot be confidently resolved, skip that recipient and report the reason. Never guess the recipient's identity.\n- Respect the user's specified recipient list and never message additional people.\n\n### 3. Microsoft Teams Message Execution\n- Send each requested message using the connected Microsoft Teams messaging tool.\n- If the user explicitly requests individual one-to-one messages, send a separate message to each recipient. Do not create a group chat.\n- Use the exact extracted message body for the corresponding recipient.\n- If the user requests personalization, replace the relevant placeholders for each recipient.\n- Do not include the manager's name, task instructions, or other contextual information in the message unless that information is explicitly part of the message template.\n- Confirm successful execution using the actual tool response.\n\n### 4. Follow-up Management\n- Schedule a follow-up only when the user explicitly requests one.\n- If the user states not to schedule a follow-up, do not create a reminder, scheduled task, or follow-up message.\n- Do not infer a follow-up deadline or create additional actions automatically.\n\n### 5. Input and Execution Rules\n- Accept natural-language instructions, JSON objects, arrays, and nested input fields.\n- When the input contains a field such as `User Inputs`, parse its string value and extract the actionable instructions and recipient-facing message.\n- Treat the input structure as data to interpret, not as the message to forward.\n- Do not invent recipient IDs, chat IDs, message IDs, or execution results.\n- Do not claim an action succeeded unless the connected tool confirms it.\n\n### 6. Expected Output\nReturn a concise, structured JSON result containing:\n- `action`\n- `recipient`\n- `message`\n- `message_id`\n- `follow_up_required`\n- `follow_up_deadline`\n- `status`\n- `details`\n\nReturn one result per recipient. Populate the message ID and status from the actual tool response. Use `null` for unavailable values and explain any skipped recipients or failures in `details`.\n\n**Final validation before sending:** Verify that the outgoing message contains only the intended recipient-facing text and does not contain the original task instructions, JSON wrappers, field names, or unrelated content.",
+          "workflowId": {
+            "__rl": true,
+            "value": "9Ze9HSYzQgrqyiPy",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/9Ze9HSYzQgrqyiPy",
+            "cachedResultName": "Teams MCP"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "User Inputs": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('User_Inputs', ``, 'string') }}"
+            },
+            "matchingColumns": [
+              "User Inputs"
+            ],
+            "schema": [
+              {
+                "id": "User Inputs",
+                "displayName": "User Inputs",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          160,
+          208
+        ],
+        "id": "a68998eb-dff7-4a2f-84b7-3f47e9a885ee",
+        "name": "Teams MCP"
+      },
+      {
+        "parameters": {
+          "description": "**Tool Name:** Fetch Manager Reportees\n\n**Tool Description:**\n\nFetch the list of employees who report directly to a specified manager. Based on the user's input, identify the manager using the available details, such as manager name, email address, or employee ID, and retrieve the corresponding reportee information from the connected data source.\n\nReturn the list of reportees along with the available employee details, such as employee name, employee ID, email address, designation, department, and reporting manager.\n\nIf the user asks for reportees under a specific manager, use the provided manager details to fetch the relevant records. If the user requests reportees for multiple managers, fetch the data separately for each manager and organize the results accordingly.\n\nIf the manager's identity is ambiguous or insufficient information is provided to identify the correct manager, ask the user for clarification before fetching the data. Do not assume or fabricate employee details. Return only the information available from the connected data source.",
+          "workflowId": {
+            "__rl": true,
+            "value": "r5Sh1gpey6m2evnd",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/r5Sh1gpey6m2evnd",
+            "cachedResultName": "My workflow"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+        "typeVersion": 2.2,
+        "position": [
+          32,
+          176
+        ],
+        "id": "2b2ecd15-4dd0-4690-a86b-40d0fa67579d",
+        "name": "Reportees Data"
+      }
+    ],
+    "connections": {
+      "Add-Numbers": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Teams MCP": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Reportees Data": {
+        "ai_tool": [
+          [
+            {
+              "node": "MCP Server Trigger",
+              "type": "ai_tool",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version ca84f82b",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-14T06:43:04.167Z",
+    "updatedAt": "2026-10-14T06:43:07.000Z"
+  }
+}
