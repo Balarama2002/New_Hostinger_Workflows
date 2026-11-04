@@ -1,10 +1,13 @@
 {
-  "updatedAt": "2026-08-14T05:49:43.000Z",
-  "createdAt": "2026-08-13T17:31:13.158Z",
   "id": "2mfBcob056ARaThM",
   "name": "Usecase2",
   "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:13.158Z",
+  "updatedAt": "2026-08-14T05:49:43.000Z",
   "isArchived": true,
+  "versionId": "d470e9ef-de6a-4291-8bb5-489e5cd8a731",
+  "triggerCount": 0,
   "nodes": [
     {
       "parameters": {
@@ -745,26 +748,23 @@
       ]
     }
   },
+  "nodeGroups": [],
   "settings": {
     "executionOrder": "v1",
     "availableInMCP": false
   },
   "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
   "pinData": null,
-  "versionId": "d470e9ef-de6a-4291-8bb5-489e5cd8a731",
-  "activeVersionId": null,
-  "triggerCount": 0,
+  "meta": null,
+  "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-08-13T17:31:13.160Z",
-      "createdAt": "2026-08-13T17:31:13.160Z",
       "role": "workflow:owner",
       "workflowId": "2mfBcob056ARaThM",
-      "projectId": "2qHCdIvoXHur7xyh"
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.160Z",
+      "updatedAt": "2026-08-13T17:31:13.160Z"
     }
   ],
-  "activeVersion": null,
-  "tags": []
+  "activeVersion": null
 }
