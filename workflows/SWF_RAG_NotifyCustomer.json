@@ -1,0 +1,1807 @@
+{
+  "id": "9NtwBk4tc8mpAhUe",
+  "name": "SWF_RAG_NotifyCustomer",
+  "active": true,
+  "activeVersionId": "ca971c32-b677-4608-9ba2-20ef61d06c03",
+  "createdAt": "2026-08-20T11:19:57.531Z",
+  "updatedAt": "2026-11-03T17:43:02.831Z",
+  "isArchived": false,
+  "versionId": "ca971c32-b677-4608-9ba2-20ef61d06c03",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineAll",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1104,
+        272
+      ],
+      "id": "3f0a7e1d-cc4b-4c57-89c0-8e05b292dcfa",
+      "name": "Merge",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "resource": "issueAttachment",
+        "issueKey": "={{ $json.key }}"
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        1328,
+        272
+      ],
+      "id": "31f2772d-9f58-47a0-a13c-ec471f47d2cf",
+      "name": "Add an attachment to an issue",
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "6niYeoA8FKoTDP95",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        544,
+        160
+      ],
+      "id": "9af150c6-eb11-4e51-b077-faf168ba0549",
+      "name": "Google Gemini Chat Model2",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        672,
+        160
+      ],
+      "id": "29312926-20fb-482f-8c19-4db31621b147",
+      "name": "Mistral Cloud Chat Model1",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "mcrRnfTlEh6KCXvh",
+          "name": "Mistral Cloud account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7655a439-0174-4a95-a68b-3818c1e43add",
+              "leftValue": "={{ $json.output_includes.includes(\"Status: Insufficient Data\") }}",
+              "rightValue": "Sufficient Data",
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        304,
+        32
+      ],
+      "id": "96c38f6a-2d6b-43de-b0ad-a6b048eedb76",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "project": {
+          "__rl": true,
+          "value": "10001",
+          "mode": "list",
+          "cachedResultName": "IT Helpdesk"
+        },
+        "issueType": {
+          "__rl": true,
+          "value": "10011",
+          "mode": "list",
+          "cachedResultName": "Service Request"
+        },
+        "summary": "={{ JSON.parse($json.output).summary }} - {{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}",
+        "additionalFields": {
+          "description": "={{ JSON.parse($json.output).description }} ",
+          "priority": {
+            "__rl": true,
+            "value": "3",
+            "mode": "list",
+            "cachedResultName": "Medium"
+          },
+          "reporter": {
+            "__rl": true,
+            "value": "60e5a86a471e61006a4c51fd",
+            "mode": "list",
+            "cachedResultName": "Microsoft Teams for Jira Cloud"
+          }
+        }
+      },
+      "type": "n8n-nodes-base.jira",
+      "typeVersion": 1,
+      "position": [
+        880,
+        32
+      ],
+      "id": "d6802513-902c-4a51-ad63-cad62c38774c",
+      "name": "Create an issue",
+      "alwaysOutputData": false,
+      "credentials": {
+        "jiraSoftwareCloudApi": {
+          "id": "6niYeoA8FKoTDP95",
+          "name": "Jira SW Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:582034f1e4704a64b39d01850c1e7935@thread.v2",
+          "mode": "list",
+          "cachedResultName": "Bathini Sindhura, Cherukuri Bala Rama Krishna, TGH AI (group)",
+          "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A582034f1e4704a64b39d01850c1e7935%40thread.v2/0?tenantId=261bcec6-f2fd-4665-bd3f-a1e563b397b3"
+        },
+        "contentType": "html",
+        "message": "={{ JSON.parse($('AI Agent').item.json.output).description }}- <b>Requested by:</b> {{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}\n<br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        -144,
+        736
+      ],
+      "id": "ebaa3966-5cb7-4d55-8a18-ea1b4e0e4dc8",
+      "name": "Create chat message1",
+      "webhookId": "59ced8b8-67a0-494e-8ca2-a29f52606cff",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.output_includes }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are an IT Helpdesk assistant. Based on the following support interaction, generate:\n1. \"summary\": A concise, professional ticket title (max 10-12 words, e.g., \"Clarification request: Cab facility policy in HR knowledge base\").\n2. \"description\": A structured description with the issue details, removing unnecessary HTML tags.\n\nInteraction Data:\n{{ $json.teamsHtml }}\n{{ $('Teams Trigger').item.json.question || '' }}\n\nReturn ONLY valid JSON in this format:\n{\n  \"summary\": \"...\",\n  \"description\": \"...\"\n}"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        528,
+        -80
+      ],
+      "id": "a0a8f4a2-872d-47f2-b84a-b740df9ae60a",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "output_includes",
+              "type": "any"
+            },
+            {
+              "name": "from_user_displayName",
+              "type": "any"
+            },
+            {
+              "name": "Chat Id"
+            },
+            {
+              "name": "Message ID"
+            }
+          ]
+        }
+      },
+      "id": "7f542944-25cf-4e1b-a444-738301519c9c",
+      "typeVersion": 1.1,
+      "name": "Start",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "position": [
+        -144,
+        32
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/chats/{{ $json[\"Chat Id\"] }}/messages/{{ $json[\"Message ID\"] }}/hostedContents",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        304,
+        320
+      ],
+      "id": "9b6cc797-5aa1-4971-b57b-37fbcaa8e253",
+      "name": "Fetch Message Details",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/chats/{{ $('Start').item.json[\"Chat Id\"] }}/messages/{{ $('Start').item.json[\"Message ID\"] }}/hostedContents/{{ $json.value[0].id }}/$value ",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        880,
+        320
+      ],
+      "id": "05532044-83df-48af-bd34-b04832b21837",
+      "name": "Fetch Image Details from Chat",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3ecb3105-be0e-40cf-b1f5-a24d5c47008c",
+              "leftValue": "={{ $json.value[0].id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        592,
+        320
+      ],
+      "id": "779c85fd-2f4e-41a1-bf93-ab724e8f25e8",
+      "name": "Check If Image is There or not."
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "HR_Feedback",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        80,
+        512
+      ],
+      "id": "15df2513-608e-43fd-9c09-fb0e87ae63bc",
+      "name": "Webhook",
+      "webhookId": "8d3ac6f9-d246-4500-bb27-b4a0ea2e5b6f"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8db7b683-4c70-4d6f-9d96-18658b609a63",
+              "name": "output_includes",
+              "value": "={{ $json.body.subject }} - {{ $json.body.description }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        304,
+        512
+      ],
+      "id": "5b6cdf7c-12e8-4f5b-8f4b-cb3e573e31af",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.chat_id : $('Start').item.json[\"Chat Id\"] }}",
+          "mode": "id"
+        },
+        "contentType": "html",
+        "message": "=JIRA Ticket Created Successfully. Due to insufficient data, please track the request using the URL below. <br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        80,
+        736
+      ],
+      "id": "9317643c-13cd-4115-ba86-2763c47d994a",
+      "name": "Create chat message",
+      "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "MESSAGE_ID",
+              "keyValue": "={{ $('Webhook').isExecuted ?$('Webhook').item.json.query.message_id.trim() : $('Start').item.json[\"Message ID\"] }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "JIRA_NUMBER": "={{ $('Create an issue').item.json.key }}",
+            "JIRA_URL": "={{ $('Create an issue').item.json.self }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_NUMBER",
+              "displayName": "JIRA_NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "JIRA_URL",
+              "displayName": "JIRA_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "QUESTION",
+              "displayName": "QUESTION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "RESPONSE",
+              "displayName": "RESPONSE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "MESSAGE_ID",
+              "displayName": "MESSAGE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        304,
+        736
+      ],
+      "id": "1e92f3e1-0290-452a-bbcc-44edeffc00bd",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3df1bed9-a8a1-4010-b9b0-e4f8ad0f09fc",
+              "leftValue": "={{ $json.from_user_displayName }}",
+              "rightValue": "=U0BNEM72MM3",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        80,
+        320
+      ],
+      "id": "ea1550c4-6be0-44a8-b0be-883331378516",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "kOiCUxOhf0VMVoan",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/kOiCUxOhf0VMVoan",
+          "cachedResultName": "SWF_Return-Notify_Customer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Description": "={{ JSON.parse($('AI Agent').item.json.output).description }}",
+            "Teams UserName": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}",
+            "Key": "={{ $('Create an issue').item.json.key }}",
+            "Teams Chat Id": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.chat_id : $('Start').item.json[\"Chat Id\"] }}",
+            "Message ID": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.message_id : $('Start').item.json[\"Message ID\"]}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Teams UserName",
+              "displayName": "Teams UserName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Key",
+              "displayName": "Key",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Teams Chat Id",
+              "displayName": "Teams Chat Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Message ID",
+              "displayName": "Message ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1104,
+        32
+      ],
+      "id": "c58cbb3f-ac95-4b10-b1d9-944a5777ecbe",
+      "name": "Call 'My workflow'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "5c1d1609-48f4-4504-aa19-3a7c85464b3d",
+              "name": "output",
+              "value": "={{ $('Create chat message').first()}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1552,
+        272
+      ],
+      "id": "a45032d4-e476-484d-b312-ff55cb7d023e",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Create an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model2": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Add an attachment to an issue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an issue": {
+      "main": [
+        [
+          {
+            "node": "Call 'My workflow'",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Message Details": {
+      "main": [
+        [
+          {
+            "node": "Check If Image is There or not.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Image Details from Chat": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Check If Image is There or not.": {
+      "main": [
+        [
+          {
+            "node": "Fetch Image Details from Chat",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add an attachment to an issue": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chat message1": {
+      "main": [
+        [
+          {
+            "node": "Create chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chat message": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Message Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "vtN1JQvH45zQjAiD",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1901759.hstgr.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+            "content-length": "194",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9",
+            "content-type": "application/json",
+            "origin": "null",
+            "priority": "u=1, i",
+            "sec-ch-ua": "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Microsoft Edge\";v=\"152\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "empty",
+            "sec-fetch-mode": "cors",
+            "sec-fetch-site": "cross-site",
+            "x-forwarded-for": "103.160.27.57",
+            "x-forwarded-host": "n8n.srv1901759.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "132076d7780b",
+            "x-real-ip": "103.160.27.57"
+          },
+          "params": {},
+          "query": {
+            "message_id": " 1788675745653",
+            "userName": "Cherukuri Bala Rama Krishna",
+            "chat_id": "19:4103cf02-cdbf-482b-ac9a-8d12c05ea963_b78da932-2796-4818-80d2-fdd6496dc824@unq.gbl.spaces"
+          },
+          "body": {
+            "action": "raise_ticket",
+            "subject": "Bench Policy",
+            "category": "Work From Home",
+            "priority": "Low",
+            "description": "I want an Work From Home for the One Week",
+            "submittedAt": "2026-09-06T06:23:42.908Z"
+          },
+          "webhookUrl": "https://n8n.srv1901759.hstgr.cloud/webhook/HR_Feedback",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Create chat message1": [
+      {
+        "json": {
+          "@odata.context": "https://graph.microsoft.com/v1.0/$metadata#chats('19%3A582034f1e4704a64b39d01850c1e7935%40thread.v2')/messages/$entity",
+          "id": "1792232049456",
+          "replyToId": null,
+          "etag": "1792232049456",
+          "messageType": "message",
+          "createdDateTime": "2026-10-17T10:14:09.456Z",
+          "lastModifiedDateTime": "2026-10-17T10:14:09.456Z",
+          "lastEditedDateTime": null,
+          "deletedDateTime": null,
+          "subject": null,
+          "summary": null,
+          "chatId": "19:582034f1e4704a64b39d01850c1e7935@thread.v2",
+          "importance": "normal",
+          "locale": "en-us",
+          "webUrl": "https://teams.microsoft.com/l/message/19%3A582034f1e4704a64b39d01850c1e7935%40thread.v2/1792232049456?context=%7b%22contextType%22%3a%22chat%22%7d&tenantId=261bcec6-f2fd-4665-bd3f-a1e563b397b3",
+          "channelIdentity": null,
+          "policyViolation": null,
+          "eventDetail": null,
+          "from": {
+            "application": null,
+            "device": null,
+            "user": {
+              "@odata.type": "#microsoft.graph.teamworkUserIdentity",
+              "id": "4103cf02-cdbf-482b-ac9a-8d12c05ea963",
+              "displayName": "TGH AI",
+              "userIdentityType": "aadUser",
+              "tenantId": "261bcec6-f2fd-4665-bd3f-a1e563b397b3"
+            }
+          },
+          "body": {
+            "contentType": "html",
+            "content": "Issue Summary:\nThe user submitted an inquiry regarding EDI. The HR automated assistant identified this as outside the scope of HR policies and recommended escalating to the IT/technical support team.\n\nContext &amp; Status:\n- Query Topic: EDI (Electronic Data Interchange / Technical System)\n- Status: Insufficient data within HR scope\n\nNext Steps:\nFollow up with the user to clarify their EDI-related request and route to the appropriate IT/systems administrator.- <b>Requested by:</b> Cherukuri Bala Rama Krishna\n<br>\n\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/KAN-84\">\nKAN-84\n</a>"
+          },
+          "attachments": [],
+          "mentions": [],
+          "reactions": []
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Start": [
+      {
+        "json": {
+          "output_includes": "Status: Insufficient Data<br><br>Answer:<br>I am designed to assist with TGH HR policies and internal documentation. I may not have information outside this scope. <br><br>If EDI refers to an internal TGH HR policy, process, or software system, could you please provide a bit more context? Otherwise, I recommend reaching out to the relevant technical or IT team for assistance. <br><br>🎫 Support: A support ticket can be raised for the relevant team if you need further help with this topic.<br><br>👋 Let me know if you have any questions related to TGH HR policies, leave, attendance, or benefits!",
+          "from_user_displayName": "Cherukuri Bala Rama Krishna",
+          "Chat Id": "19:4103cf02-cdbf-482b-ac9a-8d12c05ea963_b78da932-2796-4818-80d2-fdd6496dc824@unq.gbl.spaces",
+          "Message ID": "1792232032443"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "9NtwBk4tc8mpAhUe",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-20T11:19:57.536Z",
+      "updatedAt": "2026-08-20T11:19:57.536Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "ca971c32-b677-4608-9ba2-20ef61d06c03",
+    "workflowId": "9NtwBk4tc8mpAhUe",
+    "nodes": [
+      {
+        "parameters": {
+          "mode": "combine",
+          "combineBy": "combineAll",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          1104,
+          272
+        ],
+        "id": "3f0a7e1d-cc4b-4c57-89c0-8e05b292dcfa",
+        "name": "Merge",
+        "alwaysOutputData": false
+      },
+      {
+        "parameters": {
+          "resource": "issueAttachment",
+          "issueKey": "={{ $json.key }}"
+        },
+        "type": "n8n-nodes-base.jira",
+        "typeVersion": 1,
+        "position": [
+          1328,
+          272
+        ],
+        "id": "31f2772d-9f58-47a0-a13c-ec471f47d2cf",
+        "name": "Add an attachment to an issue",
+        "credentials": {
+          "jiraSoftwareCloudApi": {
+            "id": "6niYeoA8FKoTDP95",
+            "name": "Jira SW Cloud account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.1-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.1,
+        "position": [
+          544,
+          160
+        ],
+        "id": "9af150c6-eb11-4e51-b077-faf168ba0549",
+        "name": "Google Gemini Chat Model2",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "KQBQgkPqPhjQnbPh",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+        "typeVersion": 1,
+        "position": [
+          672,
+          160
+        ],
+        "id": "29312926-20fb-482f-8c19-4db31621b147",
+        "name": "Mistral Cloud Chat Model1",
+        "credentials": {
+          "mistralCloudApi": {
+            "id": "mcrRnfTlEh6KCXvh",
+            "name": "Mistral Cloud account 2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "7655a439-0174-4a95-a68b-3818c1e43add",
+                "leftValue": "={{ $json.output_includes.includes(\"Status: Insufficient Data\") }}",
+                "rightValue": "Sufficient Data",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "false",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          304,
+          32
+        ],
+        "id": "96c38f6a-2d6b-43de-b0ad-a6b048eedb76",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "project": {
+            "__rl": true,
+            "value": "10001",
+            "mode": "list",
+            "cachedResultName": "IT Helpdesk"
+          },
+          "issueType": {
+            "__rl": true,
+            "value": "10011",
+            "mode": "list",
+            "cachedResultName": "Service Request"
+          },
+          "summary": "={{ JSON.parse($json.output).summary }} - {{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}",
+          "additionalFields": {
+            "description": "={{ JSON.parse($json.output).description }} ",
+            "priority": {
+              "__rl": true,
+              "value": "3",
+              "mode": "list",
+              "cachedResultName": "Medium"
+            },
+            "reporter": {
+              "__rl": true,
+              "value": "60e5a86a471e61006a4c51fd",
+              "mode": "list",
+              "cachedResultName": "Microsoft Teams for Jira Cloud"
+            }
+          }
+        },
+        "type": "n8n-nodes-base.jira",
+        "typeVersion": 1,
+        "position": [
+          880,
+          32
+        ],
+        "id": "d6802513-902c-4a51-ad63-cad62c38774c",
+        "name": "Create an issue",
+        "alwaysOutputData": false,
+        "credentials": {
+          "jiraSoftwareCloudApi": {
+            "id": "6niYeoA8FKoTDP95",
+            "name": "Jira SW Cloud account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "19:582034f1e4704a64b39d01850c1e7935@thread.v2",
+            "mode": "list",
+            "cachedResultName": "Bathini Sindhura, Cherukuri Bala Rama Krishna, TGH AI (group)",
+            "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A582034f1e4704a64b39d01850c1e7935%40thread.v2/0?tenantId=261bcec6-f2fd-4665-bd3f-a1e563b397b3"
+          },
+          "contentType": "html",
+          "message": "={{ JSON.parse($('AI Agent').item.json.output).description }}- <b>Requested by:</b> {{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}\n<br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+          "options": {
+            "includeLinkToWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          -144,
+          736
+        ],
+        "id": "ebaa3966-5cb7-4d55-8a18-ea1b4e0e4dc8",
+        "name": "Create chat message1",
+        "webhookId": "59ced8b8-67a0-494e-8ca2-a29f52606cff",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.output_includes }}",
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "You are an IT Helpdesk assistant. Based on the following support interaction, generate:\n1. \"summary\": A concise, professional ticket title (max 10-12 words, e.g., \"Clarification request: Cab facility policy in HR knowledge base\").\n2. \"description\": A structured description with the issue details, removing unnecessary HTML tags.\n\nInteraction Data:\n{{ $json.teamsHtml }}\n{{ $('Teams Trigger').item.json.question || '' }}\n\nReturn ONLY valid JSON in this format:\n{\n  \"summary\": \"...\",\n  \"description\": \"...\"\n}"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          528,
+          -80
+        ],
+        "id": "a0a8f4a2-872d-47f2-b84a-b740df9ae60a",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "output_includes",
+                "type": "any"
+              },
+              {
+                "name": "from_user_displayName",
+                "type": "any"
+              },
+              {
+                "name": "Chat Id"
+              },
+              {
+                "name": "Message ID"
+              }
+            ]
+          }
+        },
+        "id": "7f542944-25cf-4e1b-a444-738301519c9c",
+        "typeVersion": 1.1,
+        "name": "Start",
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "position": [
+          -144,
+          32
+        ]
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/chats/{{ $json[\"Chat Id\"] }}/messages/{{ $json[\"Message ID\"] }}/hostedContents",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          304,
+          320
+        ],
+        "id": "9b6cc797-5aa1-4971-b57b-37fbcaa8e253",
+        "name": "Fetch Message Details",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/chats/{{ $('Start').item.json[\"Chat Id\"] }}/messages/{{ $('Start').item.json[\"Message ID\"] }}/hostedContents/{{ $json.value[0].id }}/$value ",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          880,
+          320
+        ],
+        "id": "05532044-83df-48af-bd34-b04832b21837",
+        "name": "Fetch Image Details from Chat",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3ecb3105-be0e-40cf-b1f5-a24d5c47008c",
+                "leftValue": "={{ $json.value[0].id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          592,
+          320
+        ],
+        "id": "779c85fd-2f4e-41a1-bf93-ab724e8f25e8",
+        "name": "Check If Image is There or not."
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "HR_Feedback",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          80,
+          512
+        ],
+        "id": "15df2513-608e-43fd-9c09-fb0e87ae63bc",
+        "name": "Webhook",
+        "webhookId": "8d3ac6f9-d246-4500-bb27-b4a0ea2e5b6f"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8db7b683-4c70-4d6f-9d96-18658b609a63",
+                "name": "output_includes",
+                "value": "={{ $json.body.subject }} - {{ $json.body.description }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          304,
+          512
+        ],
+        "id": "5b6cdf7c-12e8-4f5b-8f4b-cb3e573e31af",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.chat_id : $('Start').item.json[\"Chat Id\"] }}",
+            "mode": "id"
+          },
+          "contentType": "html",
+          "message": "=JIRA Ticket Created Successfully. Due to insufficient data, please track the request using the URL below. <br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+          "options": {
+            "includeLinkToWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          80,
+          736
+        ],
+        "id": "9317643c-13cd-4115-ba86-2763c47d994a",
+        "name": "Create chat message",
+        "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "MESSAGE_ID",
+                "keyValue": "={{ $('Webhook').isExecuted ?$('Webhook').item.json.query.message_id.trim() : $('Start').item.json[\"Message ID\"] }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "JIRA_NUMBER": "={{ $('Create an issue').item.json.key }}",
+              "JIRA_URL": "={{ $('Create an issue').item.json.self }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_NUMBER",
+                "displayName": "JIRA_NUMBER",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "JIRA_URL",
+                "displayName": "JIRA_URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "QUESTION",
+                "displayName": "QUESTION",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "RESPONSE",
+                "displayName": "RESPONSE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "MESSAGE_ID",
+                "displayName": "MESSAGE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "Feedback",
+                "displayName": "Feedback",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          304,
+          736
+        ],
+        "id": "1e92f3e1-0290-452a-bbcc-44edeffc00bd",
+        "name": "Update row(s)"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3df1bed9-a8a1-4010-b9b0-e4f8ad0f09fc",
+                "leftValue": "={{ $json.from_user_displayName }}",
+                "rightValue": "=U0BNEM72MM3",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          80,
+          320
+        ],
+        "id": "ea1550c4-6be0-44a8-b0be-883331378516",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "kOiCUxOhf0VMVoan",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/kOiCUxOhf0VMVoan",
+            "cachedResultName": "SWF_Return-Notify_Customer"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Description": "={{ JSON.parse($('AI Agent').item.json.output).description }}",
+              "Teams UserName": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}",
+              "Key": "={{ $('Create an issue').item.json.key }}",
+              "Teams Chat Id": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.chat_id : $('Start').item.json[\"Chat Id\"] }}",
+              "Message ID": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.message_id : $('Start').item.json[\"Message ID\"]}}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "Description",
+                "displayName": "Description",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Teams UserName",
+                "displayName": "Teams UserName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Key",
+                "displayName": "Key",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Teams Chat Id",
+                "displayName": "Teams Chat Id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Message ID",
+                "displayName": "Message ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "position": [
+          1104,
+          32
+        ],
+        "id": "c58cbb3f-ac95-4b10-b1d9-944a5777ecbe",
+        "name": "Call 'My workflow'"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "5c1d1609-48f4-4504-aa19-3a7c85464b3d",
+                "name": "output",
+                "value": "={{ $('Create chat message').first()}}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1552,
+          272
+        ],
+        "id": "a45032d4-e476-484d-b312-ff55cb7d023e",
+        "name": "Edit Fields"
+      }
+    ],
+    "connections": {
+      "If": {
+        "main": [
+          [],
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Create an issue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model2": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mistral Cloud Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Add an attachment to an issue",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create an issue": {
+        "main": [
+          [
+            {
+              "node": "Call 'My workflow'",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Start": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Message Details": {
+        "main": [
+          [
+            {
+              "node": "Check If Image is There or not.",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Image Details from Chat": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Check If Image is There or not.": {
+        "main": [
+          [
+            {
+              "node": "Fetch Image Details from Chat",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Add an attachment to an issue": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create chat message1": {
+        "main": [
+          [
+            {
+              "node": "Create chat message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create chat message": {
+        "main": [
+          [
+            {
+              "node": "Update row(s)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Fetch Message Details",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version ca971c32",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-03T17:43:02.833Z",
+    "updatedAt": "2026-11-04T07:01:16.000Z"
+  }
+}
