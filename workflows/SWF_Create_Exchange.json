@@ -1,0 +1,3112 @@
+{
+  "id": "RsVC1Fc1NXQ43sP9",
+  "name": "SWF-Create Exchange",
+  "active": true,
+  "activeVersionId": "1c9c44ac-0b48-4e5d-a9d0-e16ffe4cedda",
+  "createdAt": "2026-10-26T11:28:27.894Z",
+  "updatedAt": "2026-11-04T13:53:43.151Z",
+  "isArchived": false,
+  "versionId": "fccd79c3-8197-4915-b257-b7d38d390faa",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "order_id"
+            },
+            {
+              "name": "customer_id"
+            },
+            {
+              "name": "product_name"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -4336,
+        128
+      ],
+      "id": "a6c49cc8-29f1-414f-a473-23082a7f90ee",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "984509a8-7f40-44f2-a856-28ec625efe90",
+              "leftValue": "={{ $json.country }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "129225a2-85bb-4bf2-9d5c-80161faa1863",
+              "leftValue": "={{ $json.sku }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "701886d2-0c98-4691-a815-3ff88ba0a1bb",
+              "leftValue": "={{ $json.size }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4ce81984-130e-4f8b-b472-6ab30ce744e3",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -752,
+        32
+      ],
+      "id": "5001870b-56d6-4a40-a213-cc9a9896cc58",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "c0ddd591-df4a-4c37-bf32-5e239219e4ce",
+              "leftValue": "={{ $json.allowed }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1792,
+        -240
+      ],
+      "id": "be8ec6b4-ccb2-4fe8-8144-ea7cc668f088",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "71bcc3eb-2363-43d3-93ba-d3372a91bb06",
+              "leftValue": "={{ Number($json.num_affected_rows) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2464,
+        -336
+      ],
+      "id": "d0e8b626-f0da-4b77-a1ce-6577e34a67a7",
+      "name": "Check Number of rows effected"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Get input data\nconst input = $input.item.json;\n\nconst o = Array.isArray(input.order) ? input.order[0] : null;\nconst n = Array.isArray(input.newitem) ? input.newitem[0] : null;\n\nconst confirmed = [\"true\", \"yes\"].includes(\n  String(input.confirmed || \"\").trim().toLowerCase()\n);\n\nconst risk = parseInt(input.risk_score, 10) || 0;\nconst refunds90 = parseInt(input.refunds_last_90d, 10) || 0;\n\n// Prepare output\nconst res = (ok, msg, credit = 0.0) => ({\n  allowed: ok ? \"true\" : \"false\",\n  message: msg,\n  credit: Number(credit).toFixed(2),\n  currency: o ? String(o.currency || \"\") : \"\",\n  new_item: n ? String(n.new_item || \"\") : \"\",\n  new_price: n ? String(n.price ?? \"\") : \"\",\n  old_item: o ? String(o.item || \"\") : \"\",\n  old_sku: o ? String(o.sku || \"\") : \"\",\n  old_size: o ? String(o.size || \"\") : \"\",\n  policy_version: o ? String(o.policy_version || \"\") : \"\"\n});\n\nlet result;\n\nif (!confirmed) {\n  result = res(false, \"The customer has not confirmed yet.\");\n} else if (!o) {\n  result = res(false, \"Order not found for this customer\");\n} else if (\n  risk >= (parseInt(o.risk_score_escalate, 10) || 0) ||\n  refunds90 >= (parseInt(o.serial_refund_threshold, 10) || 0)\n) {\n  result = res(false, \"This needs a person to review. Escalate instead.\");\n} else if (\n  String(o.refunded || \"\").toLowerCase() === \"yes\" ||\n  (parseInt(o.refund_count, 10) || 0) > 0\n) {\n  result = res(false, \"This order was already refunded.\");\n} else if (\n  (parseInt(o.return_count, 10) || 0) > 0 ||\n  (parseInt(o.exchange_count, 10) || 0) > 0\n) {\n  result = res(\n    false,\n    \"A return or exchange is already in progress for this order.\"\n  );\n} else if (String(o.order_status || \"\").toLowerCase() !== \"delivered\") {\n  result = res(\n    false,\n    \"The order has not been delivered yet, so it cannot be exchanged.\"\n  );\n} else if (\n  (parseInt(o.return_window_days, 10) || 0) -\n    (parseInt(o.days_since_delivery, 10) || 0) < 0\n) {\n  result = res(\n    false,\n    `Delivered ${o.days_since_delivery} days ago; the exchange window is ${o.return_window_days} days.`\n  );\n} else if (!n) {\n  result = res(false, \"That item and size is not in the catalogue.\");\n} else if ((parseInt(n.stock, 10) || 0) < 1) {\n  result = res(false, \"That item has just gone out of stock.\");\n} else if (\n  (parseFloat(n.price) || 0) > (parseFloat(o.amount) || 0)\n) {\n  result = res(\n    false,\n    \"The new item costs more than the order. A person must handle a price difference. Escalate instead.\"\n  );\n} else {\n  const credit = Math.max(\n    (parseFloat(o.amount) || 0) - (parseFloat(n.price) || 0),\n    0\n  );\n\n  result = res(true, \"OK\", credit);\n}\n\n// Return output in n8n format\nreturn {\n  json: result\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        -240
+      ],
+      "id": "5bb3d794-2510-49d5-a3e4-840baf2ed437",
+      "name": "core business logic gatekeeper",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nINSERT INTO workspace.agentic_support.returns (\n    return_id,\n    order_id,\n    reason_code,\n    reason_text,\n    resolution,\n    status,\n    label_url,\n    refund_amount,\n    currency,\n    created_at\n)\nSELECT\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    o.order_id,\n    NULLIF('{{ $json.reason_code }}', ''),\n    NULLIF('{{ $json.reason_text }}', ''),\n    'exchange',\n    'awaiting_inspection',\n    CONCAT(\n        'https://watchmate.example/return/',\n        '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}'\n    ),\n    '{{ $('If1').item.json.credit }}',\n    o.currency,\n    CURRENT_DATE()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '{{ $('When Executed by Another Workflow').item.json.order_id }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2912,
+        -432
+      ],
+      "id": "f3b8dd50-f620-4ee5-ac2c-d004fd0995a9",
+      "name": "Returns Table",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nINSERT INTO workspace.agentic_support.exchanges (\n    exchange_id,\n    order_id,\n    customer_id,\n    return_id,\n    old_sku,\n    old_size,\n    new_sku,\n    new_size,\n    credit_amount,\n    currency,\n    status\n)\nVALUES (\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.exchange_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}',\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    '{{ $('core business logic gatekeeper').item.json.old_sku }}',\n    '{{ $('core business logic gatekeeper').item.json.old_size }}',\n    '{{ $('Old_product').item.json.sku }}',\n    '{{ $('Old_product').item.json.size }}',\n    '{{ $('core business logic gatekeeper').item.json.credit }}',\n    '{{ $('core business logic gatekeeper').item.json.currency }}','pending'\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        3360,
+        -496
+      ],
+      "id": "6b022d7d-14e5-4615-907f-ce3023f1cf98",
+      "name": "Exchange Record",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"reason_code\": \"changed_mind\",\n  \"reason_text\": \"changed my mind\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2688,
+        -432
+      ],
+      "id": "478d71f4-0c01-4e31-a5e1-b51e7007162e",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=UPDATE workspace.agentic_support.orders\nSET status = '{{ $('gettingOrderDetails').item.json.order_status }}'\nWHERE order_id = '{{ $('gettingOrderDetails').item.json.order_id }}'\n  AND customer_id = '{{ $('gettingOrderDetails').item.json.customer_id }}'\n  ;",
+        "queryParameters": {
+          "parameters": []
+        }
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        -544
+      ],
+      "id": "c5a6ac51-ff63-4a7a-b7ba-4a78fdd42dfd",
+      "name": "update_order_status",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nINSERT INTO workspace.agentic_support.order_events (\n    \n    order_id,\n    customer_id,\n    event,\n    detail\n    \n)\nVALUES (\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}','{{ $json.event }}','{{ $json.detail }}'\n    \n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        4256,
+        -544
+      ],
+      "id": "74483a7b-e0ff-442f-8269-55b98178efc7",
+      "name": "Create_order_event",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"event\": \"ExchangeInitiated\",\n  \"detail\": \"ExchangeInitiated\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        4032,
+        -544
+      ],
+      "id": "dbacea2f-b2f0-46dc-b8c6-b6b5e166b79e",
+      "name": "create_detail_and_event_fiekds"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "ca698414-a714-4a0e-8def-124359e28589",
+              "leftValue": "={{Number($json.num_inserted_rows)}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            },
+            {
+              "id": "912fe167-fc5e-4add-b5db-4389d655b9fe",
+              "leftValue": "={{Number($json.num_affected_rows )}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        4480,
+        -544
+      ],
+      "id": "65931ea7-79d5-46d8-a874-592c0d6975c9",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "resource": "case",
+        "type": "Other",
+        "additionalFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "Customer_Id__c",
+                "value": "={{ $json.Customer_Id__c }}"
+              }
+            ]
+          },
+          "description": "={{ $json.Description }}",
+          "priority": "={{ $json.Priority }}",
+          "status": "={{ $json.Status }}",
+          "subject": "={{ $json.Subject }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        4928,
+        -640
+      ],
+      "id": "b7fd6864-5245-4b66-8c7f-c0ec2ea2bdb1",
+      "name": "Create a case",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "tK3OrGrt5EoVx0FC",
+          "name": "SalesforceNikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "=\n{\n  \"Subject\": \"Return Inspection - {{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}\",\n  \"Description\": \"Inspect the returned item. Return ID: {{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}. Exchange ID: {{ $('Getting_ruturnId&ExchangeId').item.json.exchange_id }}. Verify the item's condition before approving replacement dispatch.\",\n  \"Status\": \"New\",\n  \"Priority\": \"High\",\n  \"Customer_Id__c\": '{{ $('When Executed by Another Workflow').item.json.customer_id }}'\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        4704,
+        -640
+      ],
+      "id": "cde70766-46a7-4492-8377-03c2fa9097fc",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "439238bb-0e01-42dd-ad53-cf7a5b904173",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        5152,
+        -640
+      ],
+      "id": "900554d4-83d6-493c-b336-8aacf572e107",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "resource": "case",
+        "operation": "get",
+        "caseId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        5376,
+        -720
+      ],
+      "id": "dbf9e533-47f9-41b9-9b9d-bc3754062cb3",
+      "name": "Get a case",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "tK3OrGrt5EoVx0FC",
+          "name": "SalesforceNikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nUPDATE workspace.agentic_support.inventory\nSET stock_quantity = stock_quantity - 1\nWHERE sku = '{{ $('New_ProductDetails').item.json.sku }}'\n  AND size = '{{ $('New_ProductDetails').item.json.size }}'\n  AND stock_quantity > 0;"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        -336
+      ],
+      "id": "548bfeb5-0ec8-4a70-90a0-01eaed5e0b7a",
+      "name": "uodatingInventory",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "\nSELECT\n    (\n        SELECT CONCAT(\n            'R',\n            LPAD(\n                CAST(\n                    COALESCE(\n                        MAX(TRY_CAST(SUBSTRING(return_id, 2) AS INT)),\n                        0\n                    ) + 1 AS STRING\n                ),\n                4,\n                '0'\n            )\n        )\n        FROM workspace.agentic_support.returns\n    ) AS return_id,\n    (\n        SELECT CONCAT(\n            'X',\n            LPAD(\n                CAST(\n                    COALESCE(\n                        MAX(TRY_CAST(SUBSTRING(exchange_id, 2) AS INT)),\n                        0\n                    ) + 1 AS STRING\n                ),\n                4,\n                '0'\n            )\n        )\n        FROM workspace.agentic_support.exchanges\n    ) AS exchange_id;\n"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        -336
+      ],
+      "id": "f747c5c8-0c35-4406-b0da-639ecf990fa3",
+      "name": "Getting_ruturnId&ExchangeId",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nINSERT INTO workspace.agentic_support.inspections (\n    return_id,\n    order_id,\n    customer_id,\n    kind,\n    jira_key,\n    status\n)\nVALUES (\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    '{{ $('gettingOrderDetails').item.json.order_id }}',\n    '{{ $('gettingOrderDetails').item.json.customer_id }}'\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n      'Exchange',\n      '{{ $json.Id }}',\n      '{{ $json.Status }}'    \n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        5824,
+        -816
+      ],
+      "id": "e608fd75-554e-404d-a054-bdfd3bdd1042",
+      "name": "Creating Inspection ",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "912fe167-fc5e-4add-b5db-4389d655b9fe",
+              "leftValue": "={{ $json.CaseNumber }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        5600,
+        -720
+      ],
+      "id": "89ad7d1d-e0ab-461f-94e9-952f842b55e1",
+      "name": "checking Inspection Created or Not"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nINSERT INTO workspace.agentic_support.request_tracker (\n    kind,\n    external_system,\n    external_id,\n    external_alt,\n    customer_id,\n    order_id,\n    return_id,\n    whatsapp_phone,\n    language,\n    last_status\n)\nVALUES (\n   'Exchange',\n    'Salesforce',\n    '{{ $('Get a case').item.json.Id }}',\n    '{{ $('Get a case').item.json.CaseNumber }}',\n    '{{ $('gettingOrderDetails').item.json.customer_id }}',\n    '{{ $('gettingOrderDetails').item.json.order_id }}',\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    '{{ $('Get a case').item.json.ContactPhone }}',\n    'English',\n    '{{ $('Get a case').item.json.Status }}'\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        6048,
+        -816
+      ],
+      "id": "bb95cb51-8aa5-4667-8203-8fd30ff37e79",
+      "name": "Creating request_tracker",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\": \"true\",\n  \"return_id\": ' {{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n  \"exchange_id\":'{{ $('Getting_ruturnId&ExchangeId').item.json.exchange_id }}',\n  \"credit\":'{{ $('core business logic gatekeeper').item.json.credit }}'\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        6272,
+        -736
+      ],
+      "id": "73d7f9fd-b869-4f01-99f7-64e3f9cd35e4",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Response\": \"inventory could not be reserved because rows_affected was 0\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2688,
+        -240
+      ],
+      "id": "2f02c2b7-d828-4ace-ba74-63663f091f73",
+      "name": "Inventory roes effected zero"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"success\": false,\n  \"message\": \"Rows effected is zero\"\n}",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        4704,
+        -448
+      ],
+      "id": "2ea564ca-5289-4443-90f6-19779b554c15",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"success\": \"false\",\n  \"message\":\"Case is not created\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        5824,
+        -496
+      ],
+      "id": "2ddc7342-72ab-472e-b457-7bcceec6eb36",
+      "name": "Edit Fields7"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\": \"false\",\n  \"response\": ' {{ $json.message }}'\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        -144
+      ],
+      "id": "3b484b62-7ec2-4420-94d7-4659a15c994c",
+      "name": "Edit Fields8"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b57d4b24-fd95-4a11-871b-b6814c9b5aca",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f3f04a37-ad8f-495d-8282-2c36760facc3",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "b99746c0-f5c1-42c5-8467-e9588c366d1d",
+              "leftValue": "={{ $json.product_name }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -3616,
+        176
+      ],
+      "id": "5d484084-02cf-4b0b-81d1-571d11b74f51",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "\n {\n  \"Response\": \"Country, SKU and Size should not be null\"\n}\n\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        960,
+        528
+      ],
+      "id": "f8d47a41-b317-4793-9241-700df5ccf27f",
+      "name": "Country,SizeSKU_not Found"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Response\": \"orderid and customerid should not be null\"\n}\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -64,
+        720
+      ],
+      "id": "a572ab26-5f8c-48f2-bdb7-c9839c2204a2",
+      "name": "OrderId&CustomerId_notFound"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT\n    pr.sku,\n    pr.name AS new_item,\n    i.size,\n    i.stock_quantity AS stock,\n    CASE\n        WHEN '%{{ $json.country }}%' = 'IN' THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\nFROM workspace.agentic_support.products pr\nJOIN workspace.agentic_support.inventory i\n    ON i.sku = pr.sku\nWHERE pr.sku = '{{ $json.sku }}'\n  AND i.size = '{{ $json.size }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        32,
+        -80
+      ],
+      "id": "012f668f-f247-4abc-8edb-9c8f546e3094",
+      "name": "Old_product",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT\n    pr.sku,\n    pr.name AS new_item,\n    i.size,\n    i.stock_quantity AS stock,\n    CASE\n        WHEN '%{{ $json.country }}%' = 'IN' THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\nFROM workspace.agentic_support.products pr\nJOIN workspace.agentic_support.inventory i\n    ON i.sku = pr.sku\nWHERE pr.name = '{{ $('When Executed by Another Workflow').item.json.product_name }}' "
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        576,
+        -144
+      ],
+      "id": "cd490d07-d961-4680-a0f7-a693dcf34a5b",
+      "name": "New_ProductDetails",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"order\": [\n    {\n      \"order_id\": \"{{ $('gettingOrderDetails').item.json.order_id }}\",\n      \"customer_id\": \"{{ $('gettingOrderDetails').item.json.customer_id }}\",\n      \"country\": \"{{ $('gettingOrderDetails').item.json.country }}\",\n      \"currency\": \"{{ $('gettingOrderDetails').item.json.currency }}\",\n      \"item\": \"{{ $('gettingOrderDetails').item.json.item }}\",\n      \"sku\": \"{{ $('gettingOrderDetails').item.json.sku }}\",\n      \"size\": \"{{ $('gettingOrderDetails').item.json.size }}\",\n      \"amount\": \"{{ $('gettingOrderDetails').item.json.amount }}\",\n      \"order_status\": \"{{ $('gettingOrderDetails').item.json.order_status }}\",\n      \"refunded\": \"{{ $('gettingOrderDetails').item.json.refunded }}\",\n      \"ship_status\": \"{{ $('gettingOrderDetails').item.json.ship_status }}\",\n      \"days_since_delivery\": \"{{ $('gettingOrderDetails').item.json.days_since_delivery }}\",\n      \"return_window_days\": \"{{ $('gettingOrderDetails').item.json.return_window_days }}\",\n      \"policy_version\": \"{{ $('gettingOrderDetails').item.json.policy_version }}\",\n      \"return_count\": \"{{ $('gettingOrderDetails').item.json.return_count }}\",\n      \"refund_count\": \"{{ $('gettingOrderDetails').item.json.refund_count }}\",\n      \"exchange_count\": \"{{ $('gettingOrderDetails').item.json.exchange_count }}\",\n      \"category\": \"{{ $('gettingOrderDetails').item.json.category }}\",\n      \"risk_score_escalate\": \"{{ $('gettingOrderDetails').item.json.risk_score_escalate }}\",\n      \"serial_refund_threshold\": \"{{ $('gettingOrderDetails').item.json.serial_refund_threshold }}\"\n    }\n  ],\n  \"newitem\": [\n     {\n      \"sku\": '{{ $json.sku }}',\n      \"new_item\": '{{ $json.new_item }}',\n      \"size\": '{{ $json.size }}',\n      \"stock\": '{{ $json.stock }}',\n      \"price\":'{{ $json.price }}'\n    }\n  ],\n  \"confirmed\": \"true\",\n  \"risk_score\": \"20\",\n  \"refunds_last_90d\": 0\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1344,
+        -240
+      ],
+      "id": "a2bd7c6b-9e4c-43c3-adb5-fa65661d69fd",
+      "name": "Edit Fields9",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=\nUPDATE workspace.agentic_support.inventory\nSET stock_quantity = stock_quantity + 1\nWHERE sku = ''\n  AND size = ''\n  AND stock_quantity > 0;"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        -336
+      ],
+      "id": "20708c10-4450-4207-9031-45aafb101086",
+      "name": "uodatingInventory1",
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "a231d48f-1110-4810-94fd-c190dae1a132",
+              "leftValue": "={{Number($json.num_affected_rows)}}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3136,
+        -432
+      ],
+      "id": "f5da4f05-af93-4bf5-a127-2572fcf7b046",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "4810fd0d-01f7-4d5d-988b-52b38e0e9af0",
+              "leftValue": "={{ Number($json.num_affected_rows) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3584,
+        -496
+      ],
+      "id": "6ed16845-6abb-4274-9e6d-45c6210bf73c",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=WITH config_values AS (\n    SELECT\n        MAX(CASE\n            WHEN config_key = 'as_of_date'\n            THEN CAST(config_value AS DATE)\n        END) AS asof,\n        MAX(CASE\n            WHEN config_key = 'risk_score_escalate'\n            THEN CAST(config_value AS INT)\n        END) AS risk_score_escalate,\n        MAX(CASE\n            WHEN config_key = 'serial_refund_threshold'\n            THEN CAST(config_value AS INT)\n        END) AS serial_refund_threshold\n    FROM workspace.agentic_support.config\n    WHERE config_key IN (\n        'as_of_date',\n        'risk_score_escalate',\n        'serial_refund_threshold'\n    )\n),\nreturn_counts AS (\n    SELECT order_id, COUNT(*) AS return_count\n    FROM workspace.agentic_support.returns\n    GROUP BY order_id\n),\nrefund_counts AS (\n    SELECT order_id, COUNT(*) AS refund_count\n    FROM workspace.agentic_support.refunds\n    GROUP BY order_id\n),\nexchange_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS exchange_count\n    FROM workspace.agentic_support.exchanges\n    WHERE status NOT IN ('rejected', 'cancelled')\n    GROUP BY order_id\n),\nproduct_categories AS (\n    SELECT\n        sku,\n        MAX(category) AS category\n    FROM workspace.agentic_support.products\n    GROUP BY sku\n)\nSELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.item,\n    o.sku,\n    o.size,\n    o.amount,\n    o.status AS order_status,\n    o.refunded,\n    s.status AS ship_status,\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n    p.return_window_days,\n    p.version AS policy_version,\n    COALESCE(rc.return_count, 0) AS return_count,\n    COALESCE(fc.refund_count, 0) AS refund_count,\n    COALESCE(ec.exchange_count, 0) AS exchange_count,\n    pc.category,\n    c.risk_score_escalate,\n    c.serial_refund_threshold\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\nCROSS JOIN config_values c\nLEFT JOIN return_counts rc\n    ON rc.order_id = o.order_id\nLEFT JOIN refund_counts fc\n    ON fc.order_id = o.order_id\nLEFT JOIN exchange_counts ec\n    ON ec.order_id = o.order_id\nLEFT JOIN product_categories pc\n    ON pc.sku = o.sku\nWHERE o.order_id Like '%{{ $json.order_id }}%'\n  AND o.customer_id Like '%{{ $json.customer_id }}%';"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        -2624,
+        144
+      ],
+      "id": "79b8fa71-28c4-45c1-8ccc-36808c692479",
+      "name": "gettingOrderDetails",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "zIJmHoiWzIvErscZ",
+          "name": "Databricks-Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "984509a8-7f40-44f2-a856-28ec625efe90",
+              "leftValue": "={{ $json.country }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "129225a2-85bb-4bf2-9d5c-80161faa1863",
+              "leftValue": "={{ $json.sku }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "701886d2-0c98-4691-a815-3ff88ba0a1bb",
+              "leftValue": "={{ $json.size }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "4ce81984-130e-4f8b-b472-6ab30ce744e3",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -1760,
+        112
+      ],
+      "id": "cce01ae3-73a2-409a-94fb-96b27b742f19",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Success\": \"false\",\n  \"Response\": \"Enetered details are invalid, not Order found with the details you entered\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        512,
+        640
+      ],
+      "id": "b3918947-4ae9-4f8c-90b0-0aadd36f9155",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "\n {\n   \"Sucess\":\"false\",\n  \"Response\": \"That product that you are requesting is not found\"\n}\n\n",
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1488,
+        224
+      ],
+      "id": "d8036a2e-f9cf-4c5c-87c8-7036973f38fe",
+      "name": "Country,SizeSKU_not Found1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "984509a8-7f40-44f2-a856-28ec625efe90",
+              "leftValue": "={{ $json.sku }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e84f2b59-9790-4590-8b23-99914ad0256f",
+              "leftValue": "={{ $json.new_item }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a7537c0d-9ff7-4ff1-a7eb-9aef52ab72c7",
+              "leftValue": "={{ $json.size }}",
+              "rightValue": "={{ $json.new_item }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "111e3e77-aa2a-474f-9f1d-4edba7b1bf9f",
+              "leftValue": "={{ $json.stock }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1008,
+        -128
+      ],
+      "id": "392db256-488c-479e-b818-ff19a0954727",
+      "name": "RequestedProductCheck"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Old_product",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Country,SizeSKU_not Found",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Getting_ruturnId&ExchangeId",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "core business logic gatekeeper": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Number of rows effected": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Inventory roes effected zero",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returns Table": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Returns Table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Exchange Record": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "update_order_status": {
+      "main": [
+        [
+          {
+            "node": "create_detail_and_event_fiekds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create_order_event": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "create_detail_and_event_fiekds": {
+      "main": [
+        [
+          {
+            "node": "Create_order_event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Create a case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a case": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Get a case",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a case": {
+      "main": [
+        [
+          {
+            "node": "checking Inspection Created or Not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "uodatingInventory": {
+      "main": [
+        [
+          {
+            "node": "Check Number of rows effected",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Getting_ruturnId&ExchangeId": {
+      "main": [
+        [
+          {
+            "node": "uodatingInventory",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creating Inspection ": {
+      "main": [
+        [
+          {
+            "node": "Creating request_tracker",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "checking Inspection Created or Not": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Creating Inspection ",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Creating request_tracker": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        []
+      ]
+    },
+    "Inventory roes effected zero": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields7": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields8": {
+      "main": [
+        []
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "gettingOrderDetails",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "OrderId&CustomerId_notFound",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Country,SizeSKU_not Found": {
+      "main": [
+        []
+      ]
+    },
+    "OrderId&CustomerId_notFound": {
+      "main": [
+        []
+      ]
+    },
+    "Old_product": {
+      "main": [
+        [
+          {
+            "node": "New_ProductDetails",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New_ProductDetails": {
+      "main": [
+        [
+          {
+            "node": "RequestedProductCheck",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields9": {
+      "main": [
+        [
+          {
+            "node": "core business logic gatekeeper",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Exchange Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uodatingInventory1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "update_order_status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "uodatingInventory1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "gettingOrderDetails": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RequestedProductCheck": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Country,SizeSKU_not Found1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "pinData": {
+    "Get a case": [
+      {
+        "json": {
+          "attributes": {
+            "type": "Case",
+            "url": "/services/data/v59.0/sobjects/Case/500dM000048wlXlQAI"
+          },
+          "Id": "500dM000048wlXlQAI",
+          "IsDeleted": false,
+          "MasterRecordId": null,
+          "CaseNumber": "00001037",
+          "ContactId": null,
+          "AccountId": null,
+          "AssetId": null,
+          "SourceId": null,
+          "ParentId": null,
+          "SuppliedName": null,
+          "SuppliedEmail": null,
+          "SuppliedPhone": null,
+          "SuppliedCompany": null,
+          "Type": "Other",
+          "Status": "New",
+          "Reason": null,
+          "Origin": null,
+          "Subject": "Return Inspection - R0041",
+          "Priority": "High",
+          "Description": "Inspect the returned item. Return ID: R0041. Exchange ID: X0021. Verify the item's condition before approving replacement dispatch.",
+          "IsClosed": false,
+          "ClosedDate": null,
+          "IsEscalated": false,
+          "OwnerId": "005dM000007pnInQAI",
+          "CreatedDate": "2026-10-28T12:00:10.000+0000",
+          "CreatedById": "005dM000007pnInQAI",
+          "LastModifiedDate": "2026-10-28T12:00:10.000+0000",
+          "LastModifiedById": "005dM000007pnInQAI",
+          "SystemModstamp": "2026-10-28T12:00:10.000+0000",
+          "ContactPhone": null,
+          "ContactMobile": null,
+          "ContactEmail": null,
+          "ContactFax": null,
+          "Comments": null,
+          "LastViewedDate": "2026-10-28T12:00:10.000+0000",
+          "LastReferencedDate": "2026-10-28T12:00:10.000+0000",
+          "EngineeringReqNumber__c": null,
+          "SLAViolation__c": null,
+          "Product__c": null,
+          "PotentialLiability__c": null,
+          "Customer_Id__c": "C013"
+        }
+      }
+    ],
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "order_id": "O1019",
+          "customer_id": "C017",
+          "product_name": "idol"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "RsVC1Fc1NXQ43sP9",
+      "projectId": "gpVAwDGe6y6vwU0o",
+      "createdAt": "2026-10-26T11:28:27.896Z",
+      "updatedAt": "2026-10-26T11:28:27.896Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "1c9c44ac-0b48-4e5d-a9d0-e16ffe4cedda",
+    "workflowId": "RsVC1Fc1NXQ43sP9",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "order_id"
+              },
+              {
+                "name": "customer_id"
+              },
+              {
+                "name": "product_name"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -592,
+          128
+        ],
+        "id": "a6c49cc8-29f1-414f-a473-23082a7f90ee",
+        "name": "When Executed by Another Workflow",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "984509a8-7f40-44f2-a856-28ec625efe90",
+                "leftValue": "={{ $json.country }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "129225a2-85bb-4bf2-9d5c-80161faa1863",
+                "leftValue": "={{ $json.sku }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "701886d2-0c98-4691-a815-3ff88ba0a1bb",
+                "leftValue": "={{ $json.size }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "4ce81984-130e-4f8b-b472-6ab30ce744e3",
+                "leftValue": "",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          672,
+          -80
+        ],
+        "id": "5001870b-56d6-4a40-a213-cc9a9896cc58",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "c0ddd591-df4a-4c37-bf32-5e239219e4ce",
+                "leftValue": "={{ $json.allowed }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1792,
+          -240
+        ],
+        "id": "be8ec6b4-ccb2-4fe8-8144-ea7cc668f088",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "71bcc3eb-2363-43d3-93ba-d3372a91bb06",
+                "leftValue": "={{ Number($json.num_affected_rows) }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          2464,
+          -336
+        ],
+        "id": "d0e8b626-f0da-4b77-a1ce-6577e34a67a7",
+        "name": "Check Number of rows effected"
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "// Get input data\nconst input = $input.item.json;\n\nconst o = Array.isArray(input.order) ? input.order[0] : null;\nconst n = Array.isArray(input.newitem) ? input.newitem[0] : null;\n\nconst confirmed = [\"true\", \"yes\"].includes(\n  String(input.confirmed || \"\").trim().toLowerCase()\n);\n\nconst risk = parseInt(input.risk_score, 10) || 0;\nconst refunds90 = parseInt(input.refunds_last_90d, 10) || 0;\n\n// Prepare output\nconst res = (ok, msg, credit = 0.0) => ({\n  allowed: ok ? \"true\" : \"false\",\n  message: msg,\n  credit: Number(credit).toFixed(2),\n  currency: o ? String(o.currency || \"\") : \"\",\n  new_item: n ? String(n.new_item || \"\") : \"\",\n  new_price: n ? String(n.price ?? \"\") : \"\",\n  old_item: o ? String(o.item || \"\") : \"\",\n  old_sku: o ? String(o.sku || \"\") : \"\",\n  old_size: o ? String(o.size || \"\") : \"\",\n  policy_version: o ? String(o.policy_version || \"\") : \"\"\n});\n\nlet result;\n\nif (!confirmed) {\n  result = res(false, \"The customer has not confirmed yet.\");\n} else if (!o) {\n  result = res(false, \"Order not found for this customer\");\n} else if (\n  risk >= (parseInt(o.risk_score_escalate, 10) || 0) ||\n  refunds90 >= (parseInt(o.serial_refund_threshold, 10) || 0)\n) {\n  result = res(false, \"This needs a person to review. Escalate instead.\");\n} else if (\n  String(o.refunded || \"\").toLowerCase() === \"yes\" ||\n  (parseInt(o.refund_count, 10) || 0) > 0\n) {\n  result = res(false, \"This order was already refunded.\");\n} else if (\n  (parseInt(o.return_count, 10) || 0) > 0 ||\n  (parseInt(o.exchange_count, 10) || 0) > 0\n) {\n  result = res(\n    false,\n    \"A return or exchange is already in progress for this order.\"\n  );\n} else if (String(o.order_status || \"\").toLowerCase() !== \"delivered\") {\n  result = res(\n    false,\n    \"The order has not been delivered yet, so it cannot be exchanged.\"\n  );\n} else if (\n  (parseInt(o.return_window_days, 10) || 0) -\n    (parseInt(o.days_since_delivery, 10) || 0) < 0\n) {\n  result = res(\n    false,\n    `Delivered ${o.days_since_delivery} days ago; the exchange window is ${o.return_window_days} days.`\n  );\n} else if (!n) {\n  result = res(false, \"That item and size is not in the catalogue.\");\n} else if ((parseInt(n.stock, 10) || 0) < 1) {\n  result = res(false, \"That item has just gone out of stock.\");\n} else if (\n  (parseFloat(n.price) || 0) > (parseFloat(o.amount) || 0)\n) {\n  result = res(\n    false,\n    \"The new item costs more than the order. A person must handle a price difference. Escalate instead.\"\n  );\n} else {\n  const credit = Math.max(\n    (parseFloat(o.amount) || 0) - (parseFloat(n.price) || 0),\n    0\n  );\n\n  result = res(true, \"OK\", credit);\n}\n\n// Return output in n8n format\nreturn {\n  json: result\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          -240
+        ],
+        "id": "5bb3d794-2510-49d5-a3e4-840baf2ed437",
+        "name": "core business logic gatekeeper"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nINSERT INTO workspace.agentic_support.returns (\n    return_id,\n    order_id,\n    reason_code,\n    reason_text,\n    resolution,\n    status,\n    label_url,\n    refund_amount,\n    currency,\n    created_at\n)\nSELECT\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    o.order_id,\n    NULLIF('{{ $json.reason_code }}', ''),\n    NULLIF('{{ $json.reason_text }}', ''),\n    'exchange',\n    'awaiting_inspection',\n    CONCAT(\n        'https://watchmate.example/return/',\n        '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}'\n    ),\n    '{{ $('If1').item.json.credit }}',\n    o.currency,\n    CURRENT_DATE()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '{{ $('When Executed by Another Workflow').item.json.order_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2912,
+          -432
+        ],
+        "id": "f3b8dd50-f620-4ee5-ac2c-d004fd0995a9",
+        "name": "Returns Table",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nINSERT INTO workspace.agentic_support.exchanges (\n    exchange_id,\n    order_id,\n    customer_id,\n    return_id,\n    old_sku,\n    old_size,\n    new_sku,\n    new_size,\n    credit_amount,\n    currency,\n    status\n)\nVALUES (\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.exchange_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}',\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    '{{ $('core business logic gatekeeper').item.json.old_sku }}',\n    '{{ $('core business logic gatekeeper').item.json.old_size }}',\n    '{{ $('Old_product').item.json.sku }}',\n    '{{ $('Old_product').item.json.size }}',\n    '{{ $('core business logic gatekeeper').item.json.credit }}',\n    '{{ $('core business logic gatekeeper').item.json.currency }}','pending'\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          3360,
+          -496
+        ],
+        "id": "6b022d7d-14e5-4615-907f-ce3023f1cf98",
+        "name": "Exchange Record",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"reason_code\": \"changed_mind\",\n  \"reason_text\": \"changed my mind\"\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2688,
+          -432
+        ],
+        "id": "478d71f4-0c01-4e31-a5e1-b51e7007162e",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=UPDATE workspace.agentic_support.orders\nSET status = '{{ $('gettingOrderDetails').item.json.order_status }}'\nWHERE order_id = '{{ $('gettingOrderDetails').item.json.order_id }}'\n  AND customer_id = '{{ $('gettingOrderDetails').item.json.customer_id }}'\n  ;",
+          "queryParameters": {
+            "parameters": []
+          }
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          3808,
+          -544
+        ],
+        "id": "c5a6ac51-ff63-4a7a-b7ba-4a78fdd42dfd",
+        "name": "update_order_status",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nINSERT INTO workspace.agentic_support.order_events (\n    \n    order_id,\n    customer_id,\n    event,\n    detail\n    \n)\nVALUES (\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}','{{ $json.event }}','{{ $json.detail }}'\n    \n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          4256,
+          -544
+        ],
+        "id": "74483a7b-e0ff-442f-8269-55b98178efc7",
+        "name": "Create_order_event",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"event\": \"ExchangeInitiated\",\n  \"detail\": \"ExchangeInitiated\"\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          4032,
+          -544
+        ],
+        "id": "dbacea2f-b2f0-46dc-b8c6-b6b5e166b79e",
+        "name": "create_detail_and_event_fiekds"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "ca698414-a714-4a0e-8def-124359e28589",
+                "leftValue": "={{Number($json.num_inserted_rows)}}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              },
+              {
+                "id": "912fe167-fc5e-4add-b5db-4389d655b9fe",
+                "leftValue": "={{Number($json.num_affected_rows )}}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          4480,
+          -544
+        ],
+        "id": "65931ea7-79d5-46d8-a874-592c0d6975c9",
+        "name": "If2"
+      },
+      {
+        "parameters": {
+          "resource": "case",
+          "type": "Other",
+          "additionalFields": {
+            "customFieldsUi": {
+              "customFieldsValues": [
+                {
+                  "fieldId": "Customer_Id__c",
+                  "value": "={{ $json.Customer_Id__c }}"
+                }
+              ]
+            },
+            "description": "={{ $json.Description }}",
+            "priority": "={{ $json.Priority }}",
+            "status": "={{ $json.Status }}",
+            "subject": "={{ $json.Subject }}"
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          4928,
+          -640
+        ],
+        "id": "b7fd6864-5245-4b66-8c7f-c0ec2ea2bdb1",
+        "name": "Create a case",
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "tK3OrGrt5EoVx0FC",
+            "name": "SalesforceNikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "=\n{\n  \"Subject\": \"Return Inspection - {{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}\",\n  \"Description\": \"Inspect the returned item. Return ID: {{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}. Exchange ID: {{ $('Getting_ruturnId&ExchangeId').item.json.exchange_id }}. Verify the item's condition before approving replacement dispatch.\",\n  \"Status\": \"New\",\n  \"Priority\": \"High\",\n  \"Customer_Id__c\": '{{ $('When Executed by Another Workflow').item.json.customer_id }}'\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          4704,
+          -640
+        ],
+        "id": "cde70766-46a7-4492-8377-03c2fa9097fc",
+        "name": "Edit Fields2"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "439238bb-0e01-42dd-ad53-cf7a5b904173",
+                "leftValue": "={{ $json.id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          5152,
+          -640
+        ],
+        "id": "900554d4-83d6-493c-b336-8aacf572e107",
+        "name": "If3"
+      },
+      {
+        "parameters": {
+          "resource": "case",
+          "operation": "get",
+          "caseId": "={{ $json.id }}"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          5376,
+          -720
+        ],
+        "id": "dbf9e533-47f9-41b9-9b9d-bc3754062cb3",
+        "name": "Get a case",
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "tK3OrGrt5EoVx0FC",
+            "name": "SalesforceNikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nUPDATE workspace.agentic_support.inventory\nSET stock_quantity = stock_quantity - 1\nWHERE sku = '{{ $('New_ProductDetails').item.json.sku }}'\n  AND size = '{{ $('New_ProductDetails').item.json.size }}'\n  AND stock_quantity > 0;"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2240,
+          -336
+        ],
+        "id": "548bfeb5-0ec8-4a70-90a0-01eaed5e0b7a",
+        "name": "uodatingInventory",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "\nSELECT\n    (\n        SELECT CONCAT(\n            'R',\n            LPAD(\n                CAST(\n                    COALESCE(\n                        MAX(TRY_CAST(SUBSTRING(return_id, 2) AS INT)),\n                        0\n                    ) + 1 AS STRING\n                ),\n                4,\n                '0'\n            )\n        )\n        FROM workspace.agentic_support.returns\n    ) AS return_id,\n    (\n        SELECT CONCAT(\n            'X',\n            LPAD(\n                CAST(\n                    COALESCE(\n                        MAX(TRY_CAST(SUBSTRING(exchange_id, 2) AS INT)),\n                        0\n                    ) + 1 AS STRING\n                ),\n                4,\n                '0'\n            )\n        )\n        FROM workspace.agentic_support.exchanges\n    ) AS exchange_id;\n"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2016,
+          -336
+        ],
+        "id": "f747c5c8-0c35-4406-b0da-639ecf990fa3",
+        "name": "Getting_ruturnId&ExchangeId",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nINSERT INTO workspace.agentic_support.inspections (\n    return_id,\n    order_id,\n    customer_id,\n    kind,\n    jira_key,\n    status\n)\nVALUES (\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    '{{ $('gettingOrderDetails').item.json.order_id }}',\n    '{{ $('gettingOrderDetails').item.json.customer_id }}'\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n      'Exchange',\n      '{{ $json.Id }}',\n      '{{ $json.Status }}'    \n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          5824,
+          -816
+        ],
+        "id": "e608fd75-554e-404d-a054-bdfd3bdd1042",
+        "name": "Creating Inspection ",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "912fe167-fc5e-4add-b5db-4389d655b9fe",
+                "leftValue": "={{ $json.CaseNumber }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          5600,
+          -720
+        ],
+        "id": "89ad7d1d-e0ab-461f-94e9-952f842b55e1",
+        "name": "checking Inspection Created or Not"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nINSERT INTO workspace.agentic_support.request_tracker (\n    kind,\n    external_system,\n    external_id,\n    external_alt,\n    customer_id,\n    order_id,\n    return_id,\n    whatsapp_phone,\n    language,\n    last_status\n)\nVALUES (\n   'Exchange',\n    'Salesforce',\n    '{{ $('Get a case').item.json.Id }}',\n    '{{ $('Get a case').item.json.CaseNumber }}',\n    '{{ $('gettingOrderDetails').item.json.customer_id }}',\n    '{{ $('gettingOrderDetails').item.json.order_id }}',\n    '{{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n    '{{ $('Get a case').item.json.ContactPhone }}',\n    'English',\n    '{{ $('Get a case').item.json.Status }}'\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          6048,
+          -816
+        ],
+        "id": "bb95cb51-8aa5-4667-8203-8fd30ff37e79",
+        "name": "Creating request_tracker",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"success\": \"true\",\n  \"return_id\": ' {{ $('Getting_ruturnId&ExchangeId').item.json.return_id }}',\n  \"exchange_id\":'{{ $('Getting_ruturnId&ExchangeId').item.json.exchange_id }}',\n  \"credit\":'{{ $('core business logic gatekeeper').item.json.credit }}'\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          6272,
+          -736
+        ],
+        "id": "73d7f9fd-b869-4f01-99f7-64e3f9cd35e4",
+        "name": "Edit Fields3"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"Response\": \"inventory could not be reserved because rows_affected was 0\"\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2688,
+          -240
+        ],
+        "id": "2f02c2b7-d828-4ace-ba74-63663f091f73",
+        "name": "Inventory roes effected zero"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"success\": false,\n  \"message\": \"Rows effected is zero\"\n}",
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          4704,
+          -448
+        ],
+        "id": "2ea564ca-5289-4443-90f6-19779b554c15",
+        "name": "Edit Fields5"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"success\": \"false\",\n  \"message\":\"Case is not created\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          5824,
+          -496
+        ],
+        "id": "2ddc7342-72ab-472e-b457-7bcceec6eb36",
+        "name": "Edit Fields7"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"success\": \"false\",\n  \"response\": ' {{ $json.message }}'\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          -144
+        ],
+        "id": "3b484b62-7ec2-4420-94d7-4659a15c994c",
+        "name": "Edit Fields8"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "b57d4b24-fd95-4a11-871b-b6814c9b5aca",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "f3f04a37-ad8f-495d-8282-2c36760facc3",
+                "leftValue": "={{ $json.customer_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "b99746c0-f5c1-42c5-8467-e9588c366d1d",
+                "leftValue": "={{ $json.product_name }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          -352,
+          256
+        ],
+        "id": "5d484084-02cf-4b0b-81d1-571d11b74f51",
+        "name": "If5"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "\n {\n  \"Response\": \"Country, SKU and Size should not be null\"\n}\n\n",
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          896,
+          -48
+        ],
+        "id": "f8d47a41-b317-4793-9241-700df5ccf27f",
+        "name": "Country,SizeSKU_not Found"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"Response\": \"orderid and customerid should not be null\"\n}\n",
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          448,
+          128
+        ],
+        "id": "a572ab26-5f8c-48f2-bdb7-c9839c2204a2",
+        "name": "OrderId&CustomerId_notFound"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT\n    pr.sku,\n    pr.name AS new_item,\n    i.size,\n    i.stock_quantity AS stock,\n    CASE\n        WHEN '%{{ $json.country }}%' = 'IN' THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\nFROM workspace.agentic_support.products pr\nJOIN workspace.agentic_support.inventory i\n    ON i.sku = pr.sku\nWHERE pr.sku = '{{ $json.sku }}'\n  AND i.size = '{{ $json.size }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          896,
+          -240
+        ],
+        "id": "012f668f-f247-4abc-8edb-9c8f546e3094",
+        "name": "Old_product",
+        "executeOnce": false,
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT\n    pr.sku,\n    pr.name AS new_item,\n    i.size,\n    i.stock_quantity AS stock,\n    CASE\n        WHEN '%{{ $json.country }}%' = 'IN' THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\nFROM workspace.agentic_support.products pr\nJOIN workspace.agentic_support.inventory i\n    ON i.sku = pr.sku\nWHERE pr.name = '{{ $('When Executed by Another Workflow').item.json.product_name }}' "
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          -240
+        ],
+        "id": "cd490d07-d961-4680-a0f7-a693dcf34a5b",
+        "name": "New_ProductDetails",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"order\": [\n    {\n      \"order_id\": \"{{ $('gettingOrderDetails').item.json.order_id }}\",\n      \"customer_id\": \"{{ $('gettingOrderDetails').item.json.customer_id }}\",\n      \"country\": \"{{ $('gettingOrderDetails').item.json.country }}\",\n      \"currency\": \"{{ $('gettingOrderDetails').item.json.currency }}\",\n      \"item\": \"{{ $('gettingOrderDetails').item.json.item }}\",\n      \"sku\": \"{{ $('gettingOrderDetails').item.json.sku }}\",\n      \"size\": \"{{ $('gettingOrderDetails').item.json.size }}\",\n      \"amount\": \"{{ $('gettingOrderDetails').item.json.amount }}\",\n      \"order_status\": \"{{ $('gettingOrderDetails').item.json.order_status }}\",\n      \"refunded\": \"{{ $('gettingOrderDetails').item.json.refunded }}\",\n      \"ship_status\": \"{{ $('gettingOrderDetails').item.json.ship_status }}\",\n      \"days_since_delivery\": \"{{ $('gettingOrderDetails').item.json.days_since_delivery }}\",\n      \"return_window_days\": \"{{ $('gettingOrderDetails').item.json.return_window_days }}\",\n      \"policy_version\": \"{{ $('gettingOrderDetails').item.json.policy_version }}\",\n      \"return_count\": \"{{ $('gettingOrderDetails').item.json.return_count }}\",\n      \"refund_count\": \"{{ $('gettingOrderDetails').item.json.refund_count }}\",\n      \"exchange_count\": \"{{ $('gettingOrderDetails').item.json.exchange_count }}\",\n      \"category\": \"{{ $('gettingOrderDetails').item.json.category }}\",\n      \"risk_score_escalate\": \"{{ $('gettingOrderDetails').item.json.risk_score_escalate }}\",\n      \"serial_refund_threshold\": \"{{ $('gettingOrderDetails').item.json.serial_refund_threshold }}\"\n    }\n  ],\n  \"newitem\": [\n     {\n      \"sku\": '{{ $json.sku }}',\n      \"new_item\": '{{ $json.new_item }}',\n      \"size\": '{{ $json.size }}',\n      \"stock\": '{{ $json.stock }}',\n      \"price\":'{{ $json.price }}'\n    }\n  ],\n  \"confirmed\": \"true\",\n  \"risk_score\": \"20\",\n  \"refunds_last_90d\": 0\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1344,
+          -240
+        ],
+        "id": "a2bd7c6b-9e4c-43c3-adb5-fa65661d69fd",
+        "name": "Edit Fields9"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=\nUPDATE workspace.agentic_support.inventory\nSET stock_quantity = stock_quantity + 1\nWHERE sku = ''\n  AND size = ''\n  AND stock_quantity > 0;"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          3808,
+          -336
+        ],
+        "id": "20708c10-4450-4207-9031-45aafb101086",
+        "name": "uodatingInventory1",
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "a231d48f-1110-4810-94fd-c190dae1a132",
+                "leftValue": "={{Number($json.num_affected_rows)}}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          3136,
+          -432
+        ],
+        "id": "f5da4f05-af93-4bf5-a127-2572fcf7b046",
+        "name": "If4"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "4810fd0d-01f7-4d5d-988b-52b38e0e9af0",
+                "leftValue": "={{ Number($json.num_affected_rows) }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          3584,
+          -496
+        ],
+        "id": "6ed16845-6abb-4274-9e6d-45c6210bf73c",
+        "name": "If6"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=WITH config_values AS (\n    SELECT\n        MAX(CASE\n            WHEN config_key = 'as_of_date'\n            THEN CAST(config_value AS DATE)\n        END) AS asof,\n        MAX(CASE\n            WHEN config_key = 'risk_score_escalate'\n            THEN CAST(config_value AS INT)\n        END) AS risk_score_escalate,\n        MAX(CASE\n            WHEN config_key = 'serial_refund_threshold'\n            THEN CAST(config_value AS INT)\n        END) AS serial_refund_threshold\n    FROM workspace.agentic_support.config\n    WHERE config_key IN (\n        'as_of_date',\n        'risk_score_escalate',\n        'serial_refund_threshold'\n    )\n),\nreturn_counts AS (\n    SELECT order_id, COUNT(*) AS return_count\n    FROM workspace.agentic_support.returns\n    GROUP BY order_id\n),\nrefund_counts AS (\n    SELECT order_id, COUNT(*) AS refund_count\n    FROM workspace.agentic_support.refunds\n    GROUP BY order_id\n),\nexchange_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS exchange_count\n    FROM workspace.agentic_support.exchanges\n    WHERE status NOT IN ('rejected', 'cancelled')\n    GROUP BY order_id\n),\nproduct_categories AS (\n    SELECT\n        sku,\n        MAX(category) AS category\n    FROM workspace.agentic_support.products\n    GROUP BY sku\n)\nSELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.item,\n    o.sku,\n    o.size,\n    o.amount,\n    o.status AS order_status,\n    o.refunded,\n    s.status AS ship_status,\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n    p.return_window_days,\n    p.version AS policy_version,\n    COALESCE(rc.return_count, 0) AS return_count,\n    COALESCE(fc.refund_count, 0) AS refund_count,\n    COALESCE(ec.exchange_count, 0) AS exchange_count,\n    pc.category,\n    c.risk_score_escalate,\n    c.serial_refund_threshold\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\nCROSS JOIN config_values c\nLEFT JOIN return_counts rc\n    ON rc.order_id = o.order_id\nLEFT JOIN refund_counts fc\n    ON fc.order_id = o.order_id\nLEFT JOIN exchange_counts ec\n    ON ec.order_id = o.order_id\nLEFT JOIN product_categories pc\n    ON pc.sku = o.sku\nWHERE o.order_id Like '%{{ $json.order_id }}%'\n  AND o.customer_id Like '%{{ $json.customer_id }}%';"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          32,
+          -80
+        ],
+        "id": "79b8fa71-28c4-45c1-8ccc-36808c692479",
+        "name": "gettingOrderDetails",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "zIJmHoiWzIvErscZ",
+            "name": "Databricks-Nikhitha"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "984509a8-7f40-44f2-a856-28ec625efe90",
+                "leftValue": "={{ $json.country }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "129225a2-85bb-4bf2-9d5c-80161faa1863",
+                "leftValue": "={{ $json.sku }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "701886d2-0c98-4691-a815-3ff88ba0a1bb",
+                "leftValue": "={{ $json.size }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "4ce81984-130e-4f8b-b472-6ab30ce744e3",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          320,
+          -32
+        ],
+        "id": "cce01ae3-73a2-409a-94fb-96b27b742f19",
+        "name": "If7"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"Success\": \"false\",\n  \"Response\": \"Enetered details are invalid, not Order found with the details you entered\"\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          592,
+          112
+        ],
+        "id": "b3918947-4ae9-4f8c-90b0-0aadd36f9155",
+        "name": "Edit Fields"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Old_product",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Country,SizeSKU_not Found",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Getting_ruturnId&ExchangeId",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields8",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "core business logic gatekeeper": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Number of rows effected": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Inventory roes effected zero",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Returns Table": {
+        "main": [
+          [
+            {
+              "node": "If4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Returns Table",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Exchange Record": {
+        "main": [
+          [
+            {
+              "node": "If6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "update_order_status": {
+        "main": [
+          [
+            {
+              "node": "create_detail_and_event_fiekds",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create_order_event": {
+        "main": [
+          [
+            {
+              "node": "If2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "create_detail_and_event_fiekds": {
+        "main": [
+          [
+            {
+              "node": "Create_order_event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If2": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields2": {
+        "main": [
+          [
+            {
+              "node": "Create a case",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a case": {
+        "main": [
+          [
+            {
+              "node": "If3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If3": {
+        "main": [
+          [
+            {
+              "node": "Get a case",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get a case": {
+        "main": [
+          [
+            {
+              "node": "checking Inspection Created or Not",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "uodatingInventory": {
+        "main": [
+          [
+            {
+              "node": "Check Number of rows effected",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Getting_ruturnId&ExchangeId": {
+        "main": [
+          [
+            {
+              "node": "uodatingInventory",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Creating Inspection ": {
+        "main": [
+          [
+            {
+              "node": "Creating request_tracker",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "checking Inspection Created or Not": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Creating Inspection ",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Creating request_tracker": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          []
+        ]
+      },
+      "Inventory roes effected zero": {
+        "main": [
+          []
+        ]
+      },
+      "Edit Fields5": {
+        "main": [
+          []
+        ]
+      },
+      "Edit Fields7": {
+        "main": [
+          []
+        ]
+      },
+      "Edit Fields8": {
+        "main": [
+          []
+        ]
+      },
+      "If5": {
+        "main": [
+          [
+            {
+              "node": "gettingOrderDetails",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "OrderId&CustomerId_notFound",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Country,SizeSKU_not Found": {
+        "main": [
+          []
+        ]
+      },
+      "OrderId&CustomerId_notFound": {
+        "main": [
+          []
+        ]
+      },
+      "Old_product": {
+        "main": [
+          [
+            {
+              "node": "New_ProductDetails",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "New_ProductDetails": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields9",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields9": {
+        "main": [
+          [
+            {
+              "node": "core business logic gatekeeper",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If4": {
+        "main": [
+          [
+            {
+              "node": "Exchange Record",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "uodatingInventory1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If6": {
+        "main": [
+          [
+            {
+              "node": "update_order_status",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "uodatingInventory1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "gettingOrderDetails": {
+        "main": [
+          [
+            {
+              "node": "If7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If7": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Nikhitha Boyina",
+    "name": "Version 5",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-29T06:14:23.271Z",
+    "updatedAt": "2026-10-29T06:14:48.000Z"
+  }
+}
