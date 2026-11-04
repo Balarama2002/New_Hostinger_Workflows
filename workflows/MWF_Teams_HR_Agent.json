@@ -1,0 +1,2752 @@
+{
+  "id": "YHiXt4rbOuxR0oB3",
+  "name": "MWF_Teams_HR_Agent",
+  "active": true,
+  "activeVersionId": "7d9c6c0b-e1d9-4eac-bd26-f8ab7a80e27b",
+  "createdAt": "2026-08-14T06:02:15.587Z",
+  "updatedAt": "2026-11-04T10:33:46.720Z",
+  "isArchived": false,
+  "versionId": "7d9c6c0b-e1d9-4eac-bd26-f8ab7a80e27b",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+          "mode": "id"
+        },
+        "contentType": "html",
+        "message": "={{ $json.output }}",
+        "mentions": {
+          "mention": [
+            {
+              "userId": {
+                "__rl": true,
+                "value": "={{ $('Fetch Message Posted').item.json.from.user.id }}",
+                "mode": "id"
+              }
+            }
+          ]
+        },
+        "options": {
+          "includeLinkToWorkflow": false,
+          "mentionPlacement": "end"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        2240,
+        16
+      ],
+      "id": "cf4ea903-dd54-4799-b718-e27c554bc116",
+      "name": "Create chat message",
+      "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "event": "newChatMessage",
+        "watchAllChats": true
+      },
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        400
+      ],
+      "id": "32226014-5f0c-40d6-8fbc-1b45812f20c2",
+      "name": "Trigger for Chat Messages",
+      "webhookId": "d77da041-b40d-4749-b4d4-2f2dc2be11b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "operation": "get",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $json[\"@odata.id\"].split(\"'\")[1] }}",
+          "mode": "id"
+        },
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        224,
+        400
+      ],
+      "id": "70398a53-6d0a-4a54-86e5-a31c64480c2e",
+      "name": "Fetch Message Posted",
+      "webhookId": "196e4ba0-2763-4c3f-9ac4-86bf9007ec65",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "906b8752-714d-444a-841c-4b38bec57ff4",
+              "leftValue": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+              "rightValue": "TGH AI",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "5727ffab-2018-49b5-ab21-15b313da0385",
+              "leftValue": "={{ $('Fetch Message Posted').item.json.eventDetail }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "8b351279-9e9a-4ba1-964a-6a2d19765bd6",
+              "leftValue": "={{ $('Fetch Message Posted').item.json.messageType }}",
+              "rightValue": "message",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cc5c6958-54b6-49e3-a80d-5063c04a6ba9",
+              "leftValue": "={{ $json.chatType }}",
+              "rightValue": "oneOnOne",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        672,
+        496
+      ],
+      "id": "181c7320-e177-4703-ad9a-853052a7c161",
+      "name": "Check User Message/AI Message"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "lH0zvCgoFjbiDhdB",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/lH0zvCgoFjbiDhdB",
+          "cachedResultName": "SWF_RAG_VectorSearch"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1568,
+        208
+      ],
+      "name": "Call RAG-Agent",
+      "id": "40e30c39-985e-4362-9779-bf6d6bce24c9"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/chats/{{ $json.chatId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        448,
+        400
+      ],
+      "id": "b44fdf35-4405-4840-b7e4-c6df6422654d",
+      "name": "HTTP Request",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4902e26f-43df-4264-ae3d-26a978a59d75",
+              "name": "body_content",
+              "value": "={{ $('Fetch Message Posted').item.json.body.content }}",
+              "type": "string"
+            },
+            {
+              "id": "3d5ad997-dbb1-46e0-ac2f-c6f0d593a992",
+              "name": "Username",
+              "value": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        496
+      ],
+      "id": "f74bdf70-1c56-43a3-a75d-17d588516b51",
+      "name": "Request Format Sub Flow"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "9NtwBk4tc8mpAhUe",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/9NtwBk4tc8mpAhUe",
+          "cachedResultName": "SWF_RAG_NotifyCustomer"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "output_includes": "={{ $json.output }}",
+            "Chat Id": "={{ $('Fetch Message Posted').item.json.chatId }}",
+            "Message ID": "={{ $('Fetch Message Posted').item.json.id }}",
+            "from_user_displayName": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}"
+          },
+          "matchingColumns": [
+            "output_includes",
+            "from_user_displayName"
+          ],
+          "schema": [
+            {
+              "id": "output_includes",
+              "displayName": "output_includes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "from_user_displayName",
+              "displayName": "from_user_displayName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Chat Id",
+              "displayName": "Chat Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            },
+            {
+              "id": "Message ID",
+              "displayName": "Message ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        1792,
+        400
+      ],
+      "name": "Call Notify-Customers",
+      "id": "121f2c7d-968a-4f3b-a728-286c539366aa"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "NAME": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+            "QUESTION": "={{ $('Request Format Sub Flow').item.json.body_content }}",
+            "RESPONSE": "={{ $('Call RAG-Agent').item.json.output }}",
+            "MESSAGE_ID": "={{ $('Fetch Message Posted').item.json.id }}",
+            "ExecutionID": "={{ $json[\"execution ID\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "JIRA_NUMBER",
+              "displayName": "JIRA_NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_URL",
+              "displayName": "JIRA_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "QUESTION",
+              "displayName": "QUESTION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "RESPONSE",
+              "displayName": "RESPONSE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "MESSAGE_ID",
+              "displayName": "MESSAGE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "PROMPT_TOKENS",
+              "displayName": "PROMPT_TOKENS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "COMPLETION_TOKENS",
+              "displayName": "COMPLETION_TOKENS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "TOTAL_TOKENS",
+              "displayName": "TOTAL_TOKENS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "ExecutionID",
+              "displayName": "ExecutionID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {
+          "optimizeBulk": true
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        -176
+      ],
+      "id": "df114722-2647-4e7f-a0b0-51ccc044eeb2",
+      "name": "Audit Log"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "MESSAGE_ID",
+              "keyValue": "={{ $('Fetch Message Posted').item.json.id }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "JIRA_NUMBER": "={{ $json[\"JIRA Ticket\"] }}",
+            "JIRA_URL": "={{ $json[\"JIRA URL\"] }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_NUMBER",
+              "displayName": "JIRA_NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "JIRA_URL",
+              "displayName": "JIRA_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "QUESTION",
+              "displayName": "QUESTION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "RESPONSE",
+              "displayName": "RESPONSE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "MESSAGE_ID",
+              "displayName": "MESSAGE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        1664
+      ],
+      "id": "d79a9848-e557-44fe-94c2-f0ce92d81f84",
+      "name": "Update_Audit-Log"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9dcbfed4-f270-4771-8859-ed68e4760122",
+              "name": "output",
+              "value": "={{ $json.output.replace(/^Status:[\\s\\S]*?Answer:\\s*/i, '').trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1792,
+        16
+      ],
+      "id": "f8aca860-e06a-4e7a-a790-ce5460a3e370",
+      "name": "Structuring the Data Accoring to Teams format"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://graph.microsoft.com/v1.0/chats/{{ $('Fetch Message Posted').item.json.chatId }}/messages ",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"body\": {\n    \"contentType\": \"html\",\n    \"content\": \"<attachment id=\\\"hrFeedbackCard\\\"></attachment>\"\n  },\n  \"attachments\": [\n    {\n      \"id\": \"hrFeedbackCard\",\n      \"contentType\": \"application/vnd.microsoft.card.adaptive\",\n      \"contentUrl\": null,\n      \"content\": \"{\\\"$schema\\\":\\\"http://adaptivecards.io/schemas/adaptive-card.json\\\",\\\"type\\\":\\\"AdaptiveCard\\\",\\\"version\\\":\\\"1.2\\\",\\\"body\\\":[{\\\"type\\\":\\\"TextBlock\\\",\\\"text\\\":\\\"Was this response helpful?\\\",\\\"weight\\\":\\\"Bolder\\\",\\\"spacing\\\":\\\"Medium\\\",\\\"wrap\\\":true}],\\\"actions\\\":[{\\\"type\\\":\\\"Action.OpenUrl\\\",\\\"title\\\":\\\"👍 Helpful\\\",\\\"url\\\":\\\"https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141?action=helpful&messageId= {{ $('Fetch Message Posted').item.json.id }}&userName={{ $('Fetch Message Posted').item.json.from.user.displayName }}&chat_id={{ $('Trigger for Chat Messages').item.json['@odata.id'].split(\"'\")[1] }}\\\"},{\\\"type\\\":\\\"Action.OpenUrl\\\",\\\"title\\\":\\\"👎 Not Helpful\\\",\\\"url\\\":\\\"https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141?action=not_helpful&messageId= {{ $('Fetch Message Posted').item.json.id }}&userName={{ $('Fetch Message Posted').item.json.from.user.displayName }}&chat_id={{ $('Trigger for Chat Messages').item.json['@odata.id'].split(\"'\")[1] }}\\\"},{\\\"type\\\":\\\"Action.OpenUrl\\\",\\\"title\\\":\\\"🎟️ Raise a ticket\\\",\\\"url\\\":\\\"https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141?action=raise_ticket&messageId= {{ $('Fetch Message Posted').item.json.id }}&userName={{ $('Fetch Message Posted').item.json.from.user.displayName }}&chat_id={{ $('Trigger for Chat Messages').item.json['@odata.id'].split(\"'\")[1] }}\\\"}]}\"\n    }\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1792,
+        208
+      ],
+      "id": "92a82d44-76d8-4145-b847-3b644f953c93",
+      "name": "HTTP Request1",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+          "mode": "id"
+        },
+        "contentType": "html",
+        "message": "=JIRA Ticket Created Successfully. Due to insufficient data, please track the request using the URL below. ",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1664
+      ],
+      "id": "bb6de850-ab1c-4a48-9d14-efef8bf6f674",
+      "name": "Create chat message1",
+      "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/users/{{ $('Fetch Message Posted').item.json.from.user.id }}?$select=id,displayName,mail,userPrincipalName,officeLocation,city,state,country ",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        672,
+        304
+      ],
+      "id": "3210db99-0f97-405f-82ba-49a6e31e42cf",
+      "name": "HTTP Request2",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "ZJIZAiPJUcDp9vkH",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/ZJIZAiPJUcDp9vkH",
+          "cachedResultName": "SWF_AI_Token_Consumption"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Execution-Id": "={{ $json[\"execution ID\"] }}"
+          },
+          "matchingColumns": [
+            "Execution-Id"
+          ],
+          "schema": [
+            {
+              "id": "Execution-Id",
+              "displayName": "Execution-Id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string",
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1792,
+        592
+      ],
+      "id": "f97a5779-a176-4bd2-b700-2f1f1b7f4c18",
+      "name": "Call 'SWF_AI_Token_Consumption'"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9d3bff09-0042-40c4-86e0-b3ba234522fb",
+              "name": "output",
+              "value": "={{ $json.output.replace(/<br><br>Status: Sufficient Data/g, '').trim() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        16
+      ],
+      "id": "90b23ffe-66c4-4098-a778-d05918aa44c7",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "MESSAGE_ID",
+              "keyValue": "={{ $('Webhook').isExecuted ?$('Webhook').item.json.query.message_id.trim() : $('Start').item.json[\"Message ID\"] }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "JIRA_NUMBER": "={{ $('Create an issue').item.json.key }}",
+            "JIRA_URL": "={{ $('Create an issue').item.json.self }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_NUMBER",
+              "displayName": "JIRA_NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "JIRA_URL",
+              "displayName": "JIRA_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "QUESTION",
+              "displayName": "QUESTION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "RESPONSE",
+              "displayName": "RESPONSE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "MESSAGE_ID",
+              "displayName": "MESSAGE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        1440
+      ],
+      "id": "22f5df77-b55e-420d-a180-02110cb863a2",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "19:582034f1e4704a64b39d01850c1e7935@thread.v2",
+          "mode": "list",
+          "cachedResultName": "Bathini Sindhura, Cherukuri Bala Rama Krishna, TGH AI (group)",
+          "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A582034f1e4704a64b39d01850c1e7935%40thread.v2/0?tenantId=261bcec6-f2fd-4665-bd3f-a1e563b397b3"
+        },
+        "contentType": "html",
+        "message": "={{ JSON.parse($('AI Agent').item.json.output).description }}- <b>Requested by:</b> {{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}\n<br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        0,
+        1440
+      ],
+      "id": "507be107-0924-48c8-a099-c1d9b849e313",
+      "name": "Create chat message2",
+      "webhookId": "59ced8b8-67a0-494e-8ca2-a29f52606cff",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.chat_id : $('Start').item.json[\"Chat Id\"] }}",
+          "mode": "id"
+        },
+        "contentType": "html",
+        "message": "=JIRA Ticket Created Successfully. Due to insufficient data, please track the request using the URL below. <br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        224,
+        1440
+      ],
+      "id": "0c33a233-2bf4-4099-98bf-9b86fcbd679e",
+      "name": "Create chat message3",
+      "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "NAME",
+              "keyValue": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}"
+            }
+          ]
+        },
+        "limit": 1,
+        "orderBy": true
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1120
+      ],
+      "id": "72fecf65-6be3-4c0e-be70-843c97d0344e",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert search query reformulator for an enterprise HR policy assistant. Your task is to rewrite the user's latest question into a single, self-contained, standalone search query using the previous conversation context. Rules: 1. Resolve all pronouns and ambiguous references (\"them\", \"it\", \"that policy\", \"what about probation?\") to the specific topic discussed previously. 2. If the user's question is already a complete, standalone question, return it EXACTLY as is without changes. 3. If the user sends a greeting (e.g., \"hi\", \"hello\", \"thanks\"), return it as is. 4. Do NOT answer the question. Return ONLY the rewritten query string. Previous Conversation: Employee: {{ $json.QUESTION }} Assistant: {{ $json.RESPONSE }} Current Employee Message: {{ $('Fetch Message Posted').item.json.body.content }} Standalone Search Query:",
+        "hasOutputParser": true,
+        "messages": {
+          "messageValues": [
+            {
+              "type": "HumanMessagePromptTemplate",
+              "message": "=You are an expert search query reformulator for an enterprise HR policy assistant. Your task is to rewrite the user's latest question into a single, self-contained, standalone search query using the previous conversation context. Rules: 1. Resolve all pronouns and ambiguous references (\"them\", \"it\", \"that policy\", \"what about probation?\") to the specific topic discussed previously. 2. If the user's question is already a complete, standalone question, return it EXACTLY as is without changes. 3. If the user sends a greeting (e.g., \"hi\", \"hello\", \"thanks\"), return it as is. 4. Do NOT answer the question. Return ONLY the rewritten query string. Previous Conversation: Employee: {{ $json.QUESTION }} Assistant: {{ $json.RESPONSE }} Current Employee Message: {{ $('Fetch Message Posted').item.json.body.content }} Standalone Search Query:"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        1008
+      ],
+      "id": "f1fb6213-a4e6-43fe-8560-cef1cf0b8d8c",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        296,
+        1240
+      ],
+      "id": "8107c926-f8b9-48b7-b120-9c8b914485ff",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "QBYmsFldgsugA9Tf",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "mpE2hkHb4ipjUZ7p",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/mpE2hkHb4ipjUZ7p",
+          "cachedResultName": "SWF_Check_Tokens"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.4,
+      "position": [
+        1120,
+        496
+      ],
+      "id": "52301857-884e-4625-9404-5cdbce84300f",
+      "name": "Call 'SWF_Check_Tokens'"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "4f196097-d8b1-47ff-9064-99beded2c049",
+              "leftValue": "={{ $json.Output }}",
+              "rightValue": "True",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1344,
+        496
+      ],
+      "id": "b0f44651-67ea-4fe3-aa64-5344a0e215bf",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "11d536d0-d67e-4117-90c9-8098c2fd79b8",
+              "name": "Output",
+              "value": "={{ $json.Output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        784
+      ],
+      "id": "634d5feb-93c1-46df-851d-e27d252d61d5",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+          "mode": "id"
+        },
+        "contentType": "html",
+        "message": "={{ $json.Output }}",
+        "mentions": {
+          "mention": [
+            {
+              "userId": {
+                "__rl": true,
+                "value": "={{ $('Fetch Message Posted').item.json.from.user.id }}",
+                "mode": "id"
+              }
+            }
+          ]
+        },
+        "options": {
+          "includeLinkToWorkflow": false,
+          "mentionPlacement": "start"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1792,
+        784
+      ],
+      "id": "ce7a8558-631f-4bbf-ac98-27f41a4b9716",
+      "name": "Create chat message4",
+      "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Trigger for Chat Messages": {
+      "main": [
+        [
+          {
+            "node": "Fetch Message Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Message Posted": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User Message/AI Message": {
+      "main": [
+        [
+          {
+            "node": "Request Format Sub Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call RAG-Agent": {
+      "main": [
+        [
+          {
+            "node": "Structuring the Data Accoring to Teams format",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call Notify-Customers",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Audit Log",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Call 'SWF_AI_Token_Consumption'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Check User Message/AI Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Format Sub Flow": {
+      "main": [
+        [
+          {
+            "node": "Call 'SWF_Check_Tokens'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chat message": {
+      "main": [
+        []
+      ]
+    },
+    "Call Notify-Customers": {
+      "main": [
+        []
+      ]
+    },
+    "Structuring the Data Accoring to Teams format": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chat message1": {
+      "main": [
+        [
+          {
+            "node": "Update_Audit-Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Create chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chat message2": {
+      "main": [
+        [
+          {
+            "node": "Create chat message3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create chat message3": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        []
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call 'SWF_Check_Tokens'": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Call RAG-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Create chat message4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "vtN1JQvH45zQjAiD",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": {
+    "node:Trigger for Chat Messages": {
+      "subscriptionIds": [
+        "60da9b69-ff49-4122-912b-0e7a13f9e5a7"
+      ],
+      "webhookSecret": "901cb87b3411e2c26d3a6e20d5a9d86709d1c4de18070e87c22bb0dd6fecbddf"
+    }
+  },
+  "pinData": {
+    "Get row(s)": [
+      {
+        "json": {
+          "NAME": "Om Dilip Takey",
+          "JIRA_NUMBER": null,
+          "JIRA_URL": null,
+          "QUESTION": "What are the next steps if I am on bench after being on a project?",
+          "RESPONSE": "Status: Sufficient Data<br><br>Answer: <br>When you are on the bench after finishing a project, you must follow specific guidelines outlined in the Bench Policy to ensure productive use of your time. <br><br>Here are your mandatory next steps and guidelines:<br><br>- Work From Office (WFO): Working from the office premises is mandatory during your bench period, unless you have prior approval from your Reporting Manager (RM) and HR.<br>- Daily Status Reports: You must submit a daily status report to your Reporting Manager and HR using the shared Status Mail format template.<br>- Availability: Remain actively available on Microsoft Teams for communication and collaboration purposes.<br>- Upskilling and Cross-Training: Utilize your bench time for self-improvement by cross-training in new technologies (such as MuleSoft, Boomi, EDI, Workato, etc.) in agreement with your RM. This can also include participating in training sessions, providing backend support, and creating technical content for TGH.<br>- Emergency WFH: If you require Work From Home during an emergency, prior approval is mandatory. Taking WFH for more than 2 days requires approval from the HR Head.<br><br>⚠️ Please note that failure to adhere to these guidelines may impact your ratings or appraisals and could result in disciplinary actions.<br><br>📄 Source:<br>Bench Policy – Guidelines for Employees Not Currently Assigned to a Project<br><br>❓ You may also ask:<br>• How do I get approval for working from home during an emergency while on the bench?<br>• What template should I use for my daily status report?<br>• Can I apply for leave while on the bench?",
+          "MESSAGE_ID": "1793776845053",
+          "Feedback": null,
+          "PROMPT_TOKENS": "6863",
+          "COMPLETION_TOKENS": "352",
+          "TOTAL_TOKENS": "7215",
+          "ExecutionID": "27179",
+          "id": 180,
+          "createdAt": "2026-11-04T07:22:12.875Z",
+          "updatedAt": "2026-11-04T07:22:26.082Z"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "YHiXt4rbOuxR0oB3",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-14T06:02:15.589Z",
+      "updatedAt": "2026-08-14T06:02:15.589Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "7d9c6c0b-e1d9-4eac-bd26-f8ab7a80e27b",
+    "workflowId": "YHiXt4rbOuxR0oB3",
+    "nodes": [
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+            "mode": "id"
+          },
+          "contentType": "html",
+          "message": "={{ $json.output }}",
+          "mentions": {
+            "mention": [
+              {
+                "userId": {
+                  "__rl": true,
+                  "value": "={{ $('Fetch Message Posted').item.json.from.user.id }}",
+                  "mode": "id"
+                }
+              }
+            ]
+          },
+          "options": {
+            "includeLinkToWorkflow": false,
+            "mentionPlacement": "end"
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          2240,
+          16
+        ],
+        "id": "cf4ea903-dd54-4799-b718-e27c554bc116",
+        "name": "Create chat message",
+        "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "event": "newChatMessage",
+          "watchAllChats": true
+        },
+        "type": "n8n-nodes-base.microsoftTeamsTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          400
+        ],
+        "id": "32226014-5f0c-40d6-8fbc-1b45812f20c2",
+        "name": "Trigger for Chat Messages",
+        "webhookId": "d77da041-b40d-4749-b4d4-2f2dc2be11b4",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "operation": "get",
+          "chatId": {
+            "__rl": true,
+            "value": "={{ $json[\"@odata.id\"].split(\"'\")[1] }}",
+            "mode": "id"
+          },
+          "messageId": "={{ $json.id }}"
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          224,
+          400
+        ],
+        "id": "70398a53-6d0a-4a54-86e5-a31c64480c2e",
+        "name": "Fetch Message Posted",
+        "webhookId": "196e4ba0-2763-4c3f-9ac4-86bf9007ec65",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "906b8752-714d-444a-841c-4b38bec57ff4",
+                "leftValue": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+                "rightValue": "TGH AI",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              },
+              {
+                "id": "5727ffab-2018-49b5-ab21-15b313da0385",
+                "leftValue": "={{ $('Fetch Message Posted').item.json.eventDetail }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "object",
+                  "operation": "notExists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "8b351279-9e9a-4ba1-964a-6a2d19765bd6",
+                "leftValue": "={{ $('Fetch Message Posted').item.json.messageType }}",
+                "rightValue": "message",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "cc5c6958-54b6-49e3-a80d-5063c04a6ba9",
+                "leftValue": "={{ $json.chatType }}",
+                "rightValue": "oneOnOne",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          672,
+          496
+        ],
+        "id": "181c7320-e177-4703-ad9a-853052a7c161",
+        "name": "Check User Message/AI Message"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "lH0zvCgoFjbiDhdB",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/lH0zvCgoFjbiDhdB",
+            "cachedResultName": "SWF_RAG_VectorSearch"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": true,
+            "convertFieldsToString": true
+          },
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          1568,
+          208
+        ],
+        "name": "Call RAG-Agent",
+        "id": "40e30c39-985e-4362-9779-bf6d6bce24c9"
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/chats/{{ $json.chatId }}",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          448,
+          400
+        ],
+        "id": "b44fdf35-4405-4840-b7e4-c6df6422654d",
+        "name": "HTTP Request",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        },
+        "onError": "continueErrorOutput"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "4902e26f-43df-4264-ae3d-26a978a59d75",
+                "name": "body_content",
+                "value": "={{ $('Fetch Message Posted').item.json.body.content }}",
+                "type": "string"
+              },
+              {
+                "id": "3d5ad997-dbb1-46e0-ac2f-c6f0d593a992",
+                "name": "Username",
+                "value": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          896,
+          496
+        ],
+        "id": "f74bdf70-1c56-43a3-a75d-17d588516b51",
+        "name": "Request Format Sub Flow"
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "9NtwBk4tc8mpAhUe",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/9NtwBk4tc8mpAhUe",
+            "cachedResultName": "SWF_RAG_NotifyCustomer"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "output_includes": "={{ $json.output }}",
+              "Chat Id": "={{ $('Fetch Message Posted').item.json.chatId }}",
+              "Message ID": "={{ $('Fetch Message Posted').item.json.id }}",
+              "from_user_displayName": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}"
+            },
+            "matchingColumns": [
+              "output_includes",
+              "from_user_displayName"
+            ],
+            "schema": [
+              {
+                "id": "output_includes",
+                "displayName": "output_includes",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "from_user_displayName",
+                "displayName": "from_user_displayName",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "removed": false
+              },
+              {
+                "id": "Chat Id",
+                "displayName": "Chat Id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              },
+              {
+                "id": "Message ID",
+                "displayName": "Message ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": true,
+            "convertFieldsToString": true
+          },
+          "options": {
+            "waitForSubWorkflow": true
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.2,
+        "position": [
+          1792,
+          400
+        ],
+        "name": "Call Notify-Customers",
+        "id": "121f2c7d-968a-4f3b-a728-286c539366aa"
+      },
+      {
+        "parameters": {
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "NAME": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+              "QUESTION": "={{ $('Request Format Sub Flow').item.json.body_content }}",
+              "RESPONSE": "={{ $('Call RAG-Agent').item.json.output }}",
+              "MESSAGE_ID": "={{ $('Fetch Message Posted').item.json.id }}",
+              "ExecutionID": "={{ $json[\"execution ID\"] }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "JIRA_NUMBER",
+                "displayName": "JIRA_NUMBER",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_URL",
+                "displayName": "JIRA_URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "QUESTION",
+                "displayName": "QUESTION",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "RESPONSE",
+                "displayName": "RESPONSE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "MESSAGE_ID",
+                "displayName": "MESSAGE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "Feedback",
+                "displayName": "Feedback",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "PROMPT_TOKENS",
+                "displayName": "PROMPT_TOKENS",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "COMPLETION_TOKENS",
+                "displayName": "COMPLETION_TOKENS",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "TOTAL_TOKENS",
+                "displayName": "TOTAL_TOKENS",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "ExecutionID",
+                "displayName": "ExecutionID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {
+            "optimizeBulk": true
+          }
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          1792,
+          -176
+        ],
+        "id": "df114722-2647-4e7f-a0b0-51ccc044eeb2",
+        "name": "Audit Log"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "MESSAGE_ID",
+                "keyValue": "={{ $('Fetch Message Posted').item.json.id }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "JIRA_NUMBER": "={{ $json[\"JIRA Ticket\"] }}",
+              "JIRA_URL": "={{ $json[\"JIRA URL\"] }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_NUMBER",
+                "displayName": "JIRA_NUMBER",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "JIRA_URL",
+                "displayName": "JIRA_URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "QUESTION",
+                "displayName": "QUESTION",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "RESPONSE",
+                "displayName": "RESPONSE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "MESSAGE_ID",
+                "displayName": "MESSAGE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          224,
+          1664
+        ],
+        "id": "d79a9848-e557-44fe-94c2-f0ce92d81f84",
+        "name": "Update_Audit-Log"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9dcbfed4-f270-4771-8859-ed68e4760122",
+                "name": "output",
+                "value": "={{ $json.output.replace(/^Status:[\\s\\S]*?Answer:\\s*/i, '').trim() }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1792,
+          16
+        ],
+        "id": "f8aca860-e06a-4e7a-a790-ce5460a3e370",
+        "name": "Structuring the Data Accoring to Teams format"
+      },
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "=https://graph.microsoft.com/v1.0/chats/{{ $('Fetch Message Posted').item.json.chatId }}/messages ",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": []
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"body\": {\n    \"contentType\": \"html\",\n    \"content\": \"<attachment id=\\\"hrFeedbackCard\\\"></attachment>\"\n  },\n  \"attachments\": [\n    {\n      \"id\": \"hrFeedbackCard\",\n      \"contentType\": \"application/vnd.microsoft.card.adaptive\",\n      \"contentUrl\": null,\n      \"content\": \"{\\\"$schema\\\":\\\"http://adaptivecards.io/schemas/adaptive-card.json\\\",\\\"type\\\":\\\"AdaptiveCard\\\",\\\"version\\\":\\\"1.2\\\",\\\"body\\\":[{\\\"type\\\":\\\"TextBlock\\\",\\\"text\\\":\\\"Was this response helpful?\\\",\\\"weight\\\":\\\"Bolder\\\",\\\"spacing\\\":\\\"Medium\\\",\\\"wrap\\\":true}],\\\"actions\\\":[{\\\"type\\\":\\\"Action.OpenUrl\\\",\\\"title\\\":\\\"👍 Helpful\\\",\\\"url\\\":\\\"https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141?action=helpful&messageId= {{ $('Fetch Message Posted').item.json.id }}&userName={{ $('Fetch Message Posted').item.json.from.user.displayName }}&chat_id={{ $('Trigger for Chat Messages').item.json['@odata.id'].split(\"'\")[1] }}\\\"},{\\\"type\\\":\\\"Action.OpenUrl\\\",\\\"title\\\":\\\"👎 Not Helpful\\\",\\\"url\\\":\\\"https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141?action=not_helpful&messageId= {{ $('Fetch Message Posted').item.json.id }}&userName={{ $('Fetch Message Posted').item.json.from.user.displayName }}&chat_id={{ $('Trigger for Chat Messages').item.json['@odata.id'].split(\"'\")[1] }}\\\"},{\\\"type\\\":\\\"Action.OpenUrl\\\",\\\"title\\\":\\\"🎟️ Raise a ticket\\\",\\\"url\\\":\\\"https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141?action=raise_ticket&messageId= {{ $('Fetch Message Posted').item.json.id }}&userName={{ $('Fetch Message Posted').item.json.from.user.displayName }}&chat_id={{ $('Trigger for Chat Messages').item.json['@odata.id'].split(\"'\")[1] }}\\\"}]}\"\n    }\n  ]\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          1792,
+          208
+        ],
+        "id": "92a82d44-76d8-4145-b847-3b644f953c93",
+        "name": "HTTP Request1",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+            "mode": "id"
+          },
+          "contentType": "html",
+          "message": "=JIRA Ticket Created Successfully. Due to insufficient data, please track the request using the URL below. ",
+          "options": {
+            "includeLinkToWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          0,
+          1664
+        ],
+        "id": "bb6de850-ab1c-4a48-9d14-efef8bf6f674",
+        "name": "Create chat message1",
+        "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/users/{{ $('Fetch Message Posted').item.json.from.user.id }}?$select=id,displayName,mail,userPrincipalName,officeLocation,city,state,country ",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          672,
+          304
+        ],
+        "id": "3210db99-0f97-405f-82ba-49a6e31e42cf",
+        "name": "HTTP Request2",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "ZJIZAiPJUcDp9vkH",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/ZJIZAiPJUcDp9vkH",
+            "cachedResultName": "SWF_AI_Token_Consumption"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Execution-Id": "={{ $json[\"execution ID\"] }}"
+            },
+            "matchingColumns": [
+              "Execution-Id"
+            ],
+            "schema": [
+              {
+                "id": "Execution-Id",
+                "displayName": "Execution-Id",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "canBeUsedToMatch": true,
+                "type": "string",
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "position": [
+          1792,
+          592
+        ],
+        "id": "f97a5779-a176-4bd2-b700-2f1f1b7f4c18",
+        "name": "Call 'SWF_AI_Token_Consumption'"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9d3bff09-0042-40c4-86e0-b3ba234522fb",
+                "name": "output",
+                "value": "={{ $json.output.replace(/<br><br>Status: Sufficient Data/g, '').trim() }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          16
+        ],
+        "id": "90b23ffe-66c4-4098-a778-d05918aa44c7",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "MESSAGE_ID",
+                "keyValue": "={{ $('Webhook').isExecuted ?$('Webhook').item.json.query.message_id.trim() : $('Start').item.json[\"Message ID\"] }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "JIRA_NUMBER": "={{ $('Create an issue').item.json.key }}",
+              "JIRA_URL": "={{ $('Create an issue').item.json.self }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_NUMBER",
+                "displayName": "JIRA_NUMBER",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "JIRA_URL",
+                "displayName": "JIRA_URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              },
+              {
+                "id": "QUESTION",
+                "displayName": "QUESTION",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "RESPONSE",
+                "displayName": "RESPONSE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "MESSAGE_ID",
+                "displayName": "MESSAGE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "Feedback",
+                "displayName": "Feedback",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          448,
+          1440
+        ],
+        "id": "22f5df77-b55e-420d-a180-02110cb863a2",
+        "name": "Update row(s)"
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "19:582034f1e4704a64b39d01850c1e7935@thread.v2",
+            "mode": "list",
+            "cachedResultName": "Bathini Sindhura, Cherukuri Bala Rama Krishna, TGH AI (group)",
+            "cachedResultUrl": "https://teams.microsoft.com/l/chat/19%3A582034f1e4704a64b39d01850c1e7935%40thread.v2/0?tenantId=261bcec6-f2fd-4665-bd3f-a1e563b397b3"
+          },
+          "contentType": "html",
+          "message": "={{ JSON.parse($('AI Agent').item.json.output).description }}- <b>Requested by:</b> {{ $('Webhook').isExecuted ? $('Webhook').item.json.query.userName : $('Start').item.json.from_user_displayName }}\n<br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+          "options": {
+            "includeLinkToWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          0,
+          1440
+        ],
+        "id": "507be107-0924-48c8-a099-c1d9b849e313",
+        "name": "Create chat message2",
+        "webhookId": "59ced8b8-67a0-494e-8ca2-a29f52606cff",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "={{ $('Webhook').isExecuted ? $('Webhook').item.json.query.chat_id : $('Start').item.json[\"Chat Id\"] }}",
+            "mode": "id"
+          },
+          "contentType": "html",
+          "message": "=JIRA Ticket Created Successfully. Due to insufficient data, please track the request using the URL below. <br>\n<b>JIRA Ticket Number:</b>\n<a href=\"https://ram25tgh.atlassian.net/browse/{{ $('Create an issue').item.json.key }}\">\n{{ $('Create an issue').item.json.key }}\n</a>",
+          "options": {
+            "includeLinkToWorkflow": false
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          224,
+          1440
+        ],
+        "id": "0c33a233-2bf4-4099-98bf-9b86fcbd679e",
+        "name": "Create chat message3",
+        "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "NAME",
+                "keyValue": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}"
+              }
+            ]
+          },
+          "limit": 1,
+          "orderBy": true
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          0,
+          1120
+        ],
+        "id": "72fecf65-6be3-4c0e-be70-843c97d0344e",
+        "name": "Get row(s)"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "=You are an expert search query reformulator for an enterprise HR policy assistant. Your task is to rewrite the user's latest question into a single, self-contained, standalone search query using the previous conversation context. Rules: 1. Resolve all pronouns and ambiguous references (\"them\", \"it\", \"that policy\", \"what about probation?\") to the specific topic discussed previously. 2. If the user's question is already a complete, standalone question, return it EXACTLY as is without changes. 3. If the user sends a greeting (e.g., \"hi\", \"hello\", \"thanks\"), return it as is. 4. Do NOT answer the question. Return ONLY the rewritten query string. Previous Conversation: Employee: {{ $json.QUESTION }} Assistant: {{ $json.RESPONSE }} Current Employee Message: {{ $('Fetch Message Posted').item.json.body.content }} Standalone Search Query:",
+          "hasOutputParser": true,
+          "messages": {
+            "messageValues": [
+              {
+                "type": "HumanMessagePromptTemplate",
+                "message": "=You are an expert search query reformulator for an enterprise HR policy assistant. Your task is to rewrite the user's latest question into a single, self-contained, standalone search query using the previous conversation context. Rules: 1. Resolve all pronouns and ambiguous references (\"them\", \"it\", \"that policy\", \"what about probation?\") to the specific topic discussed previously. 2. If the user's question is already a complete, standalone question, return it EXACTLY as is without changes. 3. If the user sends a greeting (e.g., \"hi\", \"hello\", \"thanks\"), return it as is. 4. Do NOT answer the question. Return ONLY the rewritten query string. Previous Conversation: Employee: {{ $json.QUESTION }} Assistant: {{ $json.RESPONSE }} Current Employee Message: {{ $('Fetch Message Posted').item.json.body.content }} Standalone Search Query:"
+              }
+            ]
+          },
+          "batching": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.chainLlm",
+        "typeVersion": 1.9,
+        "position": [
+          224,
+          1008
+        ],
+        "id": "f1fb6213-a4e6-43fe-8560-cef1cf0b8d8c",
+        "name": "Basic LLM Chain"
+      },
+      {
+        "parameters": {
+          "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          296,
+          1240
+        ],
+        "id": "8107c926-f8b9-48b7-b120-9c8b914485ff",
+        "name": "OpenRouter Chat Model",
+        "credentials": {
+          "openRouterApi": {
+            "id": "QBYmsFldgsugA9Tf",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowId": {
+            "__rl": true,
+            "value": "mpE2hkHb4ipjUZ7p",
+            "mode": "list",
+            "cachedResultUrl": "/workflow/mpE2hkHb4ipjUZ7p",
+            "cachedResultName": "SWF_Check_Tokens"
+          },
+          "workflowInputs": {
+            "mappingMode": "defineBelow",
+            "value": {},
+            "matchingColumns": [],
+            "schema": [],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": true
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.executeWorkflow",
+        "typeVersion": 1.4,
+        "position": [
+          1120,
+          496
+        ],
+        "id": "52301857-884e-4625-9404-5cdbce84300f",
+        "name": "Call 'SWF_Check_Tokens'"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "4f196097-d8b1-47ff-9064-99beded2c049",
+                "leftValue": "={{ $json.Output }}",
+                "rightValue": "True",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1344,
+          496
+        ],
+        "id": "b0f44651-67ea-4fe3-aa64-5344a0e215bf",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "11d536d0-d67e-4117-90c9-8098c2fd79b8",
+                "name": "Output",
+                "value": "={{ $json.Output }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1568,
+          784
+        ],
+        "id": "634d5feb-93c1-46df-851d-e27d252d61d5",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "resource": "chatMessage",
+          "chatId": {
+            "__rl": true,
+            "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+            "mode": "id"
+          },
+          "contentType": "html",
+          "message": "={{ $json.Output }}",
+          "mentions": {
+            "mention": [
+              {
+                "userId": {
+                  "__rl": true,
+                  "value": "={{ $('Fetch Message Posted').item.json.from.user.id }}",
+                  "mode": "id"
+                }
+              }
+            ]
+          },
+          "options": {
+            "includeLinkToWorkflow": false,
+            "mentionPlacement": "start"
+          }
+        },
+        "type": "n8n-nodes-base.microsoftTeams",
+        "typeVersion": 2,
+        "position": [
+          1792,
+          784
+        ],
+        "id": "ce7a8558-631f-4bbf-ac98-27f41a4b9716",
+        "name": "Create chat message4",
+        "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Trigger for Chat Messages": {
+        "main": [
+          [
+            {
+              "node": "Fetch Message Posted",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Message Posted": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check User Message/AI Message": {
+        "main": [
+          [
+            {
+              "node": "Request Format Sub Flow",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call RAG-Agent": {
+        "main": [
+          [
+            {
+              "node": "Structuring the Data Accoring to Teams format",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Call Notify-Customers",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Audit Log",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request1",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Call 'SWF_AI_Token_Consumption'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Check User Message/AI Message",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Request Format Sub Flow": {
+        "main": [
+          [
+            {
+              "node": "Call 'SWF_Check_Tokens'",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create chat message": {
+        "main": [
+          []
+        ]
+      },
+      "Call Notify-Customers": {
+        "main": [
+          []
+        ]
+      },
+      "Structuring the Data Accoring to Teams format": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create chat message1": {
+        "main": [
+          [
+            {
+              "node": "Update_Audit-Log",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          []
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Create chat message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create chat message2": {
+        "main": [
+          [
+            {
+              "node": "Create chat message3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create chat message3": {
+        "main": [
+          [
+            {
+              "node": "Update row(s)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get row(s)": {
+        "main": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Basic LLM Chain": {
+        "main": [
+          []
+        ]
+      },
+      "OpenRouter Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "Basic LLM Chain",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Call 'SWF_Check_Tokens'": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Call RAG-Agent",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Create chat message4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 7d9c6c0b",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-04T10:33:46.727Z",
+    "updatedAt": "2026-11-04T10:33:53.000Z"
+  }
+}
