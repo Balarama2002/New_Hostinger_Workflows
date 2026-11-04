@@ -1,0 +1,441 @@
+{
+  "id": "B7b9uddumn40CXKZ",
+  "name": "Mule Release Notes",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-15T06:52:09.182Z",
+  "updatedAt": "2026-10-27T10:08:33.540Z",
+  "isArchived": false,
+  "versionId": "decee34a-751a-412d-99ae-c57a70045b6f",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://docs.mulesoft.com/release-notes/quick-refs/by-date-index",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        32
+      ],
+      "id": "e99114b6-f380-4f4a-af98-984e5f380bab",
+      "name": "Get MuleSoft Monthly Release Index"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// EXTRACTING THE DETAILS\n// ============================================================\n// IMPORTANT:\n// - Request Details is responsible for interpreting the user's\n//   month input.\n// - This node only uses the normalized targetMonth.\n// - If no month was supplied, Request Details should already\n//   have set targetMonth to the previous completed month.\n// ============================================================\n\n\n// ------------------------------------------------------------\n// 1. GET INPUT HTML\n// ------------------------------------------------------------\n\nconst html = $input.first().json.data;\n\nif (!html || typeof html !== 'string') {\n  return [\n    {\n      json: {\n        success: false,\n        message: 'No HTML data found from Get MuleSoft Monthly Release Index.'\n      }\n    }\n  ];\n}\n\n\n// ------------------------------------------------------------\n// 2. GET NORMALIZED MONTH FROM REQUEST DETAILS\n// ------------------------------------------------------------\n\nconst request = $('Request Details').first().json;\n\nconst targetMonth = String(request.targetMonth || '').trim();\n\nif (!targetMonth) {\n  return [\n    {\n      json: {\n        success: false,\n        message: 'targetMonth is missing from Request Details.',\n        requestData: request\n      }\n    }\n  ];\n}\n\nconsole.log('Requested month:', request.requestedMonth);\nconsole.log('Target month:', targetMonth);\n\n\n// ------------------------------------------------------------\n// 3. ESCAPE MONTH FOR REGEX\n// ------------------------------------------------------------\n\nfunction escapeRegex(value) {\n  return value.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n}\n\nconst escapedTargetMonth = escapeRegex(targetMonth);\n\n\n// ------------------------------------------------------------\n// 4. FIND TARGET MONTH IN THE INDEX HTML\n// ------------------------------------------------------------\n// Allows normal spaces, newlines and HTML between month/year.\n// Example:\n// July 2026\n// July\n// 2026\n// July <span>2026</span>\n// ------------------------------------------------------------\n\nconst targetMonthRegex = new RegExp(\n  escapedTargetMonth\n    .replace(/\\\\ /g, '\\\\s+'),\n  'i'\n);\n\nlet targetMatch = targetMonthRegex.exec(html);\n\n\n// ------------------------------------------------------------\n// 5. FALLBACK: SEARCH IN PLAIN TEXT\n// ------------------------------------------------------------\n\nif (!targetMatch) {\n\n  const plainText = html\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/&nbsp;/gi, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n\n  if (\n    plainText\n      .toLowerCase()\n      .includes(targetMonth.toLowerCase())\n  ) {\n\n    // Try a more flexible raw HTML search.\n    const parts = targetMonth.split(/\\s+/);\n\n    const flexibleRegex = new RegExp(\n      parts\n        .map(escapeRegex)\n        .join('[\\\\s\\\\n\\\\r]*(?:<[^>]+>[\\\\s\\\\n\\\\r]*)*'),\n      'i'\n    );\n\n    targetMatch = flexibleRegex.exec(html);\n  }\n}\n\n\n// ------------------------------------------------------------\n// 6. IF TARGET MONTH WAS NOT FOUND\n// ------------------------------------------------------------\n\nif (!targetMatch) {\n\n  // Get available month/year headings for debugging\n  const availableMonths = [];\n\n  const availableRegex =\n    /\\b(January|February|March|April|May|June|July|August|September|October|November|December)\\s+20\\d{2}\\b/gi;\n\n  let availableMatch;\n\n  while ((availableMatch = availableRegex.exec(html)) !== null) {\n\n    const value = availableMatch[0];\n\n    if (\n      !availableMonths.some(\n        m => m.toLowerCase() === value.toLowerCase()\n      )\n    ) {\n      availableMonths.push(value);\n    }\n  }\n\n  return [\n    {\n      json: {\n        success: false,\n        requestedMonth: request.requestedMonth || null,\n        targetMonth,\n        message: `Target month \"${targetMonth}\" was not found in the MuleSoft monthly release index.`,\n        availableMonths\n      }\n    }\n  ];\n}\n\n\n// ------------------------------------------------------------\n// 7. TARGET MONTH START POSITION\n// ------------------------------------------------------------\n\nconst startPosition = targetMatch.index;\n\n\n// ------------------------------------------------------------\n// 8. FIND THE NEXT MONTH\n// ------------------------------------------------------------\n// We do NOT assume a specific HTML heading structure.\n// This is important because MuleSoft's HTML structure can vary.\n//\n// Example:\n// Target = May 2026\n//\n// We take:\n//\n// May 2026\n//       ↓\n// all May releases\n//       ↓\n// June 2026\n//\n// and stop BEFORE June 2026.\n// ------------------------------------------------------------\n\nconst monthNames =\n  'January|February|March|April|May|June|July|August|September|October|November|December';\n\nconst nextMonthRegex = new RegExp(\n  `\\\\b(${monthNames})\\\\s+20\\\\d{2}\\\\b`,\n  'gi'\n);\n\nlet nextMonthPosition = html.length;\n\nlet nextMatch;\n\nwhile ((nextMatch = nextMonthRegex.exec(html)) !== null) {\n\n  if (nextMatch.index > startPosition) {\n\n    const foundMonth = nextMatch[0];\n\n    // Make sure this is actually a different month\n    if (\n      foundMonth.toLowerCase() !==\n      targetMonth.toLowerCase()\n    ) {\n      nextMonthPosition = nextMatch.index;\n      break;\n    }\n  }\n}\n\n\n// ------------------------------------------------------------\n// 9. EXTRACT ONLY THE TARGET MONTH SECTION\n// ------------------------------------------------------------\n\nconst monthSection = html.substring(\n  startPosition,\n  nextMonthPosition\n);\n\nconsole.log(\n  `Extracted ${targetMonth} section length:`,\n  monthSection.length\n);\n\n\n// ------------------------------------------------------------\n// 10. FIND RELEASE DATES\n// ------------------------------------------------------------\n// Example:\n//\n// July 1\n// July 2\n// July 3\n//\n// Everything between two dates belongs to that date.\n// ------------------------------------------------------------\n\nconst dateRegex =\n  /\\b(January|February|March|April|May|June|July|August|September|October|November|December)\\s+(\\d{1,2})(?:,\\s*20\\d{2})?\\b/gi;\n\nconst dates = [];\n\nlet dateMatch;\n\nwhile ((dateMatch = dateRegex.exec(monthSection)) !== null) {\n\n  const dateText =\n    `${dateMatch[1]} ${dateMatch[2]}`;\n\n  // Avoid duplicate date markers\n  if (\n    !dates.some(\n      d =>\n        d.date.toLowerCase() ===\n        dateText.toLowerCase()\n    )\n  ) {\n\n    dates.push({\n      date: dateText,\n      position: dateMatch.index,\n      end: dateRegex.lastIndex\n    });\n  }\n}\n\n\nconsole.log(\n  `Dates found for ${targetMonth}:`,\n  dates.map(d => d.date)\n);\n\n\n// ------------------------------------------------------------\n// 11. EXTRACT RELEASES FOR EACH DATE\n// ------------------------------------------------------------\n\nconst results = [];\n\n\n// Link regex\nconst linkRegex =\n  /<a\\b[^>]*href=[\"']([^\"']+)[\"'][^>]*>([\\s\\S]*?)<\\/a>/gi;\n\n\nfor (let i = 0; i < dates.length; i++) {\n\n  const currentDate = dates[i];\n\n  const sectionStart = currentDate.end;\n\n  const sectionEnd =\n    i + 1 < dates.length\n      ? dates[i + 1].position\n      : monthSection.length;\n\n  const dateSection =\n    monthSection.substring(\n      sectionStart,\n      sectionEnd\n    );\n\n\n  // Reset regex state\n  linkRegex.lastIndex = 0;\n\n  let linkMatch;\n\n\n  while (\n    (linkMatch = linkRegex.exec(dateSection)) !== null\n  ) {\n\n    let url = linkMatch[1];\n\n    let release = linkMatch[2];\n\n\n    // --------------------------------------------------------\n    // CLEAN RELEASE NAME\n    // --------------------------------------------------------\n\n    release = release\n      .replace(/<script[\\s\\S]*?<\\/script>/gi, ' ')\n      .replace(/<style[\\s\\S]*?<\\/style>/gi, ' ')\n      .replace(/<[^>]+>/g, ' ')\n      .replace(/&nbsp;/gi, ' ')\n      .replace(/&amp;/gi, '&')\n      .replace(/&quot;/gi, '\"')\n      .replace(/&#39;/gi, \"'\")\n      .replace(/&#x27;/gi, \"'\")\n      .replace(/\\s+/g, ' ')\n      .trim();\n\n\n    if (!release) {\n      continue;\n    }\n\n\n    // --------------------------------------------------------\n    // IGNORE NAVIGATION LINKS\n    // --------------------------------------------------------\n\n    if (\n      /^(RSS Feed|Copy|Edit|Menu|Home|Previous|Next)$/i\n        .test(release)\n    ) {\n      continue;\n    }\n\n\n    // --------------------------------------------------------\n    // CONVERT RELATIVE URL TO ABSOLUTE URL\n    // --------------------------------------------------------\n\n    let fullUrl = url;\n\n    if (url.startsWith('../')) {\n\n      fullUrl =\n        `https://docs.mulesoft.com/release-notes/${url.substring(3)}`;\n\n    } else if (url.startsWith('/')) {\n\n      fullUrl =\n        `https://docs.mulesoft.com${url}`;\n\n    } else if (!/^https?:\\/\\//i.test(url)) {\n\n      fullUrl =\n        `https://docs.mulesoft.com/${url.replace(/^\\.?\\//, '')}`;\n    }\n\n\n    // --------------------------------------------------------\n    // EXCHANGE URL FIX\n    // --------------------------------------------------------\n\n    if (\n      fullUrl.includes(\n        '/exchange/anypoint-exchange-release-notes'\n      )\n    ) {\n\n      fullUrl =\n        fullUrl.replace(\n          '/exchange/anypoint-exchange-release-notes',\n          '/exchange/exchange-release-notes'\n        );\n    }\n\n\n    // --------------------------------------------------------\n    // ADD RESULT\n    // --------------------------------------------------------\n\n    results.push({\n      month: targetMonth,\n      date: currentDate.date,\n      release,\n      url: fullUrl\n    });\n  }\n}\n\n\n// ------------------------------------------------------------\n// 12. REMOVE DUPLICATE RELEASES\n// ------------------------------------------------------------\n\nconst uniqueResults = [];\n\nconst seen = new Set();\n\nfor (const item of results) {\n\n  const key =\n    `${item.date}|${item.release}|${item.url}`\n      .toLowerCase();\n\n  if (!seen.has(key)) {\n\n    seen.add(key);\n    uniqueResults.push(item);\n  }\n}\n\n\n// ------------------------------------------------------------\n// 13. DEBUG IF NOTHING FOUND\n// ------------------------------------------------------------\n\nif (uniqueResults.length === 0) {\n\n  return [\n    {\n      json: {\n        success: false,\n        targetMonth,\n        requestedMonth: request.requestedMonth || null,\n        message:\n          `Month \"${targetMonth}\" was found, but no release links were extracted.`,\n        htmlLength: html.length,\n        monthSectionLength: monthSection.length,\n        datesFound: dates.length,\n        dates: dates.map(d => d.date)\n      }\n    }\n  ];\n}\n\n\n// ------------------------------------------------------------\n// 14. RETURN ONE ITEM PER RELEASE\n// ------------------------------------------------------------\n\nreturn uniqueResults.map(item => ({\n  json: item\n}));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        32
+      ],
+      "id": "57f01342-a12c-44ef-909b-bd52baed7389",
+      "name": "Extracting the details",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.url }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "text"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1104,
+        240
+      ],
+      "id": "a2a199c2-9529-437a-b3e4-d04874c38129",
+      "name": "Get Individual Release"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// TGH REPORT FORMAT\n// Keeps existing release details and restores Description\n// and aligned Compatibility / Fixed Issues columns.\n// Output: text report attached as binary property \"data\"\n// ============================================================\n\nconst firstInput = $input.first()?.json ?? {};\nlet releases = [];\n\nif (Array.isArray(firstInput.releases)) {\n  releases = firstInput.releases;\n} else {\n  releases = $input.all().map(item => item.json);\n}\n\n// -------------------- HELPERS --------------------\n\nfunction clean(value, fallback = 'N/A') {\n  if (value === undefined || value === null || value === '') {\n    return fallback;\n  }\n\n  if (Array.isArray(value)) {\n    const parts = value.map(v => clean(v, '')).filter(Boolean);\n    return parts.length ? parts.join('\\n') : fallback;\n  }\n\n  if (typeof value === 'object') {\n    return JSON.stringify(value);\n  }\n\n  return String(value).trim() || fallback;\n}\n\nfunction normalizeArray(value) {\n  if (value === undefined || value === null || value === '') {\n    return [];\n  }\n\n  return Array.isArray(value) ? value : [value];\n}\n\nfunction wrapText(text, width) {\n  const words = String(text ?? '').split(/\\s+/);\n  const lines = [];\n  let line = '';\n\n  for (const word of words) {\n    if (!word) continue;\n\n    if (!line) {\n      line = word;\n    } else if ((line + ' ' + word).length <= width) {\n      line += ' ' + word;\n    } else {\n      lines.push(line);\n      line = word;\n    }\n  }\n\n  if (line) lines.push(line);\n\n  return lines.length ? lines : [''];\n}\n\nfunction padRight(value, width) {\n  const text = String(value ?? '');\n\n  return text.length > width\n    ? text.slice(0, width - 3) + '...'\n    : text.padEnd(width, ' ');\n}\n\nfunction createTableRow(columns, widths) {\n  return columns\n    .map((column, index) => padRight(column, widths[index]))\n    .join(' | ');\n}\n\nfunction createTableSeparator(widths) {\n  return widths.map(width => '-'.repeat(width)).join('-+-');\n}\n\n// -------------------- DATE HELPERS --------------------\n\nfunction parseReleaseDate(value, reportMonth = '') {\n  if (!value) return null;\n\n  const raw = String(value).trim();\n  const isoMatch = raw.match(/^(\\d{4})-(\\d{2})-(\\d{2})/);\n\n  if (isoMatch) {\n    const date = new Date(\n      Number(isoMatch[1]),\n      Number(isoMatch[2]) - 1,\n      Number(isoMatch[3])\n    );\n\n    if (!Number.isNaN(date.getTime())) return date;\n  }\n\n  const textMatch = raw.match(\n    /^([A-Za-z]+)\\s+(\\d{1,2})(?:,?\\s+(\\d{4}))?$/\n  );\n\n  if (textMatch) {\n    let year = textMatch[3]\n      ? Number(textMatch[3])\n      : new Date().getFullYear();\n\n    if (!textMatch[3] && reportMonth) {\n      const yearMatch = String(reportMonth).match(/\\b(20\\d{2})\\b/);\n\n      if (yearMatch) year = Number(yearMatch[1]);\n    }\n\n    const date = new Date(\n      `${textMatch[1]} ${Number(textMatch[2])}, ${year}`\n    );\n\n    if (!Number.isNaN(date.getTime())) return date;\n  }\n\n  const parsed = new Date(raw);\n\n  return Number.isNaN(parsed.getTime()) ? null : parsed;\n}\n\nfunction formatDate(value, reportMonth = '') {\n  const date = parseReleaseDate(value, reportMonth);\n\n  if (!date) return clean(value, 'Unknown Date');\n\n  return date.toLocaleDateString('en-US', {\n    year: 'numeric',\n    month: 'long',\n    day: 'numeric'\n  });\n}\n\n// -------------------- COMPATIBILITY TABLE --------------------\n\nfunction formatCompatibility(value) {\n  const items = normalizeArray(value);\n\n  if (!items.length) return '  N/A';\n\n  const rows = [];\n\n  for (const item of items) {\n    if (typeof item === 'string' || typeof item === 'number') {\n      rows.push({\n        software: String(item),\n        version: 'N/A'\n      });\n    } else if (item && typeof item === 'object') {\n      rows.push({\n        software: clean(\n          item.software ??\n          item.application ??\n          item.applicationName ??\n          item.name ??\n          item.service ??\n          item.component ??\n          item.product,\n          'N/A'\n        ),\n        version: clean(\n          item.version ??\n          item.supportedVersion ??\n          item.compatibleVersion ??\n          item.runtimeVersion ??\n          item.value,\n          'N/A'\n        )\n      });\n    }\n  }\n\n  if (!rows.length) return '  N/A';\n\n  const widths = [32, 24];\n\n  const output = [\n    createTableRow(['Software', 'Version'], widths),\n    createTableSeparator(widths)\n  ];\n\n  for (const row of rows) {\n    output.push(\n      createTableRow(\n        [row.software, row.version],\n        widths\n      )\n    );\n  }\n\n  return output.map(line => '  ' + line).join('\\n');\n}\n\n// -------------------- FIXED ISSUES TABLE --------------------\n\nfunction formatFixedIssues(value) {\n  const items = normalizeArray(value);\n\n  if (!items.length) return '  N/A';\n\n  const rows = [];\n\n  for (const item of items) {\n    if (typeof item === 'string' || typeof item === 'number') {\n      rows.push({\n        description: String(item),\n        id: 'N/A'\n      });\n    } else if (item && typeof item === 'object') {\n      rows.push({\n        description: clean(\n          item.description ??\n          item.resolution ??\n          item.issue ??\n          item.summary ??\n          item.details ??\n          item.title,\n          'N/A'\n        ),\n        id: clean(\n          item.id ??\n          item.issueId ??\n          item.key ??\n          item.ticket ??\n          item.reference,\n          'N/A'\n        )\n      });\n    }\n  }\n\n  if (!rows.length) return '  N/A';\n\n  const descriptionWidth = 58;\n  const idWidth = 20;\n  const widths = [descriptionWidth, idWidth];\n\n  const output = [\n    createTableRow(['Issue Resolution', 'ID'], widths),\n    createTableSeparator(widths)\n  ];\n\n  for (const row of rows) {\n    const descriptionLines = wrapText(\n      row.description,\n      descriptionWidth\n    );\n\n    descriptionLines.forEach((line, index) => {\n      output.push(\n        createTableRow(\n          [line, index === 0 ? row.id : ''],\n          widths\n        )\n      );\n    });\n  }\n\n  return output.map(line => '  ' + line).join('\\n');\n}\n\n// -------------------- NORMALIZE RELEASE DATA --------------------\n\nconst normalizedReleases = releases.map(release => {\n  const month = clean(\n    release.month ??\n    release.releaseMonth ??\n    firstInput.month,\n    ''\n  );\n\n  const rawDate =\n    release.date ??\n    release.releaseDate ??\n    release.publishedDate ??\n    release.updatedAt ??\n    null;\n\n  return {\n    ...release,\n\n    month,\n    date: formatDate(rawDate, month),\n    _sortDate: parseReleaseDate(rawDate, month),\n\n    product: clean(\n      release.product ??\n      release.release ??\n      release.name ??\n      release.title ??\n      release.productName,\n      'Unknown Product'\n    ),\n\n    version: clean(\n      release.version ??\n      release.releaseVersion ??\n      release.versionNumber,\n      'N/A'\n    ),\n\n    description: clean(\n      release.description ??\n      release.summary ??\n      release.overview,\n      'N/A'\n    ),\n\n    whatsNew:\n      release.whatsNew ??\n      release.whatIsNew ??\n      release.newFeatures ??\n      release.features ??\n      [],\n\n    dependentComponents:\n      release.dependentComponents ??\n      release.dependencies ??\n      release.components ??\n      [],\n\n    compatibility:\n      release.compatibility ??\n      release.compatibilities ??\n      release.compatibleVersions ??\n      release.compatibilityNotes ??\n      release.supportedSoftware ??\n      release.requirements ??\n      [],\n\n    fixedIssues:\n      release.fixedIssues ??\n      release.issuesFixed ??\n      release.bugFixes ??\n      release.fixes ??\n      [],\n\n    patchVersion: clean(\n      release.patchVersion ??\n      release.patch ??\n      release.patchLevel,\n      'N/A'\n    ),\n\n    otherNotes: clean(\n      release.otherNotes ??\n      release.notes ??\n      release.additionalNotes,\n      'N/A'\n    ),\n\n    url: clean(\n      release.url ??\n      release.link ??\n      release.releaseUrl,\n      'N/A'\n    )\n  };\n});\n\n// -------------------- SORT RELEASES BY DATE --------------------\n// Sort releases by date: oldest first, newest last.\nnormalizedReleases.sort((a, b) => {\n  if (a._sortDate && b._sortDate) {\n    return a._sortDate - b._sortDate;\n  }\n\n  if (a._sortDate) return -1;\n  if (b._sortDate) return 1;\n\n  return 0;\n});\n\n// -------------------- REPORT HEADER --------------------\n\nconst reportTitle = clean(\n  firstInput.reportTitle ?? firstInput.title,\n  'TGH MuleSoft Release Notes'\n);\n\nconst reportMonth = clean(\n  firstInput.month ?? normalizedReleases[0]?.month,\n  ''\n);\n\nconst reportDate = new Date().toLocaleDateString('en-US', {\n  year: 'numeric',\n  month: 'long',\n  day: 'numeric'\n});\n\nlet report = '';\n\nreport += `${reportTitle}\\n`;\nreport += `${'='.repeat(reportTitle.length)}\\n\\n`;\n\nif (reportMonth) {\n  report += `Report Month: ${reportMonth}\\n`;\n}\n\nreport += `Generated On: ${reportDate}\\n`;\nreport += `Total Releases: ${normalizedReleases.length}\\n\\n`;\n\n// -------------------- RELEASE DETAILS --------------------\n\nnormalizedReleases.forEach((release, index) => {\n  report += `${index + 1}. ${release.product}\\n`;\n  report += `${'-'.repeat(60)}\\n`;\n\n  report += `Release Date: ${release.date}\\n`;\n  report += `Version: ${release.version}\\n\\n`;\n\n  // Description\n  report += `Description:\\n`;\n  report += `${release.description}\\n\\n`;\n\n  // What's New\n  report += `What's New:\\n`;\n\n  const whatsNewItems = normalizeArray(release.whatsNew);\n\n  if (whatsNewItems.length) {\n    whatsNewItems.forEach(item => {\n      if (item && typeof item === 'object') {\n        report += `  - ${clean(\n          item.description ??\n          item.title ??\n          item.name ??\n          item.details,\n          JSON.stringify(item)\n        )}\\n`;\n      } else {\n        report += `  - ${clean(item, 'N/A')}\\n`;\n      }\n    });\n  } else {\n    report += `  N/A\\n`;\n  }\n\n  report += '\\n';\n\n  // Dependent Components\n  report += `Dependent Components:\\n`;\n\n  const components = normalizeArray(release.dependentComponents);\n\n  if (components.length) {\n    components.forEach(component => {\n      if (component && typeof component === 'object') {\n        const name = clean(\n          component.name ??\n          component.component ??\n          component.application ??\n          component.product,\n          'N/A'\n        );\n\n        const version = clean(component.version, '');\n\n        report += version && version !== 'N/A'\n          ? `  - ${name} (${version})\\n`\n          : `  - ${name}\\n`;\n      } else {\n        report += `  - ${clean(component, 'N/A')}\\n`;\n      }\n    });\n  } else {\n    report += `  N/A\\n`;\n  }\n\n  report += '\\n';\n\n  // Compatibility\n  report += `Compatibility:\\n`;\n  report += `${formatCompatibility(release.compatibility)}\\n\\n`;\n\n  // Fixed Issues\n  report += `Fixed Issues:\\n`;\n  report += `${formatFixedIssues(release.fixedIssues)}\\n\\n`;\n\n  // Patch Version\n  report += `Patch Version: ${release.patchVersion}\\n\\n`;\n\n  // Other Notes\n  report += `Other Notes:\\n`;\n  report += `${release.otherNotes}\\n\\n`;\n\n  // Release URL\n  report += `Release URL: ${release.url}\\n\\n`;\n\n  report += `${'='.repeat(72)}\\n\\n`;\n});\n\n// -------------------- OUTPUT --------------------\n\nconst fileName = 'TGH_MuleSoft_Release_Notes.txt';\n\nconst binaryData = await this.helpers.prepareBinaryData(\n  Buffer.from(report, 'utf8'),\n  fileName,\n  'text/plain'\n);\n\nreturn [{\n  json: {\n    report,\n    releaseCount: normalizedReleases.length,\n    dates: [...new Set(normalizedReleases.map(r => r.date))],\n    dateCount: new Set(normalizedReleases.map(r => r.date)).size\n  },\n  binary: {\n    data: binaryData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        -32
+      ],
+      "id": "af995d5b-7848-4976-966e-190dbce6aa4c",
+      "name": "TGH Report Format",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// MuleSoft Monthly Release Notes Extractor\n// Fixed: preserve each release's individual date and metadata\n// ============================================================\n\nconst items = $input.all();\nconst originalItems = $('Extracting the details').all();\n\n// ============================================================\n// HELPERS\n// ============================================================\n\nfunction decodeHtml(text) {\n  return String(text || '')\n    .replace(/&nbsp;/gi, ' ')\n    .replace(/&amp;/gi, '&')\n    .replace(/&quot;/gi, '\"')\n    .replace(/&#39;/gi, \"'\")\n    .replace(/&#x27;/gi, \"'\")\n    .replace(/&lt;/gi, '<')\n    .replace(/&gt;/gi, '>')\n    .replace(/&#x2F;/gi, '/')\n    .replace(/&#8217;/gi, \"'\")\n    .replace(/&#8220;/gi, '\"')\n    .replace(/&#8221;/gi, '\"')\n    .replace(/&#8211;/gi, '–')\n    .replace(/&#8212;/gi, '—');\n}\n\nfunction cleanText(text) {\n  return decodeHtml(text)\n    .replace(/<script[\\s\\S]*?<\\/script>/gi, '')\n    .replace(/<style[\\s\\S]*?<\\/style>/gi, '')\n    .replace(/<nav[\\s\\S]*?<\\/nav>/gi, '')\n    .replace(/<header[\\s\\S]*?<\\/header>/gi, '')\n    .replace(/<footer[\\s\\S]*?<\\/footer>/gi, '')\n    .replace(/<noscript[\\s\\S]*?<\\/noscript>/gi, '')\n    .replace(/<[^>]+>/g, ' ')\n    .replace(/\\\\n/g, '\\n')\n    .replace(/\\r/g, '')\n    .replace(/[ \\t]+/g, ' ')\n    .replace(/\\n\\s+/g, '\\n')\n    .replace(/\\n{3,}/g, '\\n\\n')\n    .trim();\n}\n\nfunction cleanLine(text) {\n  return cleanText(text).replace(/\\s+/g, ' ').trim();\n}\n\nfunction escapeRegex(text) {\n  return String(text || '').replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');\n}\n\nfunction unique(array) {\n  return [...new Set(array.filter(Boolean))];\n}\n\n// ============================================================\n// MATCH CURRENT HTTP RESPONSE TO ORIGINAL RELEASE\n// ============================================================\n\nfunction normalizeUrl(url) {\n  return String(url || '')\n    .trim()\n    .replace(/\\/+$/, '')\n    .toLowerCase();\n}\n\nfunction getOriginalRelease(item) {\n  const current = item.json || {};\n\n  // Preferred: HTTP Request preserved the original metadata.\n  if (current.date && (current.release || current.url)) {\n    return current;\n  }\n\n  // Otherwise, match by URL instead of array index.\n  const currentUrl = normalizeUrl(\n    current.url ||\n    current.requestUrl ||\n    current.webUrl ||\n    current.link ||\n    ''\n  );\n\n  if (currentUrl) {\n    const match = originalItems.find(original => {\n      const originalUrl = normalizeUrl(\n        original.json?.url || ''\n      );\n\n      return originalUrl === currentUrl;\n    });\n\n    if (match) {\n      return {\n        ...match.json,\n        ...current,\n        month: current.month || match.json.month,\n        date: current.date || match.json.date,\n        release: current.release || match.json.release,\n        url: current.url || match.json.url\n      };\n    }\n  }\n\n  // Fallback: use n8n's linked-item metadata, if available.\n  try {\n    const linked = $('Extracting the details').itemMatching(\n      items.indexOf(item)\n    );\n\n    if (linked?.json?.date) {\n      return {\n        ...linked.json,\n        ...current,\n        month: current.month || linked.json.month,\n        date: current.date || linked.json.date,\n        release: current.release || linked.json.release,\n        url: current.url || linked.json.url\n      };\n    }\n  } catch (error) {\n    // Continue to the explicit error below.\n  }\n\n  throw new Error(\n    'Cannot identify the original release metadata for this HTTP response. ' +\n    'Configure Get Individual Release to preserve the input fields, ' +\n    'or match its response to the original release using the URL.'\n  );\n}\n\n// ============================================================\n// SECTION EXTRACTION\n// ============================================================\n\nfunction extractSection(text, headingNames) {\n  if (!text) return '';\n\n  const names = headingNames.map(escapeRegex).join('|');\n\n  const regex = new RegExp(\n    `(?:^|\\\\n)\\\\s*(?:${names})\\\\s*:?\\\\s*\\\\n([\\\\s\\\\S]*?)(?=\\\\n\\\\s*(?:What's New|What’s New|Fixed Issues|Compatibility|Compability|Dependent Components used|Known Issues|Breaking Changes|Patch release version|Reference Links|$))`,\n    'i'\n  );\n\n  const match = text.match(regex);\n  return match ? cleanText(match[1]) : '';\n}\n\nfunction extractBullets(text) {\n  if (!text) return [];\n\n  return unique(\n    text.split('\\n')\n      .map(line => line.trim())\n      .map(line => line\n        .replace(/^[-•·▪●◦]\\s*/, '')\n        .replace(/^\\d+[.)]\\s*/, '')\n        .trim()\n      )\n      .filter(Boolean)\n  );\n}\n\n// ============================================================\n// FIXED ISSUE EXTRACTION\n// ============================================================\n\nfunction extractFixedIssues(text) {\n  if (!text) return [];\n\n  const lines = text.split('\\n')\n    .map(line => line.trim())\n    .filter(Boolean);\n\n  const issues = [];\n  let currentDescription = '';\n\n  for (const line of lines) {\n    const idMatch = line.match(/\\bW-\\d+\\b/i);\n\n    if (idMatch) {\n      const id = idMatch[0];\n\n      let description = line.replace(id, '').trim();\n\n      if (currentDescription) {\n        description = currentDescription +\n          (description ? ' ' + description : '');\n      }\n\n      if (description) {\n        issues.push({ description, id });\n      }\n\n      currentDescription = '';\n    } else if (\n      !/^(issue resolution|description|issues|id)$/i.test(line)\n    ) {\n      currentDescription = line;\n    }\n  }\n\n  return issues;\n}\n\n// ============================================================\n// COMPATIBILITY EXTRACTION\n// ============================================================\n\nfunction extractCompatibility(text) {\n  if (!text) return [];\n\n  const lines = text.split('\\n')\n    .map(line => line.trim())\n    .filter(Boolean);\n\n  const results = [];\n\n  const knownSoftware = [\n    'Mule runtime engine',\n    'Mule Runtime Engine',\n    'Mule',\n    'Anypoint Studio',\n    'OpenJDK',\n    'Java',\n    'Apache Mina SSHD',\n    'DataWeave',\n    'JDK',\n    'Java Runtime'\n  ];\n\n  for (let i = 0; i < lines.length; i++) {\n    const software = knownSoftware.find(\n      name => lines[i].toLowerCase() === name.toLowerCase()\n    );\n\n    if (software && lines[i + 1]) {\n      const version = lines[i + 1];\n\n      if (/\\d/.test(version) || /later|and|or/i.test(version)) {\n        results.push({\n          software,\n          version\n        });\n      }\n    }\n  }\n\n  return results;\n}\n\n// ============================================================\n// VERSION EXTRACTION\n// ============================================================\n\nfunction extractVersion(text) {\n  const candidates = [];\n  const regex = /\\b([0-9]+\\.[0-9]+(?:\\.[0-9]+)+)\\b/g;\n\n  let match;\n\n  while ((match = regex.exec(text)) !== null) {\n    candidates.push(match[1]);\n  }\n\n  return unique(candidates)[0] || '';\n}\n\n// ============================================================\n// DESCRIPTION EXTRACTION — MULESOFT PRODUCT INTRODUCTION\n// ============================================================\n\nfunction extractDescription(html) {\n  html = String(html || '');\n\n  if (!html) return '';\n\n  // Locate the preamble containing the product description.\n  const preambleStart = html.search(\n    /<div\\b[^>]*\\bid=[\"']preamble[\"'][^>]*>/i\n  );\n\n  if (preambleStart === -1) return '';\n\n  const preambleHtml = html.slice(preambleStart);\n\n  // Stop before the release-history sections.\n  const sectionStart = preambleHtml.search(\n    /<div\\b[^>]*class=[\"'][^\"']*\\bsect1\\b[^\"']*[\"']/i\n  );\n\n  const preamble = sectionStart >= 0\n    ? preambleHtml.slice(0, sectionStart)\n    : preambleHtml.slice(0, 15000);\n\n  // Extract paragraph text from the preamble.\n  const paragraphs = [\n    ...preamble.matchAll(/<p\\b[^>]*>([\\s\\S]*?)<\\/p>/gi)\n  ];\n\n  for (const match of paragraphs) {\n    const description = decodeHtml(\n      match[1]\n        .replace(/<!--[\\s\\S]*?-->/g, '')\n        .replace(/<script\\b[^>]*>[\\s\\S]*?<\\/script>/gi, '')\n        .replace(/<style\\b[^>]*>[\\s\\S]*?<\\/style>/gi, '')\n        .replace(/<[^>]+>/g, ' ')\n    )\n      .replace(/\\s+/g, ' ')\n      .trim();\n\n    // Skip support category, guide links, and empty text.\n    if (!description) continue;\n    if (/^Support Category\\s*:/i.test(description)) continue;\n    if (/^Guide\\s*:/i.test(description)) continue;\n\n    // Reject generic website/navigation text.\n    if (\n      /mulesoft documentation site/i.test(description) ||\n      /view as markdown|view llms\\.txt/i.test(description) ||\n      /getting started.*community.*training/i.test(description)\n    ) {\n      continue;\n    }\n\n    return description;\n  }\n\n  return '';\n}\n\n// ============================================================\n// MONTH SECTION\n// ============================================================\n\nfunction extractMonthSection(html, month) {\n  if (!html || !month) return '';\n\n  const escapedMonth = escapeRegex(month);\n\n  const headingRegex = new RegExp(\n    `<h[1-6][^>]*>\\\\s*(?:<[^>]+>\\\\s*)*${escapedMonth}(?:\\\\s*<[^>]+>)*\\\\s*<\\\\/h[1-6]>`,\n    'i'\n  );\n\n  const match = headingRegex.exec(html);\n\n  if (!match) return cleanText(html);\n\n  const start = match.index + match[0].length;\n\n  const monthNames =\n    'January|February|March|April|May|June|July|August|September|October|November|December';\n\n  const nextMonthRegex = new RegExp(\n    `<h[1-6][^>]*>[\\\\s\\\\S]*?(?:${monthNames})\\\\s+20\\\\d{2}[\\\\s\\\\S]*?<\\\\/h[1-6]>`,\n    'gi'\n  );\n\n  nextMonthRegex.lastIndex = start;\n\n  const next = nextMonthRegex.exec(html);\n  const end = next ? next.index : html.length;\n\n  return cleanText(html.substring(start, end));\n}\n\n// ============================================================\n// DATE SECTION\n// ============================================================\n\nfunction extractDateSection(monthText, targetDate) {\n  if (!monthText || !targetDate) return monthText;\n\n  const escapedDate = escapeRegex(targetDate);\n\n  const dateRegex = new RegExp(\n    `(?:^|\\\\n)\\\\s*${escapedDate}\\\\s*(?:\\\\n|$)`,\n    'i'\n  );\n\n  const match = dateRegex.exec(monthText);\n\n  if (!match) return monthText;\n\n  const start = match.index + match[0].length;\n\n  const nextDateRegex =\n    /\\n\\s*(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{1,2}\\s*\\n/gi;\n\n  nextDateRegex.lastIndex = start;\n\n  const next = nextDateRegex.exec(monthText);\n  const end = next ? next.index : monthText.length;\n\n  return monthText.substring(start, end).trim();\n}\n\n// ============================================================\n// PROCESS RELEASES — PRESERVE INDIVIDUAL DATES\n// ============================================================\n\nreturn items.map(item => {\n  const current = item.json || {};\n\n  // Resolve this response to its own original release.\n  const original = getOriginalRelease(item);\n\n  const html = current.data || current.releaseHtml || '';\n\n  const month = original.month || '';\n  const date = original.date || '';\n  const release = original.release || '';\n  const url = original.url || '';\n\n  if (!date) {\n    throw new Error(\n      `Release date missing for \"${release || url || 'unknown release'}\".`\n    );\n  }\n\n  const fullText = cleanText(html);\n\n  const titleMatch = html.match(\n    /<title[^>]*>([\\s\\S]*?)<\\/title>/i\n  );\n\n  const pageTitle = titleMatch\n    ? cleanLine(titleMatch[1])\n    : '';\n\n  const monthSection = extractMonthSection(html, month);\n\n  const dateSection = extractDateSection(monthSection, date);\n\n  const releaseText =\n    dateSection && dateSection.length > 100\n      ? dateSection\n      : monthSection || fullText;\n\n  const description = extractDescription(html);\n\n  const whatsNew = extractBullets(\n    extractSection(releaseText, [\n      \"What's New\",\n      'What’s New',\n      \"What's new\",\n      'What’s new'\n    ])\n  );\n\n  const dependentComponents = extractBullets(\n    extractSection(releaseText, [\n      'Dependent Components used',\n      'Dependent Components Used',\n      'Dependent Components'\n    ])\n  );\n\n  const fixedIssues = extractFixedIssues(\n    extractSection(releaseText, [\n      'Fixed Issues',\n      'Fixed Issues:'\n    ])\n  );\n\n  const compatibility = extractCompatibility(\n    extractSection(releaseText, [\n      'Compatibility',\n      'Compability'\n    ])\n  );\n\n  const patchMatch = releaseText.match(\n    /Patch\\s+release\\s+version\\s*:\\s*([0-9]+(?:\\.[0-9]+)+)/i\n  );\n\n  const patchVersion = patchMatch ? patchMatch[1] : '';\n  const version = extractVersion(releaseText);\n\n  let otherNotes = '';\n\n  const otherPatterns = [\n    /This patch update addresses the following[\\s\\S]*?(?=\\n\\s*(?:Description|Issue Resolution|ID))/i,\n    /DataWeave[\\s\\S]*?(?=\\n\\s*(?:Reference Links|$))/i\n  ];\n\n  for (const pattern of otherPatterns) {\n    const match = releaseText.match(pattern);\n\n    if (match) {\n      otherNotes = cleanText(match[0]);\n      break;\n    }\n  }\n\n  const result = {\n    month,\n    date,\n    product: release,\n    description,\n    version,\n    patchVersion,\n    whatsNew,\n    dependentComponents,\n    fixedIssues,\n    compatibility,\n    otherNotes,\n    url,\n    pageTitle\n  };\n\n  // Remove empty fields while retaining the release date.\n  for (const key of Object.keys(result)) {\n    if (\n      key !== 'date' &&\n      (\n        result[key] === '' ||\n        result[key] === null ||\n        result[key] === undefined ||\n        (Array.isArray(result[key]) && result[key].length === 0)\n      )\n    ) {\n      delete result[key];\n    }\n  }\n\n  return { json: result };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        240
+      ],
+      "id": "be51fe6b-8166-4839-b656-1c55702d5d8b",
+      "name": "Combined Data",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "mulesoft-release-notes",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        144,
+        32
+      ],
+      "id": "9cecdb1e-e6b7-4212-9776-24e41a67fad4",
+      "name": "Webhook",
+      "webhookId": "e1e8656e-f50f-4eb2-8231-deb8490d6692"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ============================================================\n// PREPARE REQUEST\n// Accept flexible month formats\n// ============================================================\n\nconst input = $input.first().json;\nconst body = input.body || input;\n\n\n// ============================================================\n// EMAIL\n// ============================================================\n\nconst email = String(body.email || '').trim();\n\nif (!email) {\n  throw new Error('Email address is required.');\n}\n\nconst emailRegex = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;\n\nif (!emailRegex.test(email)) {\n  throw new Error(`Invalid email address: ${email}`);\n}\n\n\n// ============================================================\n// CURRENT DATE\n// ============================================================\n\nconst now = new Date();\n\nconst currentYear = now.getFullYear();\nconst currentMonthIndex = now.getMonth();\n\nconst monthNames = [\n  'January',\n  'February',\n  'March',\n  'April',\n  'May',\n  'June',\n  'July',\n  'August',\n  'September',\n  'October',\n  'November',\n  'December'\n];\n\n\n// ============================================================\n// GET MONTH INPUT\n// ============================================================\n\nconst rawMonth = String(body.month || '').trim();\n\nlet targetYear;\nlet targetMonthIndex;\n\n\n// ============================================================\n// NO MONTH PROVIDED\n//\n// Automatically use previous completed month.\n//\n// Example:\n// Current = August 2026\n// Target  = July 2026\n// ============================================================\n\nif (!rawMonth) {\n\n  const previousMonth = new Date(\n    currentYear,\n    currentMonthIndex - 1,\n    1\n  );\n\n  targetYear = previousMonth.getFullYear();\n  targetMonthIndex = previousMonth.getMonth();\n\n}\n\n\n// ============================================================\n// MONTH PROVIDED\n// ============================================================\n\nelse {\n\n  const value = rawMonth\n    .toLowerCase()\n    .trim()\n    .replace(/\\./g, '');\n\n  let parsed = false;\n\n\n  // ==========================================================\n  // MONTH NAME LOOKUP\n  // ==========================================================\n\n  const fullMonths = {\n    january: 0,\n    february: 1,\n    march: 2,\n    april: 3,\n    may: 4,\n    june: 5,\n    july: 6,\n    august: 7,\n    september: 8,\n    october: 9,\n    november: 10,\n    december: 11\n  };\n\n  const shortMonths = {\n    jan: 0,\n    feb: 1,\n    mar: 2,\n    apr: 3,\n    may: 4,\n    jun: 5,\n    jul: 6,\n    aug: 7,\n    sep: 8,\n    sept: 8,\n    oct: 9,\n    nov: 10,\n    dec: 11\n  };\n\n\n  // ==========================================================\n  // FORMAT:\n  // July 2026\n  // Jul 2026\n  // July\n  // Jul\n  // ==========================================================\n\n  const nameMatch = value.match(\n    /^([a-z]+)(?:\\s+(\\d{4}))?$/\n  );\n\n  if (nameMatch) {\n\n    const monthName = nameMatch[1];\n    const suppliedYear = nameMatch[2];\n\n    if (\n      Object.prototype.hasOwnProperty.call(\n        fullMonths,\n        monthName\n      )\n    ) {\n\n      targetMonthIndex =\n        fullMonths[monthName];\n\n      targetYear =\n        suppliedYear\n          ? Number(suppliedYear)\n          : currentYear;\n\n      parsed = true;\n\n    } else if (\n      Object.prototype.hasOwnProperty.call(\n        shortMonths,\n        monthName\n      )\n    ) {\n\n      targetMonthIndex =\n        shortMonths[monthName];\n\n      targetYear =\n        suppliedYear\n          ? Number(suppliedYear)\n          : currentYear;\n\n      parsed = true;\n    }\n  }\n\n\n  // ==========================================================\n  // FORMAT:\n  // 2026-07\n  // ==========================================================\n\n  if (!parsed) {\n\n    const match = value.match(\n      /^(\\d{4})-(\\d{1,2})$/\n    );\n\n    if (match) {\n\n      targetYear = Number(match[1]);\n      targetMonthIndex = Number(match[2]) - 1;\n\n      parsed = true;\n    }\n  }\n\n\n  // ==========================================================\n  // FORMAT:\n  // 07-2026\n  // ==========================================================\n\n  if (!parsed) {\n\n    const match = value.match(\n      /^(\\d{1,2})-(\\d{4})$/\n    );\n\n    if (match) {\n\n      targetMonthIndex = Number(match[1]) - 1;\n      targetYear = Number(match[2]);\n\n      parsed = true;\n    }\n  }\n\n\n  // ==========================================================\n  // FORMAT:\n  // 07/26\n  //\n  // Interpret as:\n  // month/year\n  //\n  // 07/26 → July 2026\n  // ==========================================================\n\n  if (!parsed) {\n\n    const match = value.match(\n      /^(\\d{1,2})\\/(\\d{2})$/\n    );\n\n    if (match) {\n\n      targetMonthIndex =\n        Number(match[1]) - 1;\n\n      targetYear =\n        2000 + Number(match[2]);\n\n      parsed = true;\n    }\n  }\n\n\n  // ==========================================================\n  // ALSO ACCEPT:\n  // 07/2026\n  // ==========================================================\n\n  if (!parsed) {\n\n    const match = value.match(\n      /^(\\d{1,2})\\/(\\d{4})$/\n    );\n\n    if (match) {\n\n      targetMonthIndex =\n        Number(match[1]) - 1;\n\n      targetYear =\n        Number(match[2]);\n\n      parsed = true;\n    }\n  }\n\n\n  // ==========================================================\n  // INVALID INPUT\n  // ==========================================================\n\n  if (!parsed) {\n\n    throw new Error(\n      `Could not understand the month \"${rawMonth}\".`\n    );\n  }\n}\n\n\n// ============================================================\n// VALIDATE MONTH\n// ============================================================\n\nif (\n  targetMonthIndex < 0 ||\n  targetMonthIndex > 11 ||\n  !Number.isInteger(targetYear) ||\n  targetYear < 2000\n) {\n\n  throw new Error(\n    `Invalid month: ${rawMonth}`\n  );\n}\n\n\n// ============================================================\n// TARGET DATE\n// ============================================================\n\nconst targetDate = new Date(\n  targetYear,\n  targetMonthIndex,\n  1\n);\n\n\n// ============================================================\n// NEVER ALLOW CURRENT MONTH\n// NEVER ALLOW FUTURE MONTHS\n// ============================================================\n\nconst currentMonthStart = new Date(\n  currentYear,\n  currentMonthIndex,\n  1\n);\n\nif (targetDate >= currentMonthStart) {\n\n  throw new Error(\n    `The requested month \"${rawMonth}\" is the current or a future month. ` +\n    `Current month is ${monthNames[currentMonthIndex]} ${currentYear}.`\n  );\n}\n\n\n// ============================================================\n// NORMALIZED MONTH\n// ============================================================\n\nconst targetMonth =\n  `${monthNames[targetMonthIndex]} ${targetYear}`;\n\n\n// ============================================================\n// OUTPUT\n// ============================================================\n\nreturn [\n  {\n    json: {\n      email,\n\n      // Normalized internally\n      targetMonth,\n\n      targetYear,\n\n      targetMonthIndex,\n\n      targetMonthNumber:\n        targetMonthIndex + 1,\n\n      // Keep original user input for logging/debugging\n      requestedMonth:\n        rawMonth || null,\n\n      // True when user did not provide month\n      usedPreviousMonth:\n        rawMonth === ''\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        320,
+        32
+      ],
+      "id": "42c2cd96-2e07-4a11-90ab-433df472dba1",
+      "name": "Request Details"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        928,
+        32
+      ],
+      "id": "b748f202-471e-4c24-926d-62abbb73a105",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nif (items.length === 0) {\n  throw new Error('No release data received.');\n}\n\nconst releases = items\n  .map(item => item.json)\n  .filter(item => item && item.month);\n\nif (releases.length === 0) {\n  throw new Error(\n    'No valid releases found. Check the Combined Data output.'\n  );\n}\n\nreturn [\n  {\n    json: {\n      month: releases[0].month,\n      totalReleases: releases.length,\n      releases: releases\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        16
+      ],
+      "id": "f35fb8e2-2b7a-4b38-bbab-348680265b32",
+      "name": "Aggregate Releases"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Request Details').first().json.email }}",
+        "subject": "={{ 'MuleSoft Release Notes - ' + $('TGH Report Format').first().json.month }}",
+        "message": "=Hi !! Please find the Release Notes for {{ $('TGH Report Format').first().json.month }}",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2528,
+        -32
+      ],
+      "id": "fdcea8b7-ce9f-4ac0-bbe5-96aa864291db",
+      "name": "Send Mail",
+      "webhookId": "d9b375f0-42e4-48f6-9984-f4d2de087ba5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "OYLeOVqkzwXnUB4L",
+          "name": "Madhuri Gmail Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\n\nif (!input.releases || !Array.isArray(input.releases)) {\n  throw new Error(\n    'No releases array found. Check the Aggregate Releases node output.'\n  );\n}\n\nconst releases = input.releases.map((release) => ({\n  month: release.month ?? input.month ?? '',\n  date: release.date ?? '',\n  product: release.product ?? '',\n  description: release.description ?? '',\n  version: release.version ?? '',\n  patchVersion: release.patchVersion ?? '',\n  whatsNew: Array.isArray(release.whatsNew)\n    ? release.whatsNew\n    : [],\n  dependentComponents: Array.isArray(release.dependentComponents)\n    ? release.dependentComponents\n    : [],\n  compatibility: Array.isArray(release.compatibility)\n    ? release.compatibility\n    : [],\n  fixedIssues: Array.isArray(release.fixedIssues)\n    ? release.fixedIssues\n    : [],\n  otherNotes: Array.isArray(release.otherNotes)\n    ? release.otherNotes\n    : [],\n  url: release.url ?? ''\n}));\n\nreturn [\n  {\n    json: {\n      reportTitle: 'MuleSoft Release Notes',\n      reportMonth: input.month ?? '',\n      generatedOn: new Date().toLocaleDateString('en-GB'),\n      totalReleases: releases.length,\n      releases\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1408,
+        16
+      ],
+      "id": "9e320a75-f5d5-4651-97d8-bbbb6958d2ba",
+      "name": "Prepare Word Document Data"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1728,
+        -32
+      ],
+      "id": "fd8433a8-15ac-4d75-a4f1-3797b7a51631",
+      "name": "Merge",
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1Y7TLe-SFpAQCjtGrQAe-LGrvZp7IydOi",
+          "mode": "list",
+          "cachedResultName": "TGH_MuleSoft_Template.docx",
+          "cachedResultUrl": "https://docs.google.com/document/d/1Y7TLe-SFpAQCjtGrQAe-LGrvZp7IydOi/edit?usp=drivesdk&ouid=100388207597511588319&rtpof=true&sd=true"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1584,
+        96
+      ],
+      "id": "ef7b2cf4-7f7e-46c8-a26a-18c6eab41f7e",
+      "name": "Download Template",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "PWXQgUhbYOSFBl6V",
+          "name": "Madhuri Google Drive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.nutrient.io/process_office_template",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "pdf_live_PuZqgGjAFvTODVcdkQTCE9dZO4FP3sjwku20KVTU66E"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1984,
+        -32
+      ],
+      "id": "0b43bf67-f30d-41f5-aca6-e5adfea12e01",
+      "name": "Nutrient API",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "Get MuleSoft Monthly Release Index": {
+      "main": [
+        [
+          {
+            "node": "Extracting the details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extracting the details": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Individual Release": {
+      "main": [
+        [
+          {
+            "node": "Combined Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TGH Report Format": {
+      "main": [
+        [
+          {
+            "node": "Send Mail",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Combined Data": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Request Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Details": {
+      "main": [
+        [
+          {
+            "node": "Get MuleSoft Monthly Release Index",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Releases",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Individual Release",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Releases": {
+      "main": [
+        [
+          {
+            "node": "Prepare Word Document Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Word Document Data": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Nutrient API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download Template": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Nutrient API": {
+      "main": [
+        [
+          {
+            "node": "TGH Report Format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "B7b9uddumn40CXKZ",
+      "projectId": "Kx5AmZMypv8DWWt9",
+      "createdAt": "2026-10-15T06:52:09.187Z",
+      "updatedAt": "2026-10-15T06:52:09.187Z"
+    }
+  ],
+  "activeVersion": null
+}
