@@ -1,0 +1,130 @@
+{
+  "id": "Wo3alcsKUCEaNFLk",
+  "name": "test_support_agent",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-11-03T06:51:09.663Z",
+  "updatedAt": "2026-11-03T06:57:10.874Z",
+  "isArchived": false,
+  "versionId": "3798322a-b13f-4782-a1e0-0ed1d878994b",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "601d8c86-4cd6-4301-b7f0-77d9fec72372",
+      "name": "When chat message received",
+      "webhookId": "552fc740-a119-473c-82e3-aa4ac3049cca"
+    },
+    {
+      "parameters": {
+        "options": {
+          "systemMessage": "You are a customer support assistant. Use the available tools to help the customer.\nIf you need a customer_id or order_id to use a tool, ask the customer for it. Do not guess values.\nAfter a tool returns, tell the customer the outcome in plain words."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "f3150b98-efbb-41a4-b5a1-ce16d202252d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        232,
+        232
+      ],
+      "id": "01e51ee6-7b01-4280-a4ab-b2dc7f11ee68",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QmPk58zxWKldJFjH",
+          "name": "Mounika Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        360,
+        232
+      ],
+      "id": "3f27a0fb-144c-4034-9927-036919a99f8e",
+      "name": "Simple Memory"
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Wo3alcsKUCEaNFLk",
+      "projectId": "xuQhXJEHtH8zY0MB",
+      "createdAt": "2026-11-03T06:51:09.666Z",
+      "updatedAt": "2026-11-03T06:51:09.666Z"
+    }
+  ],
+  "activeVersion": null
+}
