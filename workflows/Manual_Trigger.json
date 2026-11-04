@@ -1,0 +1,71 @@
+{
+  "id": "aGx3A69b9MXfbM0L",
+  "name": "Manual Trigger",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:12.627Z",
+  "updatedAt": "2026-08-14T05:48:25.000Z",
+  "isArchived": true,
+  "versionId": "2f15f9ba-8a91-4ccb-b78a-bd94f2f11e8f",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a969804f-eec5-4132-a630-1dc86caa9ac5",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "options": {
+          "fileName": "test"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        0
+      ],
+      "id": "5f565de4-b4c9-404f-aa7f-d486ccb8e5d9",
+      "name": "Convert to File"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "aGx3A69b9MXfbM0L",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:12.641Z",
+      "updatedAt": "2026-08-13T17:31:12.641Z"
+    }
+  ],
+  "activeVersion": null
+}
