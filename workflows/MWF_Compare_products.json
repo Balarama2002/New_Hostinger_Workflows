@@ -1,0 +1,500 @@
+{
+  "id": "AufLBjsL5Lqpgo3i",
+  "name": "MWF_Compare products",
+  "active": true,
+  "activeVersionId": "645f40f8-05b3-49e8-8d85-cacbdedbf690",
+  "createdAt": "2026-11-03T07:36:20.319Z",
+  "updatedAt": "2026-11-03T15:50:19.821Z",
+  "isArchived": false,
+  "versionId": "c26ac303-fc0c-4a44-95bd-48d6e35bb34b",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "product_a"
+            },
+            {
+              "name": "product_b"
+            },
+            {
+              "name": "country"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        80
+      ],
+      "id": "bf8aa8d5-ce2e-4817-9148-e4091fa15045",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "b65ca5f5-1ae7-4732-9e8f-757fff6f113b",
+              "leftValue": "={{ $json.product_a }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "62f6bf19-59f0-46cb-bf68-fa451ba23dc3",
+              "leftValue": "={{ $json.product_b }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        80
+      ],
+      "id": "a7c11d55-f5ca-4302-8de1-0fbc1608bfdd",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed,\n    COALESCE(SUM(i.stock_quantity), 0) AS stock\nFROM workspace.agentic_support.products p\nLEFT JOIN workspace.agentic_support.inventory i\n    ON i.sku = p.sku\nWHERE\n    LOWER(p.sku) = LOWER('{{ $json.product_a }}')\n    OR LOWER(p.name) LIKE CONCAT('%', LOWER('{{ $json.product_a }}'), '%')\nGROUP BY\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed\nORDER BY p.name\nLIMIT 5;"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -16
+      ],
+      "id": "d305d6f1-d0b5-460f-8872-ed1f1eb8596f",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "jGsOlzR7CW9Wg6pY",
+          "name": "yashwanth_databricks"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed,\n    COALESCE(SUM(i.stock_quantity), 0) AS stock\nFROM workspace.agentic_support.products p\nLEFT JOIN workspace.agentic_support.inventory i\n    ON i.sku = p.sku\nWHERE\n    LOWER(CAST(p.sku AS STRING)) = LOWER(CAST('{{ $(\"When Executed by Another Workflow\").item.json.product_b }}' AS STRING))\n    OR LOWER(CAST(p.name AS STRING)) LIKE CONCAT(\n        '%',\n        LOWER(CAST('{{ $(\"When Executed by Another Workflow\").item.json.product_b }}' AS STRING)),\n        '%'\n    )\nGROUP BY\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed\nORDER BY p.name\nLIMIT 5;"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        672,
+        -16
+      ],
+      "id": "0cbe3cb8-8d93-4d23-a61c-d81ee960b86a",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "jGsOlzR7CW9Wg6pY",
+          "name": "yashwanth_databricks"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Country and currency\nconst country = String($('When Executed by Another Workflow').first().json.country || '').trim().toUpperCase() === 'AE' ? 'AE' : 'IN';\nconst currency = country === 'AE' ? 'AED' : 'INR';\nconst product_a = $('When Executed by Another Workflow').first().json.product_a\nconst product_b = $('When Executed by Another Workflow').first().json.product_b\n\n// Get Databricks responses\nconst rows_a = $('Execute a SQL query').all().map(item => item.json);\nconst rows_b = $('Execute a SQL query1').all().map(item => item.json);\n\n// Pick matching product\nfunction pick(rows, term) {\n  rows = rows || [];\n  const t = String(term || '').trim().toLowerCase();\n\n  const exact = rows.filter(r =>\n    r &&\n    (\n      String(r.sku || '').trim().toLowerCase() === t ||\n      String(r.name || '').trim().toLowerCase() === t\n    )\n  );\n\n  if (exact.length === 1) return exact[0];\n\n  if (exact.length > 1) return null;\n\n  if (rows.length === 1 && rows[0] && Object.keys(rows[0]).length > 0) {\n    return rows[0];\n  }\n\n  return null;\n}\n\nconst a = pick(rows_a, product_a);\nconst b = pick(rows_b, product_b);\n\n// Default response\nconst empty = {\n  found: false,\n  ambiguous: false,\n  message: '',\n  currency: currency,\n  product_a: '',\n  product_b: '',\n  price_a: 0,\n  price_b: 0,\n  price_difference: 0,\n  cheaper: '',\n  comparison_text: ''\n};\n\n// Check missing products\nfunction isEmptyResponse(rows) {\n  return rows.length === 0 ||\n    rows.every(row => !row || Object.keys(row).length === 0);\n}\n\nif (isEmptyResponse(rows_a) || isEmptyResponse(rows_b)) {\n  const missing = [];\n\n  if (isEmptyResponse(rows_a)) {\n    missing.push(String(product_a || ''));\n  }\n\n  if (isEmptyResponse(rows_b)) {\n    missing.push(String(product_b || ''));\n  }\n\n  return [{\n    json: {\n      ...empty,\n      message: `Could not find: ${missing.join(', ')}.`\n    }\n  }];\n}\n\n// Check ambiguous products\nif (a === null || b === null) {\n\n  const names = [];\n\n  if (a === null) {\n    names.push(`${product_a} could be: ${rows_a.map(r => r.name).join(', ')}`\n    );\n  }\n\n  if (b === null) {\n    names.push(\n      `${product_b} could be: ${rows_b.map(r => r.name).join(', ')}`\n    );\n  }\n\n  return [{\n    json: {\n      ...empty,\n      found: true,\n      ambiguous: true,\n      message: `Be more specific. ${names.join('. ')}. Ask the customer which one.`\n    }\n  }];\n\n}\n\n// Calculate discounted prices\nfunction price(r) {\n  const base = country === 'AE'\n    ? Number(r.price_aed || 0)\n    : Number(r.price_inr || 0);\n\n  const discount = Number(r.active_discount_percent || 0);\n\n  return Math.round(base * (100 - discount) / 100);\n}\n\nconst pa = price(a);\nconst pb = price(b);\n\nconst diff = Math.abs(pa - pb);\n\nconst cheaper = pa === pb\n  ? 'same price'\n  : pa < pb\n    ? a.name\n    : b.name;\n\n// Comparison text\nfunction line(label, va, vb) {\n  return `${label}: ${va ?? 'N/A'} | ${vb ?? 'N/A'}`;\n}\n\nconst text = [\n  `${a.name} | ${b.name}`,\n  line('Price', `${currency} ${pa}`, `${currency} ${pb}`),\n  line('Movement', a.movement, b.movement),\n  line('Material', a.material, b.material),\n  line('Water resistance', `${parseInt(a.water_resistance_m) || 0} m`, `${parseInt(b.water_resistance_m) || 0} m`),\n  line('Warranty', `${parseInt(a.warranty_months) || 0} months`, `${parseInt(b.warranty_months) || 0} months`),\n  line('In stock', parseInt(a.stock) || 0, parseInt(b.stock) || 0)\n].join('\\n');\n\n// Final response\nreturn [{\n  json: {\n    found: true,\n    ambiguous: false,\n    message: 'OK',\n    currency,\n    product_a: a.name,\n    product_b: b.name,\n    price_a: pa,\n    price_b: pb,\n    price_difference: diff,\n    cheaper,\n    comparison_text: text\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        -16
+      ],
+      "id": "67de9c9b-7abe-4714-9780-da38fc0e1b00",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a0a43c01-5d23-41b4-860e-8e1dd9190c8d",
+              "name": "response",
+              "value": "Please provide product_a and product_b.",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        176
+      ],
+      "id": "ea3d8ebf-0524-4443-aa8a-e568617733e5",
+      "name": "Edit Fields",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "product_a": "chrono black",
+          "product_b": "aviator black",
+          "country": null
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "AufLBjsL5Lqpgo3i",
+      "projectId": "Y7IGMMBOn70nLbTw",
+      "createdAt": "2026-11-03T07:36:20.322Z",
+      "updatedAt": "2026-11-03T07:36:20.322Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "645f40f8-05b3-49e8-8d85-cacbdedbf690",
+    "workflowId": "AufLBjsL5Lqpgo3i",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "product_a"
+              },
+              {
+                "name": "product_b"
+              },
+              {
+                "name": "country"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          80
+        ],
+        "id": "bf8aa8d5-ce2e-4817-9148-e4091fa15045",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "b65ca5f5-1ae7-4732-9e8f-757fff6f113b",
+                "leftValue": "={{ $json.product_a }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "62f6bf19-59f0-46cb-bf68-fa451ba23dc3",
+                "leftValue": "={{ $json.product_b }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          224,
+          80
+        ],
+        "id": "a7c11d55-f5ca-4302-8de1-0fbc1608bfdd",
+        "name": "If",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed,\n    COALESCE(SUM(i.stock_quantity), 0) AS stock\nFROM workspace.agentic_support.products p\nLEFT JOIN workspace.agentic_support.inventory i\n    ON i.sku = p.sku\nWHERE\n    p.sku = '{{ $json.product_a }}'\n    OR p.name LIKE CONCAT('%', '{{ $json.product_a }}', '%')\nGROUP BY\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed\nORDER BY p.name\nLIMIT 5;"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          448,
+          -16
+        ],
+        "id": "d305d6f1-d0b5-460f-8872-ed1f1eb8596f",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "jGsOlzR7CW9Wg6pY",
+            "name": "yashwanth_databricks"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed,\n    COALESCE(SUM(i.stock_quantity), 0) AS stock\nFROM workspace.agentic_support.products p\nLEFT JOIN workspace.agentic_support.inventory i\n    ON i.sku = p.sku\nWHERE\n    p.sku = '{{ $('When Executed by Another Workflow').item.json.product_b }}'\n    OR p.name LIKE CONCAT('%', '{{ $('When Executed by Another Workflow').item.json.product_b }}', '%')\nGROUP BY\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed\nORDER BY p.name\nLIMIT 5; "
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          672,
+          -16
+        ],
+        "id": "0cbe3cb8-8d93-4d23-a61c-d81ee960b86a",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "jGsOlzR7CW9Wg6pY",
+            "name": "yashwanth_databricks"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Country and currency\nconst country = String($('When Executed by Another Workflow').first().json.country || '').trim().toUpperCase() === 'AE' ? 'AE' : 'IN';\nconst currency = country === 'AE' ? 'AED' : 'INR';\nconst product_a = $('When Executed by Another Workflow').first().json.product_a\nconst product_b = $('When Executed by Another Workflow').first().json.product_b\n\n// Get Databricks responses\nconst rows_a = $('Execute a SQL query').all().map(item => item.json);\nconst rows_b = $('Execute a SQL query1').all().map(item => item.json);\n\n// Pick matching product\nfunction pick(rows, term) {\n  rows = rows || [];\n  const t = String(term || '').trim().toLowerCase();\n\n  const exact = rows.filter(r =>\n    r &&\n    (\n      String(r.sku || '').trim().toLowerCase() === t ||\n      String(r.name || '').trim().toLowerCase() === t\n    )\n  );\n\n  if (exact.length === 1) return exact[0];\n\n  if (exact.length > 1) return null;\n\n  if (rows.length === 1 && rows[0] && Object.keys(rows[0]).length > 0) {\n    return rows[0];\n  }\n\n  return null;\n}\n\nconst a = pick(rows_a, product_a);\nconst b = pick(rows_b, product_b);\n\n// Default response\nconst empty = {\n  found: false,\n  ambiguous: false,\n  message: '',\n  currency: currency,\n  product_a: '',\n  product_b: '',\n  price_a: 0,\n  price_b: 0,\n  price_difference: 0,\n  cheaper: '',\n  comparison_text: ''\n};\n\n// Check missing products\nfunction isEmptyResponse(rows) {\n  return rows.length === 0 ||\n    rows.every(row => !row || Object.keys(row).length === 0);\n}\n\nif (isEmptyResponse(rows_a) || isEmptyResponse(rows_b)) {\n  const missing = [];\n\n  if (isEmptyResponse(rows_a)) {\n    missing.push(String(product_a || ''));\n  }\n\n  if (isEmptyResponse(rows_b)) {\n    missing.push(String(product_b || ''));\n  }\n\n  return [{\n    json: {\n      ...empty,\n      message: `Could not find: ${missing.join(', ')}.`\n    }\n  }];\n}\n\n// Check ambiguous products\nif (a === null || b === null) {\n\n  const names = [];\n\n  if (a === null) {\n    names.push(`${product_a} could be: ${rows_a.map(r => r.name).join(', ')}`\n    );\n  }\n\n  if (b === null) {\n    names.push(\n      `${product_b} could be: ${rows_b.map(r => r.name).join(', ')}`\n    );\n  }\n\n  return [{\n    json: {\n      ...empty,\n      found: true,\n      ambiguous: true,\n      message: `Be more specific. ${names.join('. ')}. Ask the customer which one.`\n    }\n  }];\n\n}\n\n// Calculate discounted prices\nfunction price(r) {\n  const base = country === 'AE'\n    ? Number(r.price_aed || 0)\n    : Number(r.price_inr || 0);\n\n  const discount = Number(r.active_discount_percent || 0);\n\n  return Math.round(base * (100 - discount) / 100);\n}\n\nconst pa = price(a);\nconst pb = price(b);\n\nconst diff = Math.abs(pa - pb);\n\nconst cheaper = pa === pb\n  ? 'same price'\n  : pa < pb\n    ? a.name\n    : b.name;\n\n// Comparison text\nfunction line(label, va, vb) {\n  return `${label}: ${va ?? 'N/A'} | ${vb ?? 'N/A'}`;\n}\n\nconst text = [\n  `${a.name} | ${b.name}`,\n  line('Price', `${currency} ${pa}`, `${currency} ${pb}`),\n  line('Movement', a.movement, b.movement),\n  line('Material', a.material, b.material),\n  line('Water resistance', `${parseInt(a.water_resistance_m) || 0} m`, `${parseInt(b.water_resistance_m) || 0} m`),\n  line('Warranty', `${parseInt(a.warranty_months) || 0} months`, `${parseInt(b.warranty_months) || 0} months`),\n  line('In stock', parseInt(a.stock) || 0, parseInt(b.stock) || 0)\n].join('\\n');\n\n// Final response\nreturn [{\n  json: {\n    found: true,\n    ambiguous: false,\n    message: 'OK',\n    currency,\n    product_a: a.name,\n    product_b: b.name,\n    price_a: pa,\n    price_b: pb,\n    price_difference: diff,\n    cheaper,\n    comparison_text: text\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          -16
+        ],
+        "id": "67de9c9b-7abe-4714-9780-da38fc0e1b00",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a0a43c01-5d23-41b4-860e-8e1dd9190c8d",
+                "name": "response",
+                "value": "Please provide product_a and product_b.",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          448,
+          176
+        ],
+        "id": "ea3d8ebf-0524-4443-aa8a-e568617733e5",
+        "name": "Edit Fields",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Yashwanth Thummanapally",
+    "name": "Version 645f40f8",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-03T11:00:16.511Z",
+    "updatedAt": "2026-11-03T15:29:20.000Z"
+  }
+}
