@@ -1,0 +1,79 @@
+{
+  "id": "BlGnarBnEgIlZa95",
+  "name": "Error_WorkFlow",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:13.150Z",
+  "updatedAt": "2026-08-14T05:49:34.000Z",
+  "isArchived": true,
+  "versionId": "e6fd9759-822f-42ce-8349-424d111fd030",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        0
+      ],
+      "id": "df3dd364-619a-487b-892d-dd105ddd7d13",
+      "name": "Error Trigger"
+    },
+    {
+      "parameters": {
+        "sendTo": "cbala.ramakrishna@techygeekhub.com",
+        "subject": "Error Occured While Executing the N8N Flow",
+        "message": "=Error Message: {{ $json.execution.error.message }}  \nFailed Node: {{ $json.execution.lastNodeExecuted }}  \nExecution URL: {{ $json.execution.url }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "770574dd-2621-4f8c-8741-07878b3c56f8",
+      "name": "Send a message",
+      "webhookId": "55ae3051-afef-464c-99ee-d332f94b600d",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "06VJ1qyU0Dc5HSFT",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "BlGnarBnEgIlZa95",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.151Z",
+      "updatedAt": "2026-08-13T17:31:13.151Z"
+    }
+  ],
+  "activeVersion": null
+}
