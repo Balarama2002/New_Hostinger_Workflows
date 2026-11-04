@@ -1,0 +1,169 @@
+{
+  "id": "GfQhFXtIU1hyNIGZ",
+  "name": "My workflow 13",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-26T10:28:53.345Z",
+  "updatedAt": "2026-10-26T12:26:35.716Z",
+  "isArchived": false,
+  "versionId": "77c11013-0e77-490c-bc8b-7f98cebcc647",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -496,
+        -32
+      ],
+      "id": "0069b11e-d182-4e3a-b8ce-a41fb6ed4bbe",
+      "name": "When clicking ‘Execute workflow’",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id,Customer_Id__c, FirstName, LastName, Phone, Email FROM Contact WHERE Customer_Id__c = '{{ $json.Customer_Id }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        -176,
+        -32
+      ],
+      "id": "21492847-023b-465a-8c15-f9ce107fe984",
+      "name": "Perform a query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "NQ2apwbG8G34WIhW",
+          "name": "Salesforce account - Lokesh"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "query": "=SELECT code FROM verification_codes \nWHERE customer_id = '{{ $json.Customer_Id__c }}' \n  AND used = 0 \n  AND expires_at > current_timestamp() \n  AND code = '{{ $json.verification_code }}' \nORDER BY id DESC LIMIT 5"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        224,
+        -96
+      ],
+      "id": "75e225e2-4725-4b3a-83d3-94299bfac4aa",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "nBIZhBJ0GFaP90bZ",
+          "name": "Databricks account -Prashanth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "e918e813-f582-4301-a52c-6897d75f2f7b",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        48,
+        -32
+      ],
+      "id": "a9495add-2d99-4050-a669-333c3e1bfdaf",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Perform a query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "Customer_Id": "C063"
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "GfQhFXtIU1hyNIGZ",
+      "projectId": "jtWoSB9mnuR5HppN",
+      "createdAt": "2026-10-26T10:28:53.347Z",
+      "updatedAt": "2026-10-26T10:28:53.347Z"
+    }
+  ],
+  "activeVersion": null
+}
