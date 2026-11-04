@@ -1,0 +1,34 @@
+{
+  "id": "SHxUQ4j9V01dd23c",
+  "name": "First Workflow",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-24T05:16:17.928Z",
+  "updatedAt": "2026-10-24T05:32:05.214Z",
+  "isArchived": false,
+  "versionId": "c745e446-562b-4d0c-b7aa-553a9d22df13",
+  "triggerCount": 0,
+  "nodes": [],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "SHxUQ4j9V01dd23c",
+      "projectId": "lFxDy3L7DmFjSXlP",
+      "createdAt": "2026-10-24T05:16:17.930Z",
+      "updatedAt": "2026-10-24T05:16:17.930Z"
+    }
+  ],
+  "activeVersion": null
+}
