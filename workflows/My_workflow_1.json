@@ -1,12 +1,12 @@
 {
-  "id": "Aq0arBJOUOnYM1gi",
+  "id": "UY3edc6QI1ohuyxA",
   "name": "My workflow 1",
   "active": false,
   "activeVersionId": null,
-  "createdAt": "2026-11-03T17:19:11.568Z",
-  "updatedAt": "2026-11-03T17:19:11.568Z",
+  "createdAt": "2026-11-03T17:45:32.941Z",
+  "updatedAt": "2026-11-03T17:45:32.941Z",
   "isArchived": false,
-  "versionId": "963a5a39-5d6c-4af4-b4ae-0d12965bf9ee",
+  "versionId": "9a6487fb-9403-4d1a-bef4-fcbeb0f614c8",
   "triggerCount": 0,
   "nodes": [
     {
@@ -55,10 +55,10 @@
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "Aq0arBJOUOnYM1gi",
-      "projectId": "JsvwmzNWOafa3NcM",
-      "createdAt": "2026-11-03T17:19:11.571Z",
-      "updatedAt": "2026-11-03T17:19:11.571Z"
+      "workflowId": "UY3edc6QI1ohuyxA",
+      "projectId": "xuQhXJEHtH8zY0MB",
+      "createdAt": "2026-11-03T17:45:32.944Z",
+      "updatedAt": "2026-11-03T17:45:32.944Z"
     }
   ],
   "activeVersion": null
