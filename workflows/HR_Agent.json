@@ -1,0 +1,343 @@
+{
+  "id": "7CRVFXBFOspDRudU",
+  "name": "HR Agent",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:13.203Z",
+  "updatedAt": "2026-08-14T05:49:51.000Z",
+  "isArchived": true,
+  "versionId": "a5d43cbf-8482-416a-8817-8170b1609793",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $('Trigger for Chat Messages').item.json[\"@odata.id\"].split(\"'\")[1] }}",
+          "mode": "id"
+        },
+        "message": "={{ $json.output }}",
+        "options": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        1184,
+        -544
+      ],
+      "id": "8dbdc59f-045f-4d2a-ad2e-639ddd9f1891",
+      "name": "Create chat message",
+      "webhookId": "489c3e48-59cb-4ebf-ac07-e98d88a3a4b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "qnF3XoQvos2bcwNP",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "event": "newChatMessage",
+        "watchAllChats": true
+      },
+      "type": "n8n-nodes-base.microsoftTeamsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -544
+      ],
+      "id": "ff4d3e67-601f-4c7c-8510-6dd943321768",
+      "name": "Trigger for Chat Messages",
+      "webhookId": "d77da041-b40d-4749-b4d4-2f2dc2be11b4",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "qnF3XoQvos2bcwNP",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "chatMessage",
+        "operation": "get",
+        "chatId": {
+          "__rl": true,
+          "value": "={{ $json[\"@odata.id\"].split(\"'\")[1] }}",
+          "mode": "id"
+        },
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.microsoftTeams",
+      "typeVersion": 2,
+      "position": [
+        64,
+        -544
+      ],
+      "id": "f6e708d5-3447-4685-b07d-44bb9ec59c5e",
+      "name": "Fetch Message Posted",
+      "webhookId": "196e4ba0-2763-4c3f-9ac4-86bf9007ec65",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "qnF3XoQvos2bcwNP",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "906b8752-714d-444a-841c-4b38bec57ff4",
+              "leftValue": "={{ $('Fetch Message Posted').item.json.from.user.displayName }}",
+              "rightValue": "TGH AI",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            },
+            {
+              "id": "5727ffab-2018-49b5-ab21-15b313da0385",
+              "leftValue": "={{ $('Fetch Message Posted').item.json.eventDetail }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "8b351279-9e9a-4ba1-964a-6a2d19765bd6",
+              "leftValue": "={{ $('Fetch Message Posted').item.json.messageType }}",
+              "rightValue": "message",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cc5c6958-54b6-49e3-a80d-5063c04a6ba9",
+              "leftValue": "={{ $json.chatType }}",
+              "rightValue": "oneOnOne",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        512,
+        -544
+      ],
+      "id": "e9429b3b-af40-4837-8234-41a43d7eca22",
+      "name": "Check User Message/AI Message"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "92xgGYe9RzOPLl0R",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/92xgGYe9RzOPLl0R",
+          "cachedResultName": "RAG-Agent"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [
+            "body_content_replace"
+          ],
+          "schema": [],
+          "attemptToConvertTypes": true,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [
+        960,
+        -544
+      ],
+      "name": "Call RAG-Agent",
+      "id": "fdb7b88e-67c6-4fa8-a954-89efcd24bfbd"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/chats/{{ $json.chatId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        288,
+        -544
+      ],
+      "id": "32b3d0b6-562b-49e4-a82c-a7bb9150f42e",
+      "name": "HTTP Request",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "ez0no86bw29qTQeW",
+          "name": "TGH_AI-Teams Cred"
+        },
+        "microsoftTeamsOAuth2Api": {
+          "id": "qnF3XoQvos2bcwNP",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4902e26f-43df-4264-ae3d-26a978a59d75",
+              "name": "body_content",
+              "value": "={{ $('Fetch Message Posted').item.json.body.content }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        736,
+        -544
+      ],
+      "id": "844b4ff4-da1e-439e-9812-4cda4eb7c26f",
+      "name": "Request Format Sub Flow"
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "any_event"
+        ],
+        "channelId": {
+          "__rl": true,
+          "mode": "list",
+          "value": ""
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -144,
+        -288
+      ],
+      "id": "d1188487-ba4b-4e76-8017-437d9a88e1db",
+      "name": "Slack Trigger",
+      "webhookId": "835c483b-0caa-47d2-9449-3c8231c1d809"
+    }
+  ],
+  "connections": {
+    "Trigger for Chat Messages": {
+      "main": [
+        [
+          {
+            "node": "Fetch Message Posted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Message Posted": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check User Message/AI Message": {
+      "main": [
+        [
+          {
+            "node": "Request Format Sub Flow",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call RAG-Agent": {
+      "main": [
+        [
+          {
+            "node": "Create chat message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Check User Message/AI Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Request Format Sub Flow": {
+      "main": [
+        [
+          {
+            "node": "Call RAG-Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "KQ2yGarubqSe5Mvl",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "7CRVFXBFOspDRudU",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.205Z",
+      "updatedAt": "2026-08-13T17:31:13.205Z"
+    }
+  ],
+  "activeVersion": null
+}
