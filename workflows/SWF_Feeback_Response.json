@@ -1,0 +1,1012 @@
+{
+  "id": "NbbRU9WvSBhIWODZ",
+  "name": "SWF_Feeback_Response",
+  "active": true,
+  "activeVersionId": "c3e82079-4957-4b52-a047-f6d145c7ce6a",
+  "createdAt": "2026-09-02T07:31:18.998Z",
+  "updatedAt": "2026-10-17T06:09:56.258Z",
+  "isArchived": false,
+  "versionId": "c3e82079-4957-4b52-a047-f6d145c7ce6a",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "path": "853f79ed-914c-45ea-8748-34b7917c4141",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        -176
+      ],
+      "id": "44bad497-ce1e-4644-9885-553c972b1776",
+      "name": "Webhook",
+      "webhookId": "853f79ed-914c-45ea-8748-34b7917c4141"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Feedback Submitted</title>\n\n  <style>\n    body {\n      margin: 0;\n      min-height: 100vh;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      background: #f5f7fa;\n      font-family: \"Segoe UI\", Arial, sans-serif;\n    }\n\n    .container {\n      width: 90%;\n      max-width: 500px;\n      background: white;\n      padding: 45px 35px;\n      border-radius: 16px;\n      text-align: center;\n      box-shadow: 0 8px 30px rgba(0,0,0,0.08);\n    }\n\n    .success {\n      width: 70px;\n      height: 70px;\n      margin: 0 auto 25px;\n      border-radius: 50%;\n      background: #e8f5e9;\n      color: #2e7d32;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      font-size: 38px;\n      font-weight: bold;\n    }\n\n    h1 {\n      margin: 0 0 15px;\n      color: #242424;\n      font-size: 28px;\n    }\n\n    p {\n      margin: 8px 0;\n      color: #616161;\n      font-size: 16px;\n      line-height: 1.6;\n    }\n\n    .note {\n      margin-top: 25px;\n      padding: 12px;\n      background: #f5f5f5;\n      border-radius: 8px;\n      font-size: 14px;\n      color: #666;\n    }\n  </style>\n</head>\n\n<body>\n\n  <div class=\"container\">\n\n    <div class=\"success\">✓</div>\n\n    <h1>Thank You!</h1>\n\n    <p>\n      Thank you for submitting your feedback.\n    </p>\n\n    <p>\n      Your response has been successfully recorded.\n    </p>\n\n    <div class=\"note\">\n      You can close this window and return to Microsoft Teams.\n    </div>\n\n  </div>\n\n</body>\n</html>",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        -272
+      ],
+      "id": "75d07d65-eb2b-4aac-bdcb-614c84d6b778",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "helpful",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "1eb341c6-8c64-47e6-8415-9915bcf4407a"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "helpful"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0c8ab3aa-ff1d-480a-b564-d87fce79a773",
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "not_helpful",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "not-helpful"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "8051803f-224e-445b-a667-c544bd32c72d",
+                    "leftValue": "={{ $json.query.action }}",
+                    "rightValue": "raise_ticket",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Raise-ticket"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        224,
+        -192
+      ],
+      "id": "b460efba-8b64-42e9-9995-d2da5aa63bf9",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\n<title>Service Desk | Create Ticket</title>\n\n<style>\n\n* {\n    box-sizing: border-box;\n}\n\n:root {\n    --primary: #6264a7;\n    --primary-dark: #4f52a5;\n    --primary-light: #f2f2fc;\n\n    --text: #242424;\n    --text-secondary: #616161;\n    --border: #d1d1d1;\n    --background: #f5f5f5;\n    --white: #ffffff;\n\n    --success: #107c41;\n    --danger: #d13438;\n\n    --radius: 10px;\n}\n\nbody {\n    margin: 0;\n    min-height: 100vh;\n\n    font-family:\n        \"Segoe UI\",\n        Arial,\n        sans-serif;\n\n    background:\n        linear-gradient(\n            135deg,\n            #f7f8fc 0%,\n            #eef0f6 100%\n        );\n\n    color: var(--text);\n\n    display: flex;\n    justify-content: center;\n    align-items: center;\n\n    padding: 40px 20px;\n}\n\n/* =========================\n   MAIN CONTAINER\n========================= */\n\n.page {\n    width: 100%;\n    max-width: 780px;\n}\n\n.ticket-card {\n    background: var(--white);\n\n    border-radius: 14px;\n\n    box-shadow:\n        0 2px 6px rgba(0,0,0,0.05),\n        0 12px 35px rgba(0,0,0,0.08);\n\n    overflow: hidden;\n}\n\n/* =========================\n   HEADER\n========================= */\n\n.header {\n    padding: 28px 34px;\n\n    background:\n        linear-gradient(\n            135deg,\n            #6264a7,\n            #5558a8\n        );\n\n    color: white;\n}\n\n.header-top {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n}\n\n.brand {\n    display: flex;\n    align-items: center;\n    gap: 14px;\n}\n\n.brand-icon {\n    width: 44px;\n    height: 44px;\n\n    border-radius: 10px;\n\n    background: rgba(255,255,255,0.16);\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    font-size: 22px;\n}\n\n.brand-text h1 {\n    margin: 0;\n\n    font-size: 21px;\n    font-weight: 600;\n}\n\n.brand-text span {\n    display: block;\n\n    margin-top: 3px;\n\n    font-size: 12px;\n\n    opacity: 0.82;\n}\n\n.status {\n    display: flex;\n    align-items: center;\n    gap: 7px;\n\n    font-size: 12px;\n\n    background: rgba(255,255,255,0.12);\n\n    padding: 7px 11px;\n\n    border-radius: 20px;\n}\n\n.status-dot {\n    width: 7px;\n    height: 7px;\n\n    border-radius: 50%;\n\n    background: #7fba00;\n}\n\n.header-content {\n    margin-top: 28px;\n}\n\n.header-content h2 {\n    margin: 0;\n\n    font-size: 27px;\n    font-weight: 600;\n}\n\n.header-content p {\n    margin: 7px 0 0;\n\n    font-size: 14px;\n\n    opacity: 0.88;\n}\n\n/* =========================\n   FORM\n========================= */\n\n.form {\n    padding: 34px;\n}\n\n.section-title {\n    font-size: 16px;\n\n    font-weight: 600;\n\n    margin-bottom: 5px;\n}\n\n.section-description {\n    color: var(--text-secondary);\n\n    font-size: 13px;\n\n    margin-bottom: 27px;\n}\n\n/* =========================\n   FORM GROUP\n========================= */\n\n.form-group {\n    margin-bottom: 22px;\n}\n\nlabel {\n    display: block;\n\n    margin-bottom: 7px;\n\n    font-size: 13px;\n\n    font-weight: 600;\n}\n\n.required {\n    color: var(--danger);\n}\n\n/* =========================\n   INPUTS\n========================= */\n\ninput,\nselect,\ntextarea {\n\n    width: 100%;\n\n    border: 1px solid var(--border);\n\n    border-radius: var(--radius);\n\n    background: #fff;\n\n    padding: 12px 13px;\n\n    font-family: inherit;\n\n    font-size: 14px;\n\n    color: var(--text);\n\n    outline: none;\n\n    transition:\n        border-color .15s ease,\n        box-shadow .15s ease;\n}\n\ninput {\n    height: 44px;\n}\n\nselect {\n    height: 44px;\n\n    cursor: pointer;\n}\n\ntextarea {\n\n    min-height: 150px;\n\n    resize: vertical;\n\n    line-height: 1.5;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n\n    color: #8a8a8a;\n}\n\ninput:focus,\nselect:focus,\ntextarea:focus {\n\n    border-color: var(--primary);\n\n    box-shadow:\n        0 0 0 2px\n        rgba(98,100,167,0.12);\n}\n\n/* =========================\n   TWO COLUMN\n========================= */\n\n.form-row {\n\n    display: grid;\n\n    grid-template-columns:\n        1fr\n        1fr;\n\n    gap: 18px;\n}\n\n/* =========================\n   PRIORITY\n========================= */\n\n.priority-container {\n\n    display: grid;\n\n    grid-template-columns:\n        repeat(3, 1fr);\n\n    gap: 10px;\n}\n\n.priority-option {\n    position: relative;\n}\n\n.priority-option input {\n\n    position: absolute;\n\n    opacity: 0;\n\n    pointer-events: none;\n}\n\n.priority-option label {\n\n    height: 44px;\n\n    margin: 0;\n\n    border: 1px solid var(--border);\n\n    border-radius: var(--radius);\n\n    display: flex;\n\n    align-items: center;\n\n    justify-content: center;\n\n    cursor: pointer;\n\n    font-weight: 500;\n\n    transition: all .15s ease;\n}\n\n.priority-option label:hover {\n\n    background: #fafafa;\n}\n\n.priority-option input:checked + label {\n\n    border-color: var(--primary);\n\n    background: var(--primary-light);\n\n    color: var(--primary-dark);\n\n    font-weight: 600;\n}\n\n/* =========================\n   CHARACTER COUNT\n========================= */\n\n.textarea-wrapper {\n    position: relative;\n}\n\n.character-count {\n\n    text-align: right;\n\n    margin-top: 6px;\n\n    font-size: 11px;\n\n    color: #8a8a8a;\n}\n\n/* =========================\n   HELPER\n========================= */\n\n.helper {\n\n    display: flex;\n\n    align-items: flex-start;\n\n    gap: 8px;\n\n    margin-top: 8px;\n\n    font-size: 12px;\n\n    color: var(--text-secondary);\n\n    line-height: 1.4;\n}\n\n.helper-icon {\n\n    font-size: 13px;\n}\n\n/* =========================\n   DIVIDER\n========================= */\n\n.divider {\n\n    height: 1px;\n\n    background: #e5e5e5;\n\n    margin: 30px 0 24px;\n}\n\n/* =========================\n   ACTIONS\n========================= */\n\n.actions {\n\n    display: flex;\n\n    justify-content: flex-end;\n\n    gap: 10px;\n}\n\n.btn {\n\n    height: 44px;\n\n    padding: 0 20px;\n\n    border-radius: 8px;\n\n    font-family: inherit;\n\n    font-size: 14px;\n\n    font-weight: 600;\n\n    cursor: pointer;\n\n    transition: all .15s ease;\n}\n\n.btn-secondary {\n\n    border: 1px solid var(--border);\n\n    background: white;\n\n    color: var(--text);\n}\n\n.btn-secondary:hover {\n\n    background: #f7f7f7;\n}\n\n.btn-primary {\n\n    border: none;\n\n    background: var(--primary);\n\n    color: white;\n\n    min-width: 150px;\n}\n\n.btn-primary:hover {\n\n    background: var(--primary-dark);\n\n    box-shadow:\n        0 4px 10px\n        rgba(79,82,165,.20);\n}\n\n.btn-primary:disabled {\n\n    opacity: .65;\n\n    cursor: not-allowed;\n\n    box-shadow: none;\n}\n\n/* =========================\n   LOADING\n========================= */\n\n.loading-content {\n\n    display: flex;\n\n    align-items: center;\n\n    justify-content: center;\n\n    gap: 9px;\n}\n\n.spinner {\n\n    width: 15px;\n    height: 15px;\n\n    border: 2px solid rgba(255,255,255,.4);\n\n    border-top-color: white;\n\n    border-radius: 50%;\n\n    animation:\n        spin .7s linear infinite;\n}\n\n@keyframes spin {\n\n    to {\n        transform: rotate(360deg);\n    }\n}\n\n/* =========================\n   ERROR\n========================= */\n\n.error-message {\n\n    display: none;\n\n    padding: 12px 14px;\n\n    margin-bottom: 20px;\n\n    border-radius: 8px;\n\n    background: #fdf3f4;\n\n    border: 1px solid #f1c8ca;\n\n    color: #a4262c;\n\n    font-size: 13px;\n\n    line-height: 1.4;\n}\n\n/* =========================\n   SUCCESS\n========================= */\n\n.success {\n\n    display: none;\n\n    padding: 55px 35px;\n\n    text-align: center;\n}\n\n.success-icon {\n\n    width: 64px;\n    height: 64px;\n\n    margin: 0 auto 20px;\n\n    border-radius: 50%;\n\n    background: #e7f6ec;\n\n    color: var(--success);\n\n    display: flex;\n\n    align-items: center;\n\n    justify-content: center;\n\n    font-size: 30px;\n\n    font-weight: 700;\n}\n\n.success h2 {\n\n    margin: 0;\n\n    font-size: 24px;\n\n    font-weight: 600;\n}\n\n.success-description {\n\n    margin: 10px auto 25px;\n\n    max-width: 480px;\n\n    color: var(--text-secondary);\n\n    font-size: 14px;\n\n    line-height: 1.6;\n}\n\n/* =========================\n   TICKET INFO\n========================= */\n\n.ticket-info {\n\n    max-width: 420px;\n\n    margin: 0 auto 28px;\n\n    border: 1px solid #e5e5e5;\n\n    border-radius: 10px;\n\n    overflow: hidden;\n\n    text-align: left;\n}\n\n.ticket-row {\n\n    display: flex;\n\n    justify-content: space-between;\n\n    padding: 12px 15px;\n\n    font-size: 13px;\n\n    border-bottom: 1px solid #eeeeee;\n}\n\n.ticket-row:last-child {\n\n    border-bottom: none;\n}\n\n.ticket-label {\n\n    color: var(--text-secondary);\n}\n\n.ticket-value {\n\n    font-weight: 600;\n}\n\n.ticket-id {\n\n    color: var(--primary-dark);\n}\n\n/* =========================\n   FOOTER\n========================= */\n\n.footer {\n\n    padding: 16px 34px;\n\n    border-top: 1px solid #eeeeee;\n\n    font-size: 11px;\n\n    color: #8a8a8a;\n\n    text-align: center;\n}\n\n/* =========================\n   RESPONSIVE\n========================= */\n\n@media (max-width: 650px) {\n\n    body {\n        padding: 15px;\n        align-items: flex-start;\n    }\n\n    .header {\n        padding: 24px 22px;\n    }\n\n    .form {\n        padding: 25px 22px;\n    }\n\n    .form-row {\n        grid-template-columns: 1fr;\n        gap: 0;\n    }\n\n    .priority-container {\n        grid-template-columns: 1fr;\n    }\n\n    .actions {\n        flex-direction: column-reverse;\n    }\n\n    .btn {\n        width: 100%;\n    }\n\n    .status {\n        display: none;\n    }\n\n}\n\n</style>\n</head>\n\n\n<body>\n\n<div class=\"page\">\n\n<div class=\"ticket-card\">\n\n<!-- ================= HEADER ================= -->\n\n<div class=\"header\">\n\n    <div class=\"header-top\">\n\n        <div class=\"brand\">\n\n            <div class=\"brand-icon\">\n                🎫\n            </div>\n\n            <div class=\"brand-text\">\n\n                <h1>Service Desk</h1>\n\n                <span>Internal Support Portal</span>\n\n            </div>\n\n        </div>\n\n        <div class=\"status\">\n\n            <span class=\"status-dot\"></span>\n\n            Available\n\n        </div>\n\n    </div>\n\n\n    <div class=\"header-content\">\n\n        <h2>Create a support ticket</h2>\n\n        <p>\n            Tell us what you need help with and our support team\n            will take it from here.\n        </p>\n\n    </div>\n\n</div>\n\n\n<!-- ================= FORM ================= -->\n\n<div class=\"form\" id=\"ticketForm\">\n\n<form id=\"ticketFormElement\">\n\n    <div class=\"section-title\">\n        Ticket details\n    </div>\n\n    <div class=\"section-description\">\n        Provide the information below so we can route your request\n        to the right support team.\n    </div>\n\n\n    <!-- ERROR -->\n\n    <div\n        class=\"error-message\"\n        id=\"errorMessage\"\n        role=\"alert\">\n    </div>\n\n\n    <!-- SUBJECT -->\n\n    <div class=\"form-group\">\n\n        <label for=\"subject\">\n\n            Subject\n\n            <span class=\"required\">*</span>\n\n        </label>\n\n        <input\n            type=\"text\"\n            id=\"subject\"\n            name=\"subject\"\n            maxlength=\"150\"\n            placeholder=\"Briefly describe what you need help with\"\n            required\n        >\n\n    </div>\n\n\n    <!-- CATEGORY + PRIORITY -->\n\n    <div class=\"form-row\">\n\n\n        <div class=\"form-group\">\n\n            <label for=\"category\">\n\n                Category\n\n                <span class=\"required\">*</span>\n\n            </label>\n\n            <select\n                id=\"category\"\n                name=\"category\"\n                required\n            >\n\n                <option value=\"\">\n                    Select category\n                </option>\n\n                <option value=\"HR Policy\">\n                    HR Policy\n                </option>\n\n                <option value=\"Payroll\">\n                    Payroll\n                </option>\n\n                <option value=\"Leave / Attendance\">\n                    Leave / Attendance\n                </option>\n\n                <option value=\"Benefits\">\n                    Benefits\n                </option>\n\n                <option value=\"Work From Home\">\n                    Work From Home\n                </option>\n\n                <option value=\"Travel\">\n                    Travel\n                </option>\n\n                <option value=\"IT Support\">\n                    IT Support\n                </option>\n\n                <option value=\"Access / Permissions\">\n                    Access / Permissions\n                </option>\n\n                <option value=\"Other\">\n                    Other\n                </option>\n\n            </select>\n\n        </div>\n\n\n        <div class=\"form-group\">\n\n            <label>\n\n                Priority\n\n                <span class=\"required\">*</span>\n\n            </label>\n\n            <div class=\"priority-container\">\n\n\n                <div class=\"priority-option\">\n\n                    <input\n                        type=\"radio\"\n                        id=\"low\"\n                        name=\"priority\"\n                        value=\"Low\"\n                        checked\n                    >\n\n                    <label for=\"low\">\n                        Low\n                    </label>\n\n                </div>\n\n\n                <div class=\"priority-option\">\n\n                    <input\n                        type=\"radio\"\n                        id=\"medium\"\n                        name=\"priority\"\n                        value=\"Medium\"\n                    >\n\n                    <label for=\"medium\">\n                        Medium\n                    </label>\n\n                </div>\n\n\n                <div class=\"priority-option\">\n\n                    <input\n                        type=\"radio\"\n                        id=\"high\"\n                        name=\"priority\"\n                        value=\"High\"\n                    >\n\n                    <label for=\"high\">\n                        High\n                    </label>\n\n                </div>\n\n\n            </div>\n\n        </div>\n\n    </div>\n\n\n    <!-- DESCRIPTION -->\n\n    <div class=\"form-group\">\n\n        <label for=\"description\">\n\n            Description\n\n            <span class=\"required\">*</span>\n\n        </label>\n\n        <div class=\"textarea-wrapper\">\n\n            <textarea\n                id=\"description\"\n                name=\"description\"\n                maxlength=\"1000\"\n                placeholder=\"Describe the issue, what you were trying to do, and any error message you received...\"\n                required\n            ></textarea>\n\n            <div\n                class=\"character-count\"\n                id=\"characterCount\">\n                0 / 1000\n            </div>\n\n        </div>\n\n\n        <div class=\"helper\">\n\n            <span class=\"helper-icon\">ℹ</span>\n\n            <span>\n                Include relevant details such as error messages,\n                application names, or steps to reproduce the issue.\n            </span>\n\n        </div>\n\n    </div>\n\n\n    <div class=\"divider\"></div>\n\n\n    <!-- ACTIONS -->\n\n    <div class=\"actions\">\n\n        <button\n            type=\"button\"\n            class=\"btn btn-secondary\"\n            onclick=\"resetForm()\"\n        >\n            Cancel\n        </button>\n\n\n        <button\n            type=\"submit\"\n            class=\"btn btn-primary\"\n            id=\"submitButton\"\n        >\n            <span id=\"buttonText\">\n                Create Ticket\n            </span>\n        </button>\n\n    </div>\n\n</form>\n\n</div>\n\n\n<!-- ================= SUCCESS ================= -->\n\n<div\n    class=\"success\"\n    id=\"successMessage\"\n>\n\n    <div class=\"success-icon\">\n        ✓\n    </div>\n\n\n    <h2>\n        Ticket created successfully\n    </h2>\n\n\n    <div class=\"success-description\">\n\n        Your request has been submitted to the support team.\n        They will review it and take the appropriate action.\n\n    </div>\n\n\n    <div class=\"ticket-info\">\n\n        <div class=\"ticket-row\">\n\n            <span class=\"ticket-label\">\n                Ticket ID\n            </span>\n\n            <span\n                class=\"ticket-value ticket-id\"\n                id=\"ticketId\"\n            >\n                -\n            </span>\n\n        </div>\n\n\n        <div class=\"ticket-row\">\n\n            <span class=\"ticket-label\">\n                Status\n            </span>\n\n            <span\n                class=\"ticket-value\"\n                id=\"ticketStatus\"\n            >\n                Open\n            </span>\n\n        </div>\n\n\n        <div class=\"ticket-row\">\n\n            <span class=\"ticket-label\">\n                Priority\n            </span>\n\n            <span\n                class=\"ticket-value\"\n                id=\"ticketPriority\"\n            >\n                -\n            </span>\n\n        </div>\n\n    </div>\n\n\n    <button\n        class=\"btn btn-primary\"\n        onclick=\"createAnotherTicket()\"\n    >\n        Create Another Ticket\n    </button>\n\n</div>\n\n\n<div class=\"footer\">\n\n    Internal Service Desk • Your request is securely submitted\n    to the support team.\n\n</div>\n\n\n</div>\n\n</div>\n\n\n<script>\n\n/* ============================================================\n   CONFIGURATION\n============================================================ */\n\nconst WEBHOOK_URL =\n    \"https://n8n.srv1901759.hstgr.cloud/webhook/HR_Feedback?message_id={{ $json.query.messageId }}&userName={{ $json.query.userName }}&chat_id={{ $json.query.chat_id }}\";\n\n\n/* ============================================================\n   CHARACTER COUNTER\n============================================================ */\n\nconst description =\n    document.getElementById(\"description\");\n\nconst characterCount =\n    document.getElementById(\"characterCount\");\n\n\ndescription.addEventListener(\"input\", function () {\n\n    characterCount.textContent =\n        `${this.value.length} / 1000`;\n\n});\n\n\n/* ============================================================\n   FORM SUBMISSION\n============================================================ */\n\ndocument\n    .getElementById(\"ticketFormElement\")\n    .addEventListener(\"submit\", submitTicket);\n\n\nasync function submitTicket(event) {\n\n    event.preventDefault();\n\n\n    const button =\n        document.getElementById(\"submitButton\");\n\n    const buttonText =\n        document.getElementById(\"buttonText\");\n\n    const errorMessage =\n        document.getElementById(\"errorMessage\");\n\n\n    errorMessage.style.display = \"none\";\n\n\n    /* -----------------------------\n       GET VALUES\n    ----------------------------- */\n\n    const subject =\n        document\n            .getElementById(\"subject\")\n            .value\n            .trim();\n\n\n    const category =\n        document\n            .getElementById(\"category\")\n            .value;\n\n\n    const priority =\n        document\n            .querySelector(\n                'input[name=\"priority\"]:checked'\n            )\n            .value;\n\n\n    const description =\n        document\n            .getElementById(\"description\")\n            .value\n            .trim();\n\n\n    /* -----------------------------\n       VALIDATION\n    ----------------------------- */\n\n    if (!subject) {\n\n        showError(\n            \"Please enter a subject for the ticket.\"\n        );\n\n        return;\n    }\n\n\n    if (!category) {\n\n        showError(\n            \"Please select a category.\"\n        );\n\n        return;\n    }\n\n\n    if (!description) {\n\n        showError(\n            \"Please describe the issue.\"\n        );\n\n        return;\n    }\n\n\n    if (description.length < 10) {\n\n        showError(\n            \"Please provide a little more detail about the issue.\"\n        );\n\n        return;\n    }\n\n\n    /* -----------------------------\n       LOADING STATE\n    ----------------------------- */\n\n    button.disabled = true;\n\n    buttonText.innerHTML = `\n        <span class=\"loading-content\">\n            <span class=\"spinner\"></span>\n            Creating...\n        </span>\n    `;\n\n\n    /* -----------------------------\n       PAYLOAD\n    ----------------------------- */\n\n    const ticketData = {\n\n        action: \"raise_ticket\",\n\n        subject: subject,\n\n        category: category,\n\n        priority: priority,\n\n        description: description,\n\n        submittedAt:\n            new Date().toISOString()\n\n    };\n\n\n    try {\n\n        const response =\n            await fetch(\n                WEBHOOK_URL,\n                {\n                    method: \"POST\",\n\n                    headers: {\n                        \"Content-Type\":\n                            \"application/json\"\n                    },\n\n                    body:\n                        JSON.stringify(ticketData)\n                }\n            );\n\n\n        if (!response.ok) {\n\n            throw new Error(\n                \"Unable to create ticket.\"\n            );\n\n        }\n\n\n        /* -----------------------------\n           READ N8N RESPONSE\n        ----------------------------- */\n\n        let result = {};\n\n        try {\n\n            result =\n                await response.json();\n\n        } catch {\n\n            /*\n             If n8n doesn't return JSON,\n             continue with default values.\n            */\n\n        }\n\n\n        /* -----------------------------\n           DISPLAY RESULT\n        ----------------------------- */\n\n        document\n            .getElementById(\"ticketId\")\n            .textContent =\n                result.ticketId ||\n                result.ticketNumber ||\n                \"Created\";\n\n\n        document\n            .getElementById(\"ticketStatus\")\n            .textContent =\n                result.status ||\n                \"Open\";\n\n\n        document\n            .getElementById(\"ticketPriority\")\n            .textContent =\n                priority;\n\n\n        /* -----------------------------\n           HIDE FORM\n        ----------------------------- */\n\n        document\n            .getElementById(\"ticketForm\")\n            .style.display = \"none\";\n\n\n        /* -----------------------------\n           SHOW SUCCESS\n        ----------------------------- */\n\n        document\n            .getElementById(\"successMessage\")\n            .style.display = \"block\";\n\n\n    } catch (error) {\n\n        console.error(error);\n\n\n        showError(\n            \"We couldn't create the ticket right now. Please try again.\"\n        );\n\n\n        button.disabled = false;\n\n        buttonText.textContent =\n            \"Create Ticket\";\n\n    }\n\n}\n\n\n/* ============================================================\n   ERROR\n============================================================ */\n\nfunction showError(message) {\n\n    const error =\n        document.getElementById(\"errorMessage\");\n\n    error.textContent = message;\n\n    error.style.display = \"block\";\n\n    error.scrollIntoView({\n        behavior: \"smooth\",\n        block: \"center\"\n    });\n\n}\n\n\n/* ============================================================\n   RESET\n============================================================ */\n\nfunction resetForm() {\n\n    document\n        .getElementById(\"ticketFormElement\")\n        .reset();\n\n    document\n        .getElementById(\"low\")\n        .checked = true;\n\n    document\n        .getElementById(\"characterCount\")\n        .textContent = \"0 / 1000\";\n\n}\n\n\n/* ============================================================\n   CREATE ANOTHER\n============================================================ */\n\nfunction createAnotherTicket() {\n\n    document\n        .getElementById(\"successMessage\")\n        .style.display = \"none\";\n\n\n    document\n        .getElementById(\"ticketForm\")\n        .style.display = \"block\";\n\n\n    document\n        .getElementById(\"ticketFormElement\")\n        .reset();\n\n\n    document\n        .getElementById(\"low\")\n        .checked = true;\n\n\n    document\n        .getElementById(\"characterCount\")\n        .textContent = \"0 / 1000\";\n\n\n    document\n        .getElementById(\"buttonText\")\n        .textContent = \"Create Ticket\";\n\n\n    document\n        .getElementById(\"submitButton\")\n        .disabled = false;\n\n}\n\n</script>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "53b3d109-c499-4a18-a823-cea53038ef70",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.html }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Content-Type",
+                "value": "text/html; charset=UTF-8"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        672,
+        -80
+      ],
+      "id": "a3b20437-7260-464d-835c-52947468b47d",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "MESSAGE_ID",
+              "keyValue": "={{ String($('Webhook').item.json.query.messageId ).trim()}}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Feedback": "={{ $('Webhook').item.json.query.action }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_NUMBER",
+              "displayName": "JIRA_NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_URL",
+              "displayName": "JIRA_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "QUESTION",
+              "displayName": "QUESTION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "RESPONSE",
+              "displayName": "RESPONSE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "MESSAGE_ID",
+              "displayName": "MESSAGE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "5ab1dfef-c368-4548-8f29-13f96d7af3be",
+      "name": "Update row(s)1"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list",
+          "cachedResultName": "HR_AGENT_AUDIT_LOG",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "MESSAGE_ID",
+              "keyValue": "={{ String($json.query.messageId).trim() }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Feedback": "={{ String($json.query.action) }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "NAME",
+              "displayName": "NAME",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_NUMBER",
+              "displayName": "JIRA_NUMBER",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "JIRA_URL",
+              "displayName": "JIRA_URL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "QUESTION",
+              "displayName": "QUESTION",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "RESPONSE",
+              "displayName": "RESPONSE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "MESSAGE_ID",
+              "displayName": "MESSAGE_ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "Feedback",
+              "displayName": "Feedback",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        -272
+      ],
+      "id": "fbc9ff54-ca0b-4692-a0fb-3fe59e9de571",
+      "name": "Update row(s)"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1901759.hstgr.cloud",
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36 Edg/152.0.0.0",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+            "accept-encoding": "gzip, deflate, br, zstd",
+            "accept-language": "en-US,en;q=0.9",
+            "cookie": "rl_anonymous_id=RudderEncrypt%3AU2FsdGVkX19ZCqo5aCac9D0o3565BFhtRSCRM8iocWtHhj20XkawpYt%2FuOZehlqIpDoJiLW7vH8F7xSPcWiXJg%3D%3D; rl_group_id=RudderEncrypt%3AU2FsdGVkX19HTsKpodU4SlnKMRGqFyKpse%2BMzVzeuHw%3D; rl_group_trait=RudderEncrypt%3AU2FsdGVkX1%2B9guYFVzQ2YqWA66a9zvYfkOz2KQQ4RAA%3D; rl_page_init_referrer=RudderEncrypt%3AU2FsdGVkX19YOM2TnCrH8dEX9TGMtXQKV9VF8wnnFxU%3D; rl_page_init_referring_domain=RudderEncrypt%3AU2FsdGVkX19C%2FvjUz741jCxmE24%2Fi2F4R%2Bh8vq4z0Ds%3D; rl_user_id=RudderEncrypt%3AU2FsdGVkX19Uac2HZF8zTTRNxM2QuMM6r12fZs0hzJFsWWAT7l7h0s6DV2ztiaKx%2FIAezD7H1wQwUj8wg6UjOjRdOdjg0yhw4yT5QCh%2BlBtTYFyjE7YQgP0cKQZVSBgWXKnMrZQIQegsLQA6fRGRsus3QtO9nlt11%2B7KMW7lXOI%3D; rl_trait=RudderEncrypt%3AU2FsdGVkX1%2FIyo5FRQwqcHxvAJKq1BJWoqsoZ%2Fj5Nl76PuPCeuTgP6RmZfuPimRcU3i9W5milKe%2F9CdmiNATECbGM7GZckDwUjqidZVL1vKxH5VPxs5yafP7IX4lUDmV%2FWNVAjUCylEiOwm3QEM5vMqf9HTLNhQmHEK0NDeiAzjncAIjqcNLHwKgHVqvF4PUlsetzPsgzDv2cKCr%2Fwe9Eg%3D%3D; rl_session=RudderEncrypt%3AU2FsdGVkX1%2BgTS9iZRsSbKdhwo02ib481OgQNeR4GhdD%2ByrZV55LxoxzuqKeZnwz%2BxjlOHmHrEg20hc5zGbPb3dnqlckjcd4gQhIqvZEQnvc1NzNP9Q2IKy3dcLog3rZhWGGV1erD5JnQT68Vl9OFw%3D%3D; ph_phc_kMstNfAgBcBkWSh6KdsgN09heqqNe5VNmalHP1Ni9Q4_posthog=%7B%22%24device_id%22%3A%22cf2adcb8b1aba2c35d4a358355116d73739ba0771cad9961d470152419cef08e%231bbb9650-8c89-46b6-b062-d04fc08065d2%22%2C%22distinct_id%22%3A%22cf2adcb8b1aba2c35d4a358355116d73739ba0771cad9961d470152419cef08e%231bbb9650-8c89-46b6-b062-d04fc08065d2%22%2C%22%24sesid%22%3A%5Bnull%2Cnull%2Cnull%5D%2C%22%24epp%22%3Atrue%2C%22%24initial_person_info%22%3A%7B%22r%22%3A%22%24direct%22%2C%22u%22%3A%22https%3A%2F%2Fn8n.srv1901759.hstgr.cloud%2Fsignin%3Fredirect%3D%25252Fworkflow%25252Fu7YS24yBflX7spPp%25252F25d320%22%7D%2C%22%24user_state%22%3A%22identified%22%7D",
+            "priority": "u=0, i",
+            "sec-ch-ua": "\"Chromium\";v=\"152\", \"Not?A_Brand\";v=\"24\", \"Microsoft Edge\";v=\"152\"",
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": "\"Windows\"",
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "none",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "x-forwarded-for": "103.160.27.57",
+            "x-forwarded-host": "n8n.srv1901759.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "132076d7780b",
+            "x-real-ip": "103.160.27.57"
+          },
+          "params": {},
+          "query": {
+            "action": "raise_ticket",
+            "messageId": " 1788675014391",
+            "userName": "Cherukuri Bala Rama Krishna",
+            "chat_id": "19:4103cf02-cdbf-482b-ac9a-8d12c05ea963_b78da932-2796-4818-80d2-fdd6496dc824@unq.gbl.spaces"
+          },
+          "body": {},
+          "webhookUrl": "https://n8n.srv1901759.hstgr.cloud/webhook/853f79ed-914c-45ea-8748-34b7917c4141",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "NbbRU9WvSBhIWODZ",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-09-02T07:31:19.001Z",
+      "updatedAt": "2026-09-02T07:31:19.001Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "c3e82079-4957-4b52-a047-f6d145c7ce6a",
+    "workflowId": "NbbRU9WvSBhIWODZ",
+    "nodes": [
+      {
+        "parameters": {
+          "path": "853f79ed-914c-45ea-8748-34b7917c4141",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          -176
+        ],
+        "id": "44bad497-ce1e-4644-9885-553c972b1776",
+        "name": "Webhook",
+        "webhookId": "853f79ed-914c-45ea-8748-34b7917c4141"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Feedback Submitted</title>\n\n  <style>\n    body {\n      margin: 0;\n      min-height: 100vh;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      background: #f5f7fa;\n      font-family: \"Segoe UI\", Arial, sans-serif;\n    }\n\n    .container {\n      width: 90%;\n      max-width: 500px;\n      background: white;\n      padding: 45px 35px;\n      border-radius: 16px;\n      text-align: center;\n      box-shadow: 0 8px 30px rgba(0,0,0,0.08);\n    }\n\n    .success {\n      width: 70px;\n      height: 70px;\n      margin: 0 auto 25px;\n      border-radius: 50%;\n      background: #e8f5e9;\n      color: #2e7d32;\n      display: flex;\n      align-items: center;\n      justify-content: center;\n      font-size: 38px;\n      font-weight: bold;\n    }\n\n    h1 {\n      margin: 0 0 15px;\n      color: #242424;\n      font-size: 28px;\n    }\n\n    p {\n      margin: 8px 0;\n      color: #616161;\n      font-size: 16px;\n      line-height: 1.6;\n    }\n\n    .note {\n      margin-top: 25px;\n      padding: 12px;\n      background: #f5f5f5;\n      border-radius: 8px;\n      font-size: 14px;\n      color: #666;\n    }\n  </style>\n</head>\n\n<body>\n\n  <div class=\"container\">\n\n    <div class=\"success\">✓</div>\n\n    <h1>Thank You!</h1>\n\n    <p>\n      Thank you for submitting your feedback.\n    </p>\n\n    <p>\n      Your response has been successfully recorded.\n    </p>\n\n    <div class=\"note\">\n      You can close this window and return to Microsoft Teams.\n    </div>\n\n  </div>\n\n</body>\n</html>",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "text/html; charset=UTF-8"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          448,
+          -272
+        ],
+        "id": "75d07d65-eb2b-4aac-bdcb-614c84d6b778",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.query.action }}",
+                      "rightValue": "helpful",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "1eb341c6-8c64-47e6-8415-9915bcf4407a"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "helpful"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "0c8ab3aa-ff1d-480a-b564-d87fce79a773",
+                      "leftValue": "={{ $json.query.action }}",
+                      "rightValue": "not_helpful",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "not-helpful"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 3
+                  },
+                  "conditions": [
+                    {
+                      "id": "8051803f-224e-445b-a667-c544bd32c72d",
+                      "leftValue": "={{ $json.query.action }}",
+                      "rightValue": "raise_ticket",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Raise-ticket"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.4,
+        "position": [
+          224,
+          -192
+        ],
+        "id": "b460efba-8b64-42e9-9995-d2da5aa63bf9",
+        "name": "Switch"
+      },
+      {
+        "parameters": {
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n<meta charset=\"UTF-8\">\n<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n\n<title>Service Desk | Create Ticket</title>\n\n<style>\n\n* {\n    box-sizing: border-box;\n}\n\n:root {\n    --primary: #6264a7;\n    --primary-dark: #4f52a5;\n    --primary-light: #f2f2fc;\n\n    --text: #242424;\n    --text-secondary: #616161;\n    --border: #d1d1d1;\n    --background: #f5f5f5;\n    --white: #ffffff;\n\n    --success: #107c41;\n    --danger: #d13438;\n\n    --radius: 10px;\n}\n\nbody {\n    margin: 0;\n    min-height: 100vh;\n\n    font-family:\n        \"Segoe UI\",\n        Arial,\n        sans-serif;\n\n    background:\n        linear-gradient(\n            135deg,\n            #f7f8fc 0%,\n            #eef0f6 100%\n        );\n\n    color: var(--text);\n\n    display: flex;\n    justify-content: center;\n    align-items: center;\n\n    padding: 40px 20px;\n}\n\n/* =========================\n   MAIN CONTAINER\n========================= */\n\n.page {\n    width: 100%;\n    max-width: 780px;\n}\n\n.ticket-card {\n    background: var(--white);\n\n    border-radius: 14px;\n\n    box-shadow:\n        0 2px 6px rgba(0,0,0,0.05),\n        0 12px 35px rgba(0,0,0,0.08);\n\n    overflow: hidden;\n}\n\n/* =========================\n   HEADER\n========================= */\n\n.header {\n    padding: 28px 34px;\n\n    background:\n        linear-gradient(\n            135deg,\n            #6264a7,\n            #5558a8\n        );\n\n    color: white;\n}\n\n.header-top {\n    display: flex;\n    align-items: center;\n    justify-content: space-between;\n}\n\n.brand {\n    display: flex;\n    align-items: center;\n    gap: 14px;\n}\n\n.brand-icon {\n    width: 44px;\n    height: 44px;\n\n    border-radius: 10px;\n\n    background: rgba(255,255,255,0.16);\n\n    display: flex;\n    align-items: center;\n    justify-content: center;\n\n    font-size: 22px;\n}\n\n.brand-text h1 {\n    margin: 0;\n\n    font-size: 21px;\n    font-weight: 600;\n}\n\n.brand-text span {\n    display: block;\n\n    margin-top: 3px;\n\n    font-size: 12px;\n\n    opacity: 0.82;\n}\n\n.status {\n    display: flex;\n    align-items: center;\n    gap: 7px;\n\n    font-size: 12px;\n\n    background: rgba(255,255,255,0.12);\n\n    padding: 7px 11px;\n\n    border-radius: 20px;\n}\n\n.status-dot {\n    width: 7px;\n    height: 7px;\n\n    border-radius: 50%;\n\n    background: #7fba00;\n}\n\n.header-content {\n    margin-top: 28px;\n}\n\n.header-content h2 {\n    margin: 0;\n\n    font-size: 27px;\n    font-weight: 600;\n}\n\n.header-content p {\n    margin: 7px 0 0;\n\n    font-size: 14px;\n\n    opacity: 0.88;\n}\n\n/* =========================\n   FORM\n========================= */\n\n.form {\n    padding: 34px;\n}\n\n.section-title {\n    font-size: 16px;\n\n    font-weight: 600;\n\n    margin-bottom: 5px;\n}\n\n.section-description {\n    color: var(--text-secondary);\n\n    font-size: 13px;\n\n    margin-bottom: 27px;\n}\n\n/* =========================\n   FORM GROUP\n========================= */\n\n.form-group {\n    margin-bottom: 22px;\n}\n\nlabel {\n    display: block;\n\n    margin-bottom: 7px;\n\n    font-size: 13px;\n\n    font-weight: 600;\n}\n\n.required {\n    color: var(--danger);\n}\n\n/* =========================\n   INPUTS\n========================= */\n\ninput,\nselect,\ntextarea {\n\n    width: 100%;\n\n    border: 1px solid var(--border);\n\n    border-radius: var(--radius);\n\n    background: #fff;\n\n    padding: 12px 13px;\n\n    font-family: inherit;\n\n    font-size: 14px;\n\n    color: var(--text);\n\n    outline: none;\n\n    transition:\n        border-color .15s ease,\n        box-shadow .15s ease;\n}\n\ninput {\n    height: 44px;\n}\n\nselect {\n    height: 44px;\n\n    cursor: pointer;\n}\n\ntextarea {\n\n    min-height: 150px;\n\n    resize: vertical;\n\n    line-height: 1.5;\n}\n\ninput::placeholder,\ntextarea::placeholder {\n\n    color: #8a8a8a;\n}\n\ninput:focus,\nselect:focus,\ntextarea:focus {\n\n    border-color: var(--primary);\n\n    box-shadow:\n        0 0 0 2px\n        rgba(98,100,167,0.12);\n}\n\n/* =========================\n   TWO COLUMN\n========================= */\n\n.form-row {\n\n    display: grid;\n\n    grid-template-columns:\n        1fr\n        1fr;\n\n    gap: 18px;\n}\n\n/* =========================\n   PRIORITY\n========================= */\n\n.priority-container {\n\n    display: grid;\n\n    grid-template-columns:\n        repeat(3, 1fr);\n\n    gap: 10px;\n}\n\n.priority-option {\n    position: relative;\n}\n\n.priority-option input {\n\n    position: absolute;\n\n    opacity: 0;\n\n    pointer-events: none;\n}\n\n.priority-option label {\n\n    height: 44px;\n\n    margin: 0;\n\n    border: 1px solid var(--border);\n\n    border-radius: var(--radius);\n\n    display: flex;\n\n    align-items: center;\n\n    justify-content: center;\n\n    cursor: pointer;\n\n    font-weight: 500;\n\n    transition: all .15s ease;\n}\n\n.priority-option label:hover {\n\n    background: #fafafa;\n}\n\n.priority-option input:checked + label {\n\n    border-color: var(--primary);\n\n    background: var(--primary-light);\n\n    color: var(--primary-dark);\n\n    font-weight: 600;\n}\n\n/* =========================\n   CHARACTER COUNT\n========================= */\n\n.textarea-wrapper {\n    position: relative;\n}\n\n.character-count {\n\n    text-align: right;\n\n    margin-top: 6px;\n\n    font-size: 11px;\n\n    color: #8a8a8a;\n}\n\n/* =========================\n   HELPER\n========================= */\n\n.helper {\n\n    display: flex;\n\n    align-items: flex-start;\n\n    gap: 8px;\n\n    margin-top: 8px;\n\n    font-size: 12px;\n\n    color: var(--text-secondary);\n\n    line-height: 1.4;\n}\n\n.helper-icon {\n\n    font-size: 13px;\n}\n\n/* =========================\n   DIVIDER\n========================= */\n\n.divider {\n\n    height: 1px;\n\n    background: #e5e5e5;\n\n    margin: 30px 0 24px;\n}\n\n/* =========================\n   ACTIONS\n========================= */\n\n.actions {\n\n    display: flex;\n\n    justify-content: flex-end;\n\n    gap: 10px;\n}\n\n.btn {\n\n    height: 44px;\n\n    padding: 0 20px;\n\n    border-radius: 8px;\n\n    font-family: inherit;\n\n    font-size: 14px;\n\n    font-weight: 600;\n\n    cursor: pointer;\n\n    transition: all .15s ease;\n}\n\n.btn-secondary {\n\n    border: 1px solid var(--border);\n\n    background: white;\n\n    color: var(--text);\n}\n\n.btn-secondary:hover {\n\n    background: #f7f7f7;\n}\n\n.btn-primary {\n\n    border: none;\n\n    background: var(--primary);\n\n    color: white;\n\n    min-width: 150px;\n}\n\n.btn-primary:hover {\n\n    background: var(--primary-dark);\n\n    box-shadow:\n        0 4px 10px\n        rgba(79,82,165,.20);\n}\n\n.btn-primary:disabled {\n\n    opacity: .65;\n\n    cursor: not-allowed;\n\n    box-shadow: none;\n}\n\n/* =========================\n   LOADING\n========================= */\n\n.loading-content {\n\n    display: flex;\n\n    align-items: center;\n\n    justify-content: center;\n\n    gap: 9px;\n}\n\n.spinner {\n\n    width: 15px;\n    height: 15px;\n\n    border: 2px solid rgba(255,255,255,.4);\n\n    border-top-color: white;\n\n    border-radius: 50%;\n\n    animation:\n        spin .7s linear infinite;\n}\n\n@keyframes spin {\n\n    to {\n        transform: rotate(360deg);\n    }\n}\n\n/* =========================\n   ERROR\n========================= */\n\n.error-message {\n\n    display: none;\n\n    padding: 12px 14px;\n\n    margin-bottom: 20px;\n\n    border-radius: 8px;\n\n    background: #fdf3f4;\n\n    border: 1px solid #f1c8ca;\n\n    color: #a4262c;\n\n    font-size: 13px;\n\n    line-height: 1.4;\n}\n\n/* =========================\n   SUCCESS\n========================= */\n\n.success {\n\n    display: none;\n\n    padding: 55px 35px;\n\n    text-align: center;\n}\n\n.success-icon {\n\n    width: 64px;\n    height: 64px;\n\n    margin: 0 auto 20px;\n\n    border-radius: 50%;\n\n    background: #e7f6ec;\n\n    color: var(--success);\n\n    display: flex;\n\n    align-items: center;\n\n    justify-content: center;\n\n    font-size: 30px;\n\n    font-weight: 700;\n}\n\n.success h2 {\n\n    margin: 0;\n\n    font-size: 24px;\n\n    font-weight: 600;\n}\n\n.success-description {\n\n    margin: 10px auto 25px;\n\n    max-width: 480px;\n\n    color: var(--text-secondary);\n\n    font-size: 14px;\n\n    line-height: 1.6;\n}\n\n/* =========================\n   TICKET INFO\n========================= */\n\n.ticket-info {\n\n    max-width: 420px;\n\n    margin: 0 auto 28px;\n\n    border: 1px solid #e5e5e5;\n\n    border-radius: 10px;\n\n    overflow: hidden;\n\n    text-align: left;\n}\n\n.ticket-row {\n\n    display: flex;\n\n    justify-content: space-between;\n\n    padding: 12px 15px;\n\n    font-size: 13px;\n\n    border-bottom: 1px solid #eeeeee;\n}\n\n.ticket-row:last-child {\n\n    border-bottom: none;\n}\n\n.ticket-label {\n\n    color: var(--text-secondary);\n}\n\n.ticket-value {\n\n    font-weight: 600;\n}\n\n.ticket-id {\n\n    color: var(--primary-dark);\n}\n\n/* =========================\n   FOOTER\n========================= */\n\n.footer {\n\n    padding: 16px 34px;\n\n    border-top: 1px solid #eeeeee;\n\n    font-size: 11px;\n\n    color: #8a8a8a;\n\n    text-align: center;\n}\n\n/* =========================\n   RESPONSIVE\n========================= */\n\n@media (max-width: 650px) {\n\n    body {\n        padding: 15px;\n        align-items: flex-start;\n    }\n\n    .header {\n        padding: 24px 22px;\n    }\n\n    .form {\n        padding: 25px 22px;\n    }\n\n    .form-row {\n        grid-template-columns: 1fr;\n        gap: 0;\n    }\n\n    .priority-container {\n        grid-template-columns: 1fr;\n    }\n\n    .actions {\n        flex-direction: column-reverse;\n    }\n\n    .btn {\n        width: 100%;\n    }\n\n    .status {\n        display: none;\n    }\n\n}\n\n</style>\n</head>\n\n\n<body>\n\n<div class=\"page\">\n\n<div class=\"ticket-card\">\n\n<!-- ================= HEADER ================= -->\n\n<div class=\"header\">\n\n    <div class=\"header-top\">\n\n        <div class=\"brand\">\n\n            <div class=\"brand-icon\">\n                🎫\n            </div>\n\n            <div class=\"brand-text\">\n\n                <h1>Service Desk</h1>\n\n                <span>Internal Support Portal</span>\n\n            </div>\n\n        </div>\n\n        <div class=\"status\">\n\n            <span class=\"status-dot\"></span>\n\n            Available\n\n        </div>\n\n    </div>\n\n\n    <div class=\"header-content\">\n\n        <h2>Create a support ticket</h2>\n\n        <p>\n            Tell us what you need help with and our support team\n            will take it from here.\n        </p>\n\n    </div>\n\n</div>\n\n\n<!-- ================= FORM ================= -->\n\n<div class=\"form\" id=\"ticketForm\">\n\n<form id=\"ticketFormElement\">\n\n    <div class=\"section-title\">\n        Ticket details\n    </div>\n\n    <div class=\"section-description\">\n        Provide the information below so we can route your request\n        to the right support team.\n    </div>\n\n\n    <!-- ERROR -->\n\n    <div\n        class=\"error-message\"\n        id=\"errorMessage\"\n        role=\"alert\">\n    </div>\n\n\n    <!-- SUBJECT -->\n\n    <div class=\"form-group\">\n\n        <label for=\"subject\">\n\n            Subject\n\n            <span class=\"required\">*</span>\n\n        </label>\n\n        <input\n            type=\"text\"\n            id=\"subject\"\n            name=\"subject\"\n            maxlength=\"150\"\n            placeholder=\"Briefly describe what you need help with\"\n            required\n        >\n\n    </div>\n\n\n    <!-- CATEGORY + PRIORITY -->\n\n    <div class=\"form-row\">\n\n\n        <div class=\"form-group\">\n\n            <label for=\"category\">\n\n                Category\n\n                <span class=\"required\">*</span>\n\n            </label>\n\n            <select\n                id=\"category\"\n                name=\"category\"\n                required\n            >\n\n                <option value=\"\">\n                    Select category\n                </option>\n\n                <option value=\"HR Policy\">\n                    HR Policy\n                </option>\n\n                <option value=\"Payroll\">\n                    Payroll\n                </option>\n\n                <option value=\"Leave / Attendance\">\n                    Leave / Attendance\n                </option>\n\n                <option value=\"Benefits\">\n                    Benefits\n                </option>\n\n                <option value=\"Work From Home\">\n                    Work From Home\n                </option>\n\n                <option value=\"Travel\">\n                    Travel\n                </option>\n\n                <option value=\"IT Support\">\n                    IT Support\n                </option>\n\n                <option value=\"Access / Permissions\">\n                    Access / Permissions\n                </option>\n\n                <option value=\"Other\">\n                    Other\n                </option>\n\n            </select>\n\n        </div>\n\n\n        <div class=\"form-group\">\n\n            <label>\n\n                Priority\n\n                <span class=\"required\">*</span>\n\n            </label>\n\n            <div class=\"priority-container\">\n\n\n                <div class=\"priority-option\">\n\n                    <input\n                        type=\"radio\"\n                        id=\"low\"\n                        name=\"priority\"\n                        value=\"Low\"\n                        checked\n                    >\n\n                    <label for=\"low\">\n                        Low\n                    </label>\n\n                </div>\n\n\n                <div class=\"priority-option\">\n\n                    <input\n                        type=\"radio\"\n                        id=\"medium\"\n                        name=\"priority\"\n                        value=\"Medium\"\n                    >\n\n                    <label for=\"medium\">\n                        Medium\n                    </label>\n\n                </div>\n\n\n                <div class=\"priority-option\">\n\n                    <input\n                        type=\"radio\"\n                        id=\"high\"\n                        name=\"priority\"\n                        value=\"High\"\n                    >\n\n                    <label for=\"high\">\n                        High\n                    </label>\n\n                </div>\n\n\n            </div>\n\n        </div>\n\n    </div>\n\n\n    <!-- DESCRIPTION -->\n\n    <div class=\"form-group\">\n\n        <label for=\"description\">\n\n            Description\n\n            <span class=\"required\">*</span>\n\n        </label>\n\n        <div class=\"textarea-wrapper\">\n\n            <textarea\n                id=\"description\"\n                name=\"description\"\n                maxlength=\"1000\"\n                placeholder=\"Describe the issue, what you were trying to do, and any error message you received...\"\n                required\n            ></textarea>\n\n            <div\n                class=\"character-count\"\n                id=\"characterCount\">\n                0 / 1000\n            </div>\n\n        </div>\n\n\n        <div class=\"helper\">\n\n            <span class=\"helper-icon\">ℹ</span>\n\n            <span>\n                Include relevant details such as error messages,\n                application names, or steps to reproduce the issue.\n            </span>\n\n        </div>\n\n    </div>\n\n\n    <div class=\"divider\"></div>\n\n\n    <!-- ACTIONS -->\n\n    <div class=\"actions\">\n\n        <button\n            type=\"button\"\n            class=\"btn btn-secondary\"\n            onclick=\"resetForm()\"\n        >\n            Cancel\n        </button>\n\n\n        <button\n            type=\"submit\"\n            class=\"btn btn-primary\"\n            id=\"submitButton\"\n        >\n            <span id=\"buttonText\">\n                Create Ticket\n            </span>\n        </button>\n\n    </div>\n\n</form>\n\n</div>\n\n\n<!-- ================= SUCCESS ================= -->\n\n<div\n    class=\"success\"\n    id=\"successMessage\"\n>\n\n    <div class=\"success-icon\">\n        ✓\n    </div>\n\n\n    <h2>\n        Ticket created successfully\n    </h2>\n\n\n    <div class=\"success-description\">\n\n        Your request has been submitted to the support team.\n        They will review it and take the appropriate action.\n\n    </div>\n\n\n    <div class=\"ticket-info\">\n\n        <div class=\"ticket-row\">\n\n            <span class=\"ticket-label\">\n                Ticket ID\n            </span>\n\n            <span\n                class=\"ticket-value ticket-id\"\n                id=\"ticketId\"\n            >\n                -\n            </span>\n\n        </div>\n\n\n        <div class=\"ticket-row\">\n\n            <span class=\"ticket-label\">\n                Status\n            </span>\n\n            <span\n                class=\"ticket-value\"\n                id=\"ticketStatus\"\n            >\n                Open\n            </span>\n\n        </div>\n\n\n        <div class=\"ticket-row\">\n\n            <span class=\"ticket-label\">\n                Priority\n            </span>\n\n            <span\n                class=\"ticket-value\"\n                id=\"ticketPriority\"\n            >\n                -\n            </span>\n\n        </div>\n\n    </div>\n\n\n    <button\n        class=\"btn btn-primary\"\n        onclick=\"createAnotherTicket()\"\n    >\n        Create Another Ticket\n    </button>\n\n</div>\n\n\n<div class=\"footer\">\n\n    Internal Service Desk • Your request is securely submitted\n    to the support team.\n\n</div>\n\n\n</div>\n\n</div>\n\n\n<script>\n\n/* ============================================================\n   CONFIGURATION\n============================================================ */\n\nconst WEBHOOK_URL =\n    \"https://n8n.srv1901759.hstgr.cloud/webhook/HR_Feedback?message_id={{ $json.query.messageId }}&userName={{ $json.query.userName }}&chat_id={{ $json.query.chat_id }}\";\n\n\n/* ============================================================\n   CHARACTER COUNTER\n============================================================ */\n\nconst description =\n    document.getElementById(\"description\");\n\nconst characterCount =\n    document.getElementById(\"characterCount\");\n\n\ndescription.addEventListener(\"input\", function () {\n\n    characterCount.textContent =\n        `${this.value.length} / 1000`;\n\n});\n\n\n/* ============================================================\n   FORM SUBMISSION\n============================================================ */\n\ndocument\n    .getElementById(\"ticketFormElement\")\n    .addEventListener(\"submit\", submitTicket);\n\n\nasync function submitTicket(event) {\n\n    event.preventDefault();\n\n\n    const button =\n        document.getElementById(\"submitButton\");\n\n    const buttonText =\n        document.getElementById(\"buttonText\");\n\n    const errorMessage =\n        document.getElementById(\"errorMessage\");\n\n\n    errorMessage.style.display = \"none\";\n\n\n    /* -----------------------------\n       GET VALUES\n    ----------------------------- */\n\n    const subject =\n        document\n            .getElementById(\"subject\")\n            .value\n            .trim();\n\n\n    const category =\n        document\n            .getElementById(\"category\")\n            .value;\n\n\n    const priority =\n        document\n            .querySelector(\n                'input[name=\"priority\"]:checked'\n            )\n            .value;\n\n\n    const description =\n        document\n            .getElementById(\"description\")\n            .value\n            .trim();\n\n\n    /* -----------------------------\n       VALIDATION\n    ----------------------------- */\n\n    if (!subject) {\n\n        showError(\n            \"Please enter a subject for the ticket.\"\n        );\n\n        return;\n    }\n\n\n    if (!category) {\n\n        showError(\n            \"Please select a category.\"\n        );\n\n        return;\n    }\n\n\n    if (!description) {\n\n        showError(\n            \"Please describe the issue.\"\n        );\n\n        return;\n    }\n\n\n    if (description.length < 10) {\n\n        showError(\n            \"Please provide a little more detail about the issue.\"\n        );\n\n        return;\n    }\n\n\n    /* -----------------------------\n       LOADING STATE\n    ----------------------------- */\n\n    button.disabled = true;\n\n    buttonText.innerHTML = `\n        <span class=\"loading-content\">\n            <span class=\"spinner\"></span>\n            Creating...\n        </span>\n    `;\n\n\n    /* -----------------------------\n       PAYLOAD\n    ----------------------------- */\n\n    const ticketData = {\n\n        action: \"raise_ticket\",\n\n        subject: subject,\n\n        category: category,\n\n        priority: priority,\n\n        description: description,\n\n        submittedAt:\n            new Date().toISOString()\n\n    };\n\n\n    try {\n\n        const response =\n            await fetch(\n                WEBHOOK_URL,\n                {\n                    method: \"POST\",\n\n                    headers: {\n                        \"Content-Type\":\n                            \"application/json\"\n                    },\n\n                    body:\n                        JSON.stringify(ticketData)\n                }\n            );\n\n\n        if (!response.ok) {\n\n            throw new Error(\n                \"Unable to create ticket.\"\n            );\n\n        }\n\n\n        /* -----------------------------\n           READ N8N RESPONSE\n        ----------------------------- */\n\n        let result = {};\n\n        try {\n\n            result =\n                await response.json();\n\n        } catch {\n\n            /*\n             If n8n doesn't return JSON,\n             continue with default values.\n            */\n\n        }\n\n\n        /* -----------------------------\n           DISPLAY RESULT\n        ----------------------------- */\n\n        document\n            .getElementById(\"ticketId\")\n            .textContent =\n                result.ticketId ||\n                result.ticketNumber ||\n                \"Created\";\n\n\n        document\n            .getElementById(\"ticketStatus\")\n            .textContent =\n                result.status ||\n                \"Open\";\n\n\n        document\n            .getElementById(\"ticketPriority\")\n            .textContent =\n                priority;\n\n\n        /* -----------------------------\n           HIDE FORM\n        ----------------------------- */\n\n        document\n            .getElementById(\"ticketForm\")\n            .style.display = \"none\";\n\n\n        /* -----------------------------\n           SHOW SUCCESS\n        ----------------------------- */\n\n        document\n            .getElementById(\"successMessage\")\n            .style.display = \"block\";\n\n\n    } catch (error) {\n\n        console.error(error);\n\n\n        showError(\n            \"We couldn't create the ticket right now. Please try again.\"\n        );\n\n\n        button.disabled = false;\n\n        buttonText.textContent =\n            \"Create Ticket\";\n\n    }\n\n}\n\n\n/* ============================================================\n   ERROR\n============================================================ */\n\nfunction showError(message) {\n\n    const error =\n        document.getElementById(\"errorMessage\");\n\n    error.textContent = message;\n\n    error.style.display = \"block\";\n\n    error.scrollIntoView({\n        behavior: \"smooth\",\n        block: \"center\"\n    });\n\n}\n\n\n/* ============================================================\n   RESET\n============================================================ */\n\nfunction resetForm() {\n\n    document\n        .getElementById(\"ticketFormElement\")\n        .reset();\n\n    document\n        .getElementById(\"low\")\n        .checked = true;\n\n    document\n        .getElementById(\"characterCount\")\n        .textContent = \"0 / 1000\";\n\n}\n\n\n/* ============================================================\n   CREATE ANOTHER\n============================================================ */\n\nfunction createAnotherTicket() {\n\n    document\n        .getElementById(\"successMessage\")\n        .style.display = \"none\";\n\n\n    document\n        .getElementById(\"ticketForm\")\n        .style.display = \"block\";\n\n\n    document\n        .getElementById(\"ticketFormElement\")\n        .reset();\n\n\n    document\n        .getElementById(\"low\")\n        .checked = true;\n\n\n    document\n        .getElementById(\"characterCount\")\n        .textContent = \"0 / 1000\";\n\n\n    document\n        .getElementById(\"buttonText\")\n        .textContent = \"Create Ticket\";\n\n\n    document\n        .getElementById(\"submitButton\")\n        .disabled = false;\n\n}\n\n</script>\n\n</body>\n</html>"
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          448,
+          -80
+        ],
+        "id": "53b3d109-c499-4a18-a823-cea53038ef70",
+        "name": "HTML"
+      },
+      {
+        "parameters": {
+          "respondWith": "text",
+          "responseBody": "={{ $json.html }}",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Content-Type",
+                  "value": "text/html; charset=UTF-8"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          672,
+          -80
+        ],
+        "id": "a3b20437-7260-464d-835c-52947468b47d",
+        "name": "Respond to Webhook1"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "MESSAGE_ID",
+                "keyValue": "={{ String($('Webhook').item.json.query.messageId ).trim()}}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Feedback": "={{ $('Webhook').item.json.query.action }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_NUMBER",
+                "displayName": "JIRA_NUMBER",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_URL",
+                "displayName": "JIRA_URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "QUESTION",
+                "displayName": "QUESTION",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "RESPONSE",
+                "displayName": "RESPONSE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "MESSAGE_ID",
+                "displayName": "MESSAGE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "Feedback",
+                "displayName": "Feedback",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          896,
+          -80
+        ],
+        "id": "5ab1dfef-c368-4548-8f29-13f96d7af3be",
+        "name": "Update row(s)1"
+      },
+      {
+        "parameters": {
+          "operation": "update",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list",
+            "cachedResultName": "HR_AGENT_AUDIT_LOG",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/0Xa3cI3xvJp6UKV4"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "MESSAGE_ID",
+                "keyValue": "={{ String($json.query.messageId).trim() }}"
+              }
+            ]
+          },
+          "columns": {
+            "mappingMode": "defineBelow",
+            "value": {
+              "Feedback": "={{ String($json.query.action) }}"
+            },
+            "matchingColumns": [],
+            "schema": [
+              {
+                "id": "NAME",
+                "displayName": "NAME",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_NUMBER",
+                "displayName": "JIRA_NUMBER",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "JIRA_URL",
+                "displayName": "JIRA_URL",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "QUESTION",
+                "displayName": "QUESTION",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "RESPONSE",
+                "displayName": "RESPONSE",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "MESSAGE_ID",
+                "displayName": "MESSAGE_ID",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": true
+              },
+              {
+                "id": "Feedback",
+                "displayName": "Feedback",
+                "required": false,
+                "defaultMatch": false,
+                "display": true,
+                "type": "string",
+                "readOnly": false,
+                "removed": false
+              }
+            ],
+            "attemptToConvertTypes": false,
+            "convertFieldsToString": false
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          672,
+          -272
+        ],
+        "id": "fbc9ff54-ca0b-4692-a0fb-3fe59e9de571",
+        "name": "Update row(s)"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Switch",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Switch": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook": {
+        "main": [
+          [
+            {
+              "node": "Update row(s)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Respond to Webhook1": {
+        "main": [
+          [
+            {
+              "node": "Update row(s)1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update row(s)": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version c3e82079",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-09-06T06:13:19.927Z",
+    "updatedAt": "2026-09-06T06:13:25.000Z"
+  }
+}
