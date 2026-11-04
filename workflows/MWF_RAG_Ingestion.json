@@ -1,0 +1,225 @@
+{
+  "id": "2nVMEsiPpgAQVrqf",
+  "name": "MWF-RAG-Ingestion",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-22T14:47:31.354Z",
+  "updatedAt": "2026-10-22T14:59:37.443Z",
+  "isArchived": false,
+  "versionId": "b13174fb-d749-469e-b438-5335bd4aaec9",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -128,
+        -64
+      ],
+      "id": "f4b64c7c-be92-4800-81cf-fef8e24970fe",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1CGaI2hmHZe3315B_wAgmE5JaIqRvhyOc",
+          "mode": "list",
+          "cachedResultName": "Night Shift Allowance Policy-TGH (1).pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1CGaI2hmHZe3315B_wAgmE5JaIqRvhyOc/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        96,
+        -64
+      ],
+      "id": "0bb44347-fcbc-41cf-9a62-4730edd262e9",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "DYhsSchTA1afdzus",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        320,
+        -64
+      ],
+      "id": "b7b7d9d4-f3b9-4748-8d0e-a2000e6d16be",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "allhrpolicydetails",
+          "mode": "list",
+          "cachedResultName": "allhrpolicydetails"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        544,
+        -64
+      ],
+      "id": "8618a10a-57b0-464f-871e-9a1f73930580",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "ubFhaw4xfNfUylOC",
+          "name": "Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        464,
+        160
+      ],
+      "id": "43a795e8-19e8-49fb-b6b8-df3df4a77177",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        736,
+        144
+      ],
+      "id": "514f071d-58d9-4722-acc7-2c8b4a3c1ba1",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkOverlap": 50,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        688,
+        304
+      ],
+      "id": "9def63df-b324-474a-b775-0a53f1ece140",
+      "name": "Recursive Character Text Splitter"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "2nVMEsiPpgAQVrqf",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-22T14:47:31.357Z",
+      "updatedAt": "2026-10-22T14:47:31.357Z"
+    }
+  ],
+  "activeVersion": null
+}
