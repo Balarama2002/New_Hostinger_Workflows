@@ -1,0 +1,70 @@
+{
+  "id": "Pp791EON2zreE3vu",
+  "name": "MWF-RAG-Extraction",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-22T15:00:04.399Z",
+  "updatedAt": "2026-10-22T15:43:00.214Z",
+  "isArchived": false,
+  "versionId": "9dee6597-2209-4647-9b68-dc2622cf46cd",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0b41f443-9caa-49bc-97f1-2ee58bd69980",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "resource": "account",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "ca8624c2-09e4-431c-b4f8-f33b01d8620a",
+      "name": "Create an account"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Create an account",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Pp791EON2zreE3vu",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-22T15:00:04.414Z",
+      "updatedAt": "2026-10-22T15:00:04.414Z"
+    }
+  ],
+  "activeVersion": null
+}
