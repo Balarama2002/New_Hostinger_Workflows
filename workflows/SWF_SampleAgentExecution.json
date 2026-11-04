@@ -1,0 +1,528 @@
+{
+  "id": "V4nFQX4v0K92HTbw",
+  "name": "SWF_SampleAgentExecution",
+  "active": true,
+  "activeVersionId": "8b8605ad-7c6e-45cc-89f5-983fbe85fa0c",
+  "createdAt": "2026-10-24T09:33:33.295Z",
+  "updatedAt": "2026-10-24T10:35:00.187Z",
+  "isArchived": false,
+  "versionId": "8b8605ad-7c6e-45cc-89f5-983fbe85fa0c",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "Phone"
+            },
+            {
+              "name": "Email"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -80,
+        0
+      ],
+      "id": "31abe1aa-134a-470f-af69-674545321d7b",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT   FirstName,LastName,Email,Phone,Department,Title FROM Contact  WHERE Email LIKE '%{{ $json.Phone}}%'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        368,
+        0
+      ],
+      "id": "eae05809-f135-46b5-b994-620373b89e9f",
+      "name": "Perform a query",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "HTXK350Nf1D815Yf",
+          "name": "Salesforcecharan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "626300a8-6b15-42d2-9f45-618016a10d56",
+              "leftValue": "={{ $json.Phone }}",
+              "rightValue": "={{ $json.Email }}",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        144,
+        0
+      ],
+      "id": "1aeb3577-1808-414e-a382-555388fca4e2",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT     FirstName,LastName,Email,Phone,Department,Title FROM Contact where Email LIKE '%{{ $json.Email }}%'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        320,
+        144
+      ],
+      "id": "7fa20f89-161f-4ab0-a51f-6f20ad90be3b",
+      "name": "Perform a query1",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "HTXK350Nf1D815Yf",
+          "name": "Salesforcecharan"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "3643f34a-b8ec-4f34-847d-bf5356e1e2c9",
+              "leftValue": "={{ $json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        592,
+        0
+      ],
+      "id": "aa8418d3-b41d-4b0f-9fe3-fbd667d3aa6a",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        816,
+        -39.08053691275168
+      ],
+      "id": "0d4e59ff-260c-49ff-a108-24ba546ede8f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7c45b237-77e5-410d-ad86-fce090a40ec9",
+              "name": "output",
+              "value": "We couldn't found relevant data",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        752,
+        112
+      ],
+      "id": "bceb8894-7d1b-4152-9c1a-50faf95c27f8",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Perform a query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Perform a query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "V4nFQX4v0K92HTbw",
+      "projectId": "1ocY0ktVpZfOfhAg",
+      "createdAt": "2026-10-24T09:33:33.298Z",
+      "updatedAt": "2026-10-24T09:33:33.298Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "8b8605ad-7c6e-45cc-89f5-983fbe85fa0c",
+    "workflowId": "V4nFQX4v0K92HTbw",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "Phone"
+              },
+              {
+                "name": "Email"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -80,
+          0
+        ],
+        "id": "31abe1aa-134a-470f-af69-674545321d7b",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT   FirstName,LastName,Email,Phone,Department,Title FROM Contact  WHERE Email LIKE '%{{ $json.Phone}}%'"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          368,
+          0
+        ],
+        "id": "eae05809-f135-46b5-b994-620373b89e9f",
+        "name": "Perform a query",
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "HTXK350Nf1D815Yf",
+            "name": "Salesforcecharan"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "626300a8-6b15-42d2-9f45-618016a10d56",
+                "leftValue": "={{ $json.Phone }}",
+                "rightValue": "={{ $json.Email }}",
+                "operator": {
+                  "type": "number",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          144,
+          0
+        ],
+        "id": "1aeb3577-1808-414e-a382-555388fca4e2",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT     FirstName,LastName,Email,Phone,Department,Title FROM Contact where Email LIKE '%{{ $json.Email }}%'"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          320,
+          144
+        ],
+        "id": "7fa20f89-161f-4ab0-a51f-6f20ad90be3b",
+        "name": "Perform a query1",
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "HTXK350Nf1D815Yf",
+            "name": "Salesforcecharan"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "3643f34a-b8ec-4f34-847d-bf5356e1e2c9",
+                "leftValue": "={{ $json.Email }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          592,
+          0
+        ],
+        "id": "aa8418d3-b41d-4b0f-9fe3-fbd667d3aa6a",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": []
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          816,
+          -39.08053691275168
+        ],
+        "id": "0d4e59ff-260c-49ff-a108-24ba546ede8f",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "7c45b237-77e5-410d-ad86-fce090a40ec9",
+                "name": "output",
+                "value": "We couldn't found relevant data",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          752,
+          112
+        ],
+        "id": "bceb8894-7d1b-4152-9c1a-50faf95c27f8",
+        "name": "Edit Fields1"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Perform a query": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Perform a query",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Perform a query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Perform a query1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "charan v",
+    "name": "Version 8b8605ad",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-24T10:35:00.195Z",
+    "updatedAt": "2026-10-24T10:36:43.000Z"
+  }
+}
