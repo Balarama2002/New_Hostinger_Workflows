@@ -1,0 +1,180 @@
+{
+  "id": "VVgjPAu4NQM5pk8i",
+  "name": "MCP - Calculator Tool",
+  "active": true,
+  "activeVersionId": "82d1d7b7-0a9f-4a28-b918-2a6d69be19bd",
+  "createdAt": "2026-10-13T14:12:35.210Z",
+  "updatedAt": "2026-10-13T15:59:25.437Z",
+  "isArchived": false,
+  "versionId": "82d1d7b7-0a9f-4a28-b918-2a6d69be19bd",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "a"
+            },
+            {
+              "name": "b"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "0ae9be4a-36f2-4acd-8599-c07ea879f2ae",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8d2817bb-1051-4007-b7e0-3f7baa1492d9",
+              "name": "output ",
+              "value": "={{ Number($json.a) + Number($json.b) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "ignoreConversionErrors": true
+        }
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        224,
+        0
+      ],
+      "id": "b6855a10-8f7a-4bce-946c-d7987de8bda9",
+      "name": "Edit Fields"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "vtN1JQvH45zQjAiD",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "a": "198",
+          "b": "7768"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "VVgjPAu4NQM5pk8i",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-13T14:12:35.213Z",
+      "updatedAt": "2026-10-13T14:12:35.213Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "82d1d7b7-0a9f-4a28-b918-2a6d69be19bd",
+    "workflowId": "VVgjPAu4NQM5pk8i",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "a"
+              },
+              {
+                "name": "b"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "0ae9be4a-36f2-4acd-8599-c07ea879f2ae",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8d2817bb-1051-4007-b7e0-3f7baa1492d9",
+                "name": "output ",
+                "value": "={{ Number($json.a) + Number($json.b) }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {
+            "ignoreConversionErrors": true
+          }
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          224,
+          0
+        ],
+        "id": "b6855a10-8f7a-4bce-946c-d7987de8bda9",
+        "name": "Edit Fields"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 82d1d7b7",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-13T15:59:25.363Z",
+    "updatedAt": "2026-10-13T15:59:35.000Z"
+  }
+}
