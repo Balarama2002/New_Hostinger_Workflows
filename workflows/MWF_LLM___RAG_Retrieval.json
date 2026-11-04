@@ -1,0 +1,329 @@
+{
+  "id": "aQ9RKiqbmZUiZidX",
+  "name": "MWF_LLM | RAG Retrieval",
+  "active": true,
+  "activeVersionId": "ac1e18c9-d057-4096-9a24-f8bc9df5b8a1",
+  "createdAt": "2026-10-31T05:35:30.481Z",
+  "updatedAt": "2026-10-31T07:51:59.783Z",
+  "isArchived": false,
+  "versionId": "779d8d26-a71e-44df-814b-f07fad9e16ab",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "94e45b19-fdc6-47f0-ab16-0f072c62e8cd",
+      "name": "When chat message received",
+      "webhookId": "3c483d80-8a5c-4304-baf4-fcf4d89e6199"
+    },
+    {
+      "parameters": {
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        288,
+        0
+      ],
+      "id": "c1878980-1cce-478d-86fa-5103c4a6435f",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "If user ask any questions. It will get the data from vector database which have the EDI Accelarator document.",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-workshop-rag",
+          "mode": "list",
+          "cachedResultName": "n8n-workshop-rag"
+        },
+        "topK": 2,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        488,
+        232
+      ],
+      "id": "a67fe04d-e460-4752-b6b7-d7061b4024ec",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "rfSG9cUKOYbw80wU",
+          "name": "Mounika Pinecone account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        568,
+        440
+      ],
+      "id": "4e392fdd-d4c6-473a-8d1f-8c6d5aec88ce",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QmPk58zxWKldJFjH",
+          "name": "Mounika Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        232,
+        232
+      ],
+      "id": "71a97e60-089c-4e1f-8e1f-6ac892c142ec",
+      "name": "Mounika Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QmPk58zxWKldJFjH",
+          "name": "Mounika Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        360,
+        232
+      ],
+      "id": "3ee7ea5f-bfa8-4f3b-abe7-baa1ada3dac1",
+      "name": "Mounika Google Gemini Chat Model Fall back model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "QmPk58zxWKldJFjH",
+          "name": "Mounika Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pinecone Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mounika Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mounika Google Gemini Chat Model Fall back model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "aQ9RKiqbmZUiZidX",
+      "projectId": "xuQhXJEHtH8zY0MB",
+      "createdAt": "2026-10-31T05:35:30.486Z",
+      "updatedAt": "2026-10-31T05:35:30.486Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "ac1e18c9-d057-4096-9a24-f8bc9df5b8a1",
+    "workflowId": "aQ9RKiqbmZUiZidX",
+    "nodes": [
+      {
+        "parameters": {
+          "public": true,
+          "options": {
+            "allowFileUploads": true
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "typeVersion": 1.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "94e45b19-fdc6-47f0-ab16-0f072c62e8cd",
+        "name": "When chat message received",
+        "webhookId": "3c483d80-8a5c-4304-baf4-fcf4d89e6199"
+      },
+      {
+        "parameters": {
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "You are a helpful assistant"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "c1878980-1cce-478d-86fa-5103c4a6435f",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.1-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          48,
+          304
+        ],
+        "id": "71a97e60-089c-4e1f-8e1f-6ac892c142ec",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "QmPk58zxWKldJFjH",
+            "name": "Google Gemini(PaLM) Api account 8"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.5-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          272,
+          304
+        ],
+        "id": "3ee7ea5f-bfa8-4f3b-abe7-baa1ada3dac1",
+        "name": "Google Gemini Chat Model1",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "QmPk58zxWKldJFjH",
+            "name": "Google Gemini(PaLM) Api account 8"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Mounika Valasani",
+    "name": "V1",
+    "description": "Initial LLM",
+    "autosaved": true,
+    "createdAt": "2026-10-31T06:03:40.341Z",
+    "updatedAt": "2026-10-31T06:26:29.000Z"
+  }
+}
