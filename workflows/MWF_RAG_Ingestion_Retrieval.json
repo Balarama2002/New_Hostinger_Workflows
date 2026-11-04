@@ -1,0 +1,203 @@
+{
+  "id": "2Eq7JFouZyqXMPPW",
+  "name": "MWF_RAG_Ingestion/Retrieval",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-31T06:35:59.152Z",
+  "updatedAt": "2026-10-31T09:21:40.554Z",
+  "isArchived": false,
+  "versionId": "34d49783-27a9-4719-bd84-819e5eb4ef34",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "72cdc8fe-7f56-4c62-8368-b695876fcdf0",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "13a5hdTTaO1j7M7k7Wz-zMrVqWsF-J8Uh",
+          "mode": "list",
+          "cachedResultName": "GPU guide.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/13a5hdTTaO1j7M7k7Wz-zMrVqWsF-J8Uh/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a576254a-b912-48d6-8c3e-fdf492f464b4",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "IVKp38TYZFP7anR0",
+          "name": "Hanish_GoogleDrive"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "34899151-e742-48b8-85a5-6df9b47d5e87",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-workshop-rag",
+          "mode": "list",
+          "cachedResultName": "n8n-workshop-rag"
+        },
+        "options": {
+          "pineconeNamespace": "Initial"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        688,
+        -16
+      ],
+      "id": "de026e68-45ec-4510-a50c-1ea1e8086867",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "nPQvM8yYfmBPcyeA",
+          "name": "Hanish_Pinecone"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        656,
+        192
+      ],
+      "id": "217ae107-024e-437e-bbf3-e70b25f13124",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "FjEda47HLeFVQXz7",
+          "name": "Hanish_Gemini"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        832,
+        192
+      ],
+      "id": "e62ba892-783f-40db-aa9f-aae3d1ecaa58",
+      "name": "Default Data Loader"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "2Eq7JFouZyqXMPPW",
+      "projectId": "VZ8J0XCfSU5w3QzG",
+      "createdAt": "2026-10-31T06:35:59.153Z",
+      "updatedAt": "2026-10-31T06:35:59.153Z"
+    }
+  ],
+  "activeVersion": null
+}
