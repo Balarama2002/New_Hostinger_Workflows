@@ -1,10 +1,13 @@
 {
-  "updatedAt": "2026-08-14T05:49:45.000Z",
-  "createdAt": "2026-08-13T17:31:13.168Z",
   "id": "3kvDSZkWaxsu2NDe",
   "name": "FINVI Time Sheets",
   "active": false,
-  "isArchived": true,
+  "activeVersionId": null,
+  "createdAt": "2026-08-13T17:31:13.168Z",
+  "updatedAt": "2026-11-03T05:11:38.771Z",
+  "isArchived": false,
+  "versionId": "65e60c95-5cb9-41a4-9647-667d4d033841",
+  "triggerCount": 1,
   "nodes": [
     {
       "parameters": {
@@ -388,7 +391,7 @@
             {
               "id": "77427c9f-76f0-4ca1-84d7-57416961d67a",
               "leftValue": "={{ $json.concatenated_Worklog }}",
-              "rightValue": "=/(FTO|Sick)/gi",
+              "rightValue": "=ODM-5080",
               "operator": {
                 "type": "string",
                 "operation": "regex"
@@ -422,10 +425,10 @@
             {
               "id": "192e43a3-e6b7-44e6-97be-71ffd320ab52",
               "leftValue": "={{ $json.concatenated_Worklog }}",
-              "rightValue": "/Public Holiday/i",
+              "rightValue": "ODM-5082",
               "operator": {
                 "type": "string",
-                "operation": "equals"
+                "operation": "regex"
               }
             }
           ],
@@ -478,10 +481,24 @@
     },
     {
       "parameters": {
+        "jsCode": "const items = $input.all();\nconst result = [];\n\n// 1. Get Month/Year from Webhook headers\nconst webhookNode = $('Webhook').first();\n\nlet month = Number(webhookNode.json.headers?.month);\nlet year = Number(webhookNode.json.headers?.year);\n\n// 2. Fallback - get Month/Year from first record\nif (!month || !year) {\n\n  const firstDate = items[0]?.json.Date;\n\n  if (firstDate) {\n\n    const parts = firstDate.split('/');\n\n    const monthMap = {\n      Jan: 1,\n      Feb: 2,\n      Mar: 3,\n      Apr: 4,\n      May: 5,\n      Jun: 6,\n      Jul: 7,\n      Aug: 8,\n      Sep: 9,\n      Oct: 10,\n      Nov: 11,\n      Dec: 12\n    };\n\n    month = monthMap[parts[1]];\n    year = Number(\"20\" + parts[2]);\n  }\n}\n\n// 3. Store existing records\nconst existingDataMap = {};\n\nitems.forEach(item => {\n\n  const date = item.json.Date;\n\n  if (date) {\n    existingDataMap[date] = item.json;\n  }\n\n});\n\n// 4. Month names - fixed so locale cannot affect the result\nconst monthNames = [\n  \"Jan\", \"Feb\", \"Mar\", \"Apr\", \"May\", \"Jun\",\n  \"Jul\", \"Aug\", \"Sep\", \"Oct\", \"Nov\", \"Dec\"\n];\n\n// 5. Generate all dates\nif (month && year) {\n\n  const daysInMonth = new Date(year, month, 0).getDate();\n\n  for (let day = 1; day <= daysInMonth; day++) {\n\n    const dateObj = new Date(year, month - 1, day);\n\n    const dd = String(day).padStart(2, '0');\n    const mmm = monthNames[month - 1];\n    const yy = String(year).slice(-2);\n\n    const dateString = `${dd}/${mmm}/${yy}`;\n\n    // 0 = Sunday\n    // 6 = Saturday\n    const dayOfWeek = dateObj.getDay();\n\n    const isWeekend =\n      dayOfWeek === 0 ||\n      dayOfWeek === 6;\n\n    // ==========================================\n    // EXISTING RECORD\n    // ==========================================\n    // Keep the COMPLETE original record.\n    // Nothing is changed.\n    if (existingDataMap[dateString]) {\n\n      result.push({\n        json: existingDataMap[dateString]\n      });\n\n    }\n\n    // ==========================================\n    // MISSING WEEKEND\n    // ==========================================\n    // Only create a record if it is a weekend.\n    else if (isWeekend) {\n\n      result.push({\n        json: {\n          \"Date\": dateString,\n          \"Task Start Date\": dateString,\n          \"Task End Date\": dateString,\n          \"Environment\": \"Boomi\",\n          \"AdminDevSupport\": \"Development\",\n          \"Task Description\": \"\",\n          \"Complexity\": \"\",\n          \"Actual Efforts(hrs)\": \"8\",\n          \"Status\": \"\",\n          \"Comments\": \"Weekend\"\n        }\n      });\n\n    }\n\n  }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2672,
+        672
+      ],
+      "id": "a6841bff-780e-4d2f-bef0-8267bb373c2d",
+      "name": "Code in JavaScript2"
+    },
+    {
+      "parameters": {
         "sendTo": "={{ $node[\"Webhook\"].json.headers.to_email}}",
         "subject": "FINVI Timesheets",
         "message": "Hi PFA Timesheets ",
         "options": {
+          "appendAttribution": true,
           "attachmentsUi": {
             "attachmentsBinary": [
               {}
@@ -495,28 +512,28 @@
         3104,
         672
       ],
-      "id": "bd7141ef-fc7a-4b69-8c7b-b38904225d42",
-      "name": "Send a message",
-      "webhookId": "19445b9a-8ca4-4b12-863f-e2f7903e6965",
+      "id": "1a202d52-d601-4bf4-b4e9-c5c5cc04f7b9",
+      "name": "Send a message1",
+      "webhookId": "41a98370-07a6-455d-a272-65f6a63a17ac",
       "credentials": {
         "gmailOAuth2": {
-          "id": "06VJ1qyU0Dc5HSFT",
-          "name": "Gmail account"
+          "id": "cb64fm81qdwwKgxM",
+          "name": "Bala Ram Gmail account"
         }
       }
     },
     {
       "parameters": {
-        "jsCode": "const items = $input.all();\nconst result = [];\n\n// 1. Try to get Month/Year from Headers\nconst webhookNode = $('Webhook').first();\nlet month = Number(webhookNode.json.headers?.month);\nlet year = Number(webhookNode.json.headers?.year);\n\n// 2. FALLBACK: If headers are missing, guess from the first Boomi record\nif (!month || !year) {\n  const firstDate = items[0]?.json.Date; // e.g. \"02/Feb/26\"\n  if (firstDate) {\n    const parts = firstDate.split('/');\n    const monthMap = { Jan:1, Feb:2, Mar:3, Apr:4, May:5, Jun:6, Jul:7, Aug:8, Sep:9, Oct:10, Nov:11, Dec:12 };\n    month = monthMap[parts[1]];\n    year = Number(\"20\" + parts[2]);\n  }\n}\n\n// 3. Map existing data\nconst existingDataMap = {};\nitems.forEach(item => {\n  if (item.json.Date) existingDataMap[item.json.Date] = item.json;\n});\n\n// 4. Generate the Month\nif (month && year) {\n  const daysInMonth = new Date(year, month, 0).getDate();\n\n  for (let day = 1; day <= daysInMonth; day++) {\n    const dateObj = new Date(year, month - 1, day);\n    const dd = String(day).padStart(2, '0');\n    const mmm = dateObj.toLocaleString('en-GB', { month: 'short' });\n    const yy = String(year).slice(-2);\n    const dateString = `${dd}/${mmm}/${yy}`;\n\n    const dayOfWeek = dateObj.getDay(); // 0=Sun, 6=Sat\n    const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);\n\n    if (existingDataMap[dateString]) {\n      result.push({ json: existingDataMap[dateString] });\n    } else if (isWeekend) {\n      result.push({\n        json: {\n          \"Date\": dateString,\n          \"Task Start Date\": dateString,\n          \"Task End Date\": dateString,\n          \"Environment\": \"Boomi\",\n          \"AdminDevSupport\": \"Development\",\n          \"Task Description\": \"\",\n          \"Complexity\": \"\",\n          \"Actual Efforts(hrs)\": \"8\",\n          \"Status\": \"\",\n          \"Comments\": \"Weekend\"\n        }\n      });\n    }\n  }\n}\n\nreturn result;"
+        "options": {}
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
       "position": [
-        2672,
-        672
+        1184,
+        288
       ],
-      "id": "a6841bff-780e-4d2f-bef0-8267bb373c2d",
-      "name": "Code in JavaScript2"
+      "id": "912bed43-2cf2-4c10-8246-3f21fcbdab56",
+      "name": "Respond to Webhook"
     }
   ],
   "connections": {
@@ -566,6 +583,13 @@
     },
     "If": {
       "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Edit Fields1",
@@ -667,7 +691,7 @@
       "main": [
         [
           {
-            "node": "Send a message",
+            "node": "Send a message1",
             "type": "main",
             "index": 0
           }
@@ -679,6 +703,11 @@
         [
           {
             "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
@@ -744,26 +773,75 @@
       ]
     }
   },
+  "nodeGroups": [],
   "settings": {
     "executionOrder": "v1",
-    "availableInMCP": false
+    "availableInMCP": false,
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "vtN1JQvH45zQjAiD",
+    "callerPolicy": "workflowsFromSameOwner"
   },
   "staticData": null,
-  "meta": null,
-  "nodeGroups": [],
-  "pinData": null,
-  "versionId": "7a81df66-43dd-484f-a61b-e2790809686f",
-  "activeVersionId": null,
-  "triggerCount": 0,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1901759.hstgr.cloud",
+            "user-agent": "PostmanRuntime/2.11.2",
+            "content-length": "6415",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br",
+            "authorization": "{{bearer_token_061b}}",
+            "content-type": "multipart/form-data; boundary=--------------------------175004236935646408011506",
+            "key": "BalaRam",
+            "month": "Oct",
+            "postman-token": "03698a71-abe8-4dd1-bec8-4c4ccff371ce",
+            "to_email": "cbala.ramakrishna@techygeekhub.com",
+            "x-forwarded-for": "172.16.1.1",
+            "x-forwarded-host": "n8n.srv1901759.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "341a5b9386bf",
+            "x-real-ip": "172.16.1.1",
+            "year": "2026"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.srv1901759.hstgr.cloud/webhook/5b8eb6a2-175c-4bab-bf84-37d17dcab460",
+          "executionMode": "production"
+        },
+        "binary": {
+          "data0": {
+            "mimeType": "application/vnd.ms-excel",
+            "fileExtension": "xls",
+            "data": "filesystem-v2",
+            "fileName": "User_Balaram_Cherukuri_01_Oct_26_31_Oct_26_Logged_Time.xls",
+            "id": "filesystem-v2:workflows/3kvDSZkWaxsu2NDe/executions/22494/binary_data/b9c4de1d-bffd-4f00-8b70-cad375175f99",
+            "fileSize": "6.14 kB",
+            "bytes": 6144
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
   "shared": [
     {
-      "updatedAt": "2026-08-13T17:31:13.171Z",
-      "createdAt": "2026-08-13T17:31:13.171Z",
       "role": "workflow:owner",
       "workflowId": "3kvDSZkWaxsu2NDe",
-      "projectId": "2qHCdIvoXHur7xyh"
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.171Z",
+      "updatedAt": "2026-08-13T17:31:13.171Z"
     }
   ],
-  "activeVersion": null,
-  "tags": []
+  "activeVersion": null
 }
