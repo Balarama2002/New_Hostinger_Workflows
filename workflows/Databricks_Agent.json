@@ -1,0 +1,591 @@
+{
+  "id": "QVibLh5Wr3yNV4xT",
+  "name": "Databricks-Agent",
+  "active": true,
+  "activeVersionId": "448b6ad5-412e-4438-a140-3665a30962a8",
+  "createdAt": "2026-10-31T09:21:46.217Z",
+  "updatedAt": "2026-11-02T10:41:33.290Z",
+  "isArchived": false,
+  "versionId": "a71f4eb5-15bc-4dc9-8b71-0a3633ad153b",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_id"
+            },
+            {
+              "name": "status"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        16
+      ],
+      "id": "336dd59e-703d-481f-9bd4-5837f40f58e0",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "71553343-fd18-4388-ac56-a0c89805736c",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "={{ $json.status }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a3d7f51d-a134-4c6e-925e-a077a5656da1",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        16
+      ],
+      "id": "dee64569-5e75-437b-8d7f-ba8675605030",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{$('When Executed by Another Workflow').item.json.customer_id}}' and o.status = '{{ $('When Executed by Another Workflow').item.json.status }}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -80
+      ],
+      "id": "14a0e796-7cba-453b-adb1-dedac2682d67",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "BJGRGLZOYqVHEXgx",
+          "name": "n8n-databricks-surya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $('When Executed by Another Workflow').item.json.customer_id}}'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        112
+      ],
+      "id": "8ca1b155-f00a-4182-9a87-98a5cfefffde",
+      "name": "Execute a SQL query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "BJGRGLZOYqVHEXgx",
+          "name": "n8n-databricks-surya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "3f6541c4-2c6b-4add-8288-98a6b23d5a0d",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        16
+      ],
+      "id": "4fdbe40f-7d1e-437f-9f3d-b4cbabd3ade1",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a652cb14-4ea6-4164-a447-6c9602bd531a",
+              "name": "output",
+              "value": "No order is available for the cutomer_id, please check again",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        112
+      ],
+      "id": "9582f61e-656b-4a8c-8d73-8460782527a6",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "64f0a963-bd34-4867-866e-aa260d55985d",
+              "name": "",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -80
+      ],
+      "id": "6f1e4e76-dbe6-453f-b9be-3f6dc6e47a03",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_id": "C051",
+          "status": null
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "QVibLh5Wr3yNV4xT",
+      "projectId": "rbwfCfx34F7iplHU",
+      "createdAt": "2026-10-31T09:21:46.218Z",
+      "updatedAt": "2026-10-31T09:21:46.218Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "448b6ad5-412e-4438-a140-3665a30962a8",
+    "workflowId": "QVibLh5Wr3yNV4xT",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "customer_id"
+              },
+              {
+                "name": "status"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          16
+        ],
+        "id": "336dd59e-703d-481f-9bd4-5837f40f58e0",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "71553343-fd18-4388-ac56-a0c89805736c",
+                "leftValue": "={{ $json.customer_id }}",
+                "rightValue": "={{ $json.status }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "a3d7f51d-a134-4c6e-925e-a077a5656da1",
+                "leftValue": "={{ $json.status }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          224,
+          16
+        ],
+        "id": "dee64569-5e75-437b-8d7f-ba8675605030",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{$('When Executed by Another Workflow').item.json.customer_id}}' and o.status = '{{ $('When Executed by Another Workflow').item.json.status }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          448,
+          -80
+        ],
+        "id": "14a0e796-7cba-453b-adb1-dedac2682d67",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "BJGRGLZOYqVHEXgx",
+            "name": "n8n-databricks-surya"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $('When Executed by Another Workflow').item.json.customer_id}}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          448,
+          112
+        ],
+        "id": "8ca1b155-f00a-4182-9a87-98a5cfefffde",
+        "name": "Execute a SQL query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "BJGRGLZOYqVHEXgx",
+            "name": "n8n-databricks-surya"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "3f6541c4-2c6b-4add-8288-98a6b23d5a0d",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          672,
+          16
+        ],
+        "id": "4fdbe40f-7d1e-437f-9f3d-b4cbabd3ade1",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a652cb14-4ea6-4164-a447-6c9602bd531a",
+                "name": "output",
+                "value": "No order is avaialable for the cutomer_id, please check again",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          896,
+          112
+        ],
+        "id": "9582f61e-656b-4a8c-8d73-8460782527a6",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          896,
+          -80
+        ],
+        "id": "6f1e4e76-dbe6-453f-b9be-3f6dc6e47a03",
+        "name": "Edit Fields1"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query1": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Tanneti sri surya durga prasad",
+    "name": "v1",
+    "description": "Fetch the data from Databricks",
+    "autosaved": true,
+    "createdAt": "2026-10-31T09:43:09.646Z",
+    "updatedAt": "2026-10-31T09:50:29.000Z"
+  }
+}
