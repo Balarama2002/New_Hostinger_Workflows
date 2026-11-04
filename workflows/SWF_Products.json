@@ -1,0 +1,52 @@
+{
+  "id": "IsGDZ3k11ESzVUM4",
+  "name": "SWF-Products",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-28T10:02:06.940Z",
+  "updatedAt": "2026-10-28T10:16:08.927Z",
+  "isArchived": false,
+  "versionId": "4e4501b0-3485-442c-87de-eb1b02f08246",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "222d6ae0-8b4b-44b6-bdea-3f794c0275c4",
+      "name": "When clicking ‘Execute workflow’"
+    }
+  ],
+  "connections": {},
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "ProductName": "Chrono Black"
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "IsGDZ3k11ESzVUM4",
+      "projectId": "gpVAwDGe6y6vwU0o",
+      "createdAt": "2026-10-28T10:02:06.942Z",
+      "updatedAt": "2026-10-28T10:02:06.942Z"
+    }
+  ],
+  "activeVersion": null
+}
