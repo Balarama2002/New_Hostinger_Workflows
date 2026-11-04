@@ -1,0 +1,773 @@
+{
+  "id": "Eq8k1NmHIqmz26NZ",
+  "name": "Manager_List",
+  "active": true,
+  "activeVersionId": "abf6cf0f-c900-4a40-9a41-ff328bd457ce",
+  "createdAt": "2026-08-14T06:20:36.795Z",
+  "updatedAt": "2026-10-14T07:17:51.295Z",
+  "isArchived": false,
+  "versionId": "d48897d7-1b67-4e0f-bac3-43da0a05d9d2",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c8e3744e-a1f9-492b-9b2b-a74501524852",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/users",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {
+          "pagination": {
+            "pagination": {
+              "paginationMode": "responseContainsNextURL",
+              "nextURL": "={{ $response.body[\"@odata.nextLink\"] }}",
+              "paginationCompleteWhen": "other",
+              "completeExpression": "={{ !$response.body[\"@odata.nextLink\"] }}"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        272,
+        0
+      ],
+      "id": "793d896b-9a99-4e2d-a637-04eafb88a3cb",
+      "name": "HTTP Request",
+      "alwaysOutputData": false,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "AmEX8O3wNj5jqLo1",
+          "name": "Balaram Teams Cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/users/{{ $json.value[0].id }}/manager ",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        496,
+        208
+      ],
+      "id": "8f3408ba-bbb9-4b78-aa9b-7f8d3445a566",
+      "name": "HTTP Request1",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "wPXLYmoqlQIZ5Z3r",
+          "name": "TGH_AI-Teams Cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/users/{{ $json.id }}/manager",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        720,
+        0
+      ],
+      "id": "15ac58ce-481a-4508-af8f-58b2c5a0ec48",
+      "name": "HTTP Request2",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "AmEX8O3wNj5jqLo1",
+          "name": "Balaram Teams Cred"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "=value",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        496,
+        0
+      ],
+      "id": "f6f21ac4-a795-4ae6-9fe3-8e2d8c61c4ed",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "6403d66a-c2c1-47f0-bd66-c53bfe5d6f18",
+              "name": "employeeName",
+              "value": "={{ $('Split Out').item.json.displayName }}",
+              "type": "string"
+            },
+            {
+              "id": "db583659-a4b7-4d6e-bbed-326dcb33de1e",
+              "name": "employeeEmail",
+              "value": "={{ $('Split Out').item.json.mail }}",
+              "type": "string"
+            },
+            {
+              "id": "9382e395-05a3-45ff-a23d-d5f6518b3d3c",
+              "name": "Mobile Num",
+              "value": "={{ $('Split Out').item.json.mobilePhone }}",
+              "type": "string"
+            },
+            {
+              "id": "02bf55e2-3c84-48f1-be41-c601ed2fcc86",
+              "name": "OfficeLocation",
+              "value": "={{ $('Split Out').item.json.officeLocation }}",
+              "type": "string"
+            },
+            {
+              "id": "270ec6fa-a560-4ece-b1f6-4c24b8dd5499",
+              "name": "Employee_Id",
+              "value": "={{ $('Split Out').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "1895101d-0eec-4a5e-a560-995b42c3ee8a",
+              "name": "Employee_Role",
+              "value": "={{ $('Split Out').item.json.jobTitle }}",
+              "type": "string"
+            },
+            {
+              "id": "ebbda2ca-2f45-45e5-bffb-faf166d3eacb",
+              "name": "managerName",
+              "value": "={{ $json.displayName }}",
+              "type": "string"
+            },
+            {
+              "id": "df227157-e524-4a7e-973b-ae54f15004fd",
+              "name": "managerEmail",
+              "value": "={{ $json.mail }}",
+              "type": "string"
+            },
+            {
+              "id": "d16db7c3-173c-4dd7-a25e-4bce2d8d93b8",
+              "name": "Manager_Id",
+              "value": "={{ $json.id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        0
+      ],
+      "id": "2699215c-f3b1-49a3-b7dd-971f47d761e2",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d6cca26a-38d4-4aad-83a4-60d94fb9c20b",
+              "name": "URl",
+              "value": "={{ $json[\"@odata.nextLink\"] }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -160,
+        448
+      ],
+      "id": "79518362-7cc1-4eec-95fb-56f35351da10",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "path": "Fetch_Managers_list",
+        "authentication": "basicAuth",
+        "responseMode": "lastNode",
+        "responseData": "allEntries",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        192
+      ],
+      "id": "abdf674a-bcd4-45b1-8f04-0f516f317dfe",
+      "name": "Webhook",
+      "webhookId": "7e97a486-bb6a-43c1-97fb-e110d9f1973f",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "y4NzfqxtuA0Fl6eT",
+          "name": "TGH Basic_Credentials"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "7528cf0a-03af-4d49-b76f-722ba8f125b8",
+              "leftValue": "={{ $json.managerName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1184,
+        0
+      ],
+      "id": "b47079d5-4eaa-4384-847d-a8188eed2ec8",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "dataTableId": {
+          "__rl": true,
+          "value": "28rs2OCLC77gyIRg",
+          "mode": "list",
+          "cachedResultName": "Employee Details",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/28rs2OCLC77gyIRg"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "EmployeeName": "={{ $json.employeeName }}",
+            "ManagerName": "={{ $json.managerName }}",
+            "EmployeeId": "={{ $json.Employee_Id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "EmployeeName",
+              "displayName": "EmployeeName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "ManagerName",
+              "displayName": "ManagerName",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "EmployeeId",
+              "displayName": "EmployeeId",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        1424,
+        -48
+      ],
+      "id": "b13121ef-a87b-4372-afdd-89c6b0eb1dbd",
+      "name": "Insert row"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Insert row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner",
+    "errorWorkflow": "vtN1JQvH45zQjAiD"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Eq8k1NmHIqmz26NZ",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-14T06:20:36.800Z",
+      "updatedAt": "2026-08-14T06:20:36.800Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "abf6cf0f-c900-4a40-9a41-ff328bd457ce",
+    "workflowId": "Eq8k1NmHIqmz26NZ",
+    "nodes": [
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "c8e3744e-a1f9-492b-9b2b-a74501524852",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/users",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {
+            "pagination": {
+              "pagination": {
+                "paginationMode": "responseContainsNextURL",
+                "nextURL": "={{ $response.body[\"@odata.nextLink\"] }}",
+                "paginationCompleteWhen": "other",
+                "completeExpression": "={{ !$response.body[\"@odata.nextLink\"] }}"
+              }
+            }
+          }
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          272,
+          0
+        ],
+        "id": "793d896b-9a99-4e2d-a637-04eafb88a3cb",
+        "name": "HTTP Request",
+        "alwaysOutputData": false,
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/users/{{ $json.value[0].id }}/manager ",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          496,
+          208
+        ],
+        "id": "8f3408ba-bbb9-4b78-aa9b-7f8d3445a566",
+        "name": "HTTP Request1",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/users/{{ $json.id }}/manager",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          720,
+          0
+        ],
+        "id": "15ac58ce-481a-4508-af8f-58b2c5a0ec48",
+        "name": "HTTP Request2",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        },
+        "onError": "continueRegularOutput"
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "=value",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          496,
+          0
+        ],
+        "id": "f6f21ac4-a795-4ae6-9fe3-8e2d8c61c4ed",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "6403d66a-c2c1-47f0-bd66-c53bfe5d6f18",
+                "name": "employeeName",
+                "value": "={{ $('Split Out').item.json.displayName }}",
+                "type": "string"
+              },
+              {
+                "id": "db583659-a4b7-4d6e-bbed-326dcb33de1e",
+                "name": "employeeEmail",
+                "value": "={{ $('Split Out').item.json.mail }}",
+                "type": "string"
+              },
+              {
+                "id": "9382e395-05a3-45ff-a23d-d5f6518b3d3c",
+                "name": "Mobile Num",
+                "value": "={{ $('Split Out').item.json.mobilePhone }}",
+                "type": "string"
+              },
+              {
+                "id": "02bf55e2-3c84-48f1-be41-c601ed2fcc86",
+                "name": "OfficeLocation",
+                "value": "={{ $('Split Out').item.json.officeLocation }}",
+                "type": "string"
+              },
+              {
+                "id": "270ec6fa-a560-4ece-b1f6-4c24b8dd5499",
+                "name": "Employee_Id",
+                "value": "={{ $('Split Out').item.json.id }}",
+                "type": "string"
+              },
+              {
+                "id": "1895101d-0eec-4a5e-a560-995b42c3ee8a",
+                "name": "Employee_Role",
+                "value": "={{ $('Split Out').item.json.jobTitle }}",
+                "type": "string"
+              },
+              {
+                "id": "ebbda2ca-2f45-45e5-bffb-faf166d3eacb",
+                "name": "managerName",
+                "value": "={{ $json.displayName }}",
+                "type": "string"
+              },
+              {
+                "id": "df227157-e524-4a7e-973b-ae54f15004fd",
+                "name": "managerEmail",
+                "value": "={{ $json.mail }}",
+                "type": "string"
+              },
+              {
+                "id": "d16db7c3-173c-4dd7-a25e-4bce2d8d93b8",
+                "name": "Manager_Id",
+                "value": "={{ $json.id }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          944,
+          0
+        ],
+        "id": "2699215c-f3b1-49a3-b7dd-971f47d761e2",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "d6cca26a-38d4-4aad-83a4-60d94fb9c20b",
+                "name": "URl",
+                "value": "={{ $json[\"@odata.nextLink\"] }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          -160,
+          448
+        ],
+        "id": "79518362-7cc1-4eec-95fb-56f35351da10",
+        "name": "Edit Fields2"
+      },
+      {
+        "parameters": {
+          "path": "Fetch_Managers_list",
+          "authentication": "basicAuth",
+          "responseMode": "lastNode",
+          "responseData": "allEntries",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          192
+        ],
+        "id": "abdf674a-bcd4-45b1-8f04-0f516f317dfe",
+        "name": "Webhook",
+        "webhookId": "7e97a486-bb6a-43c1-97fb-e110d9f1973f",
+        "credentials": {
+          "httpBasicAuth": {
+            "id": "y4NzfqxtuA0Fl6eT",
+            "name": "TGH Basic_Credentials"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "7528cf0a-03af-4d49-b76f-722ba8f125b8",
+                "leftValue": "={{ $json.managerName }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1184,
+          0
+        ],
+        "id": "b47079d5-4eaa-4384-847d-a8188eed2ec8",
+        "name": "If"
+      }
+    ],
+    "connections": {
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTTP Request2": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version abf6cf0f",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-08-14T06:23:03.875Z",
+    "updatedAt": "2026-08-14T06:23:06.000Z"
+  }
+}
