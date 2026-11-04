@@ -1,0 +1,881 @@
+{
+  "id": "9Ze9HSYzQgrqyiPy",
+  "name": "Teams MCP",
+  "active": true,
+  "activeVersionId": "9f40c198-accf-4c64-8778-553d6995edad",
+  "createdAt": "2026-10-13T12:24:45.990Z",
+  "updatedAt": "2026-10-14T06:44:20.473Z",
+  "isArchived": false,
+  "versionId": "9f40c198-accf-4c64-8778-553d6995edad",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "url": "=https://graph.microsoft.com/v1.0/sites/netorgft15042087.sharepoint.com,c96b94bf-501b-4761-9542-e730b3fc143a,29d64e9e-d3e3-4a07-9eac-518e04ebad4e/drive/root/children",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        128,
+        80
+      ],
+      "id": "3651775e-3e9a-4463-bb84-48f648c5753d",
+      "name": "Fetching File Data from Folder ID",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "ZNzUFVXAPBld9QkN",
+          "name": "BalaRam Teams Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "value",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        80
+      ],
+      "id": "32dc8af5-93ac-49cc-a8e9-08fd58b9dc8b",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "site": {
+          "__rl": true,
+          "value": "root",
+          "mode": "id"
+        },
+        "folder": {
+          "__rl": true,
+          "value": "01SKB62CIAABBZLAXEE5H3VWDSX47YXGNZ",
+          "mode": "list",
+          "cachedResultName": "TGH-Policies"
+        },
+        "file": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.microsoftSharePoint",
+      "typeVersion": 1,
+      "position": [
+        1248,
+        80
+      ],
+      "id": "b3e4a9c3-7eca-4f3e-a059-6e50fd58d069",
+      "name": "Download file4",
+      "credentials": {
+        "microsoftSharePointOAuth2Api": {
+          "id": "LoK2RN3JmAXwashl",
+          "name": "TGH AI Sharepoint Cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "file",
+        "operation": "download",
+        "site": {
+          "__rl": true,
+          "value": "netorgft15042087.sharepoint.com,45c09604-ea37-4c95-aa1a-1ef5e1de68cf,c165ee2e-e680-402b-9045-91144823c97c",
+          "mode": "list",
+          "cachedResultName": "TGH-FTE-Rewards-And-Recognition-Team Balaram",
+          "cachedResultUrl": "https://netorgft15042087.sharepoint.com/sites/TGH-FTE-Rewards-And-Recognition-TeamBalaram"
+        },
+        "folder": {
+          "__rl": true,
+          "value": "01YJFDOHPVPAADCLBSEJHIFOJMO5TKDA6B",
+          "mode": "list",
+          "cachedResultName": "Team Balaram"
+        },
+        "file": {
+          "__rl": true,
+          "value": "01YJFDOHPHGJMJPGR2FVBY3FWKQ3HMWRE3",
+          "mode": "list",
+          "cachedResultName": "Cherukuri Bala Rama Krishna.xlsx"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftSharePoint",
+      "typeVersion": 2,
+      "position": [
+        -64,
+        -48
+      ],
+      "id": "32080032-baa2-4e8a-a677-cce1d83436f9",
+      "name": "Download file",
+      "credentials": {
+        "microsoftOAuth2Api": {
+          "id": "V9ZvtnEFVyCmxDAO",
+          "name": "Microsoft account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "sheetName": "Bala Krishna|| Oct-Dec 2026"
+        }
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        160,
+        -48
+      ],
+      "id": "f4f3bbef-4ef1-4ffe-ad50-fba4b78e1a0f",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "compare": "selectedFields",
+        "fieldsToCompare": "10071",
+        "options": {
+          "disableDotNotation": true,
+          "removeOtherFields": false
+        }
+      },
+      "type": "n8n-nodes-base.removeDuplicates",
+      "typeVersion": 2,
+      "position": [
+        608,
+        -48
+      ],
+      "id": "93d9da99-80fe-4e15-ac4a-a97d9f6af543",
+      "name": "Remove Duplicates"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ab016105-121b-4265-bfd6-6f4f182cb41d",
+              "name": "10071",
+              "value": "={{ String($json[\"10071\"] ?? \"\") }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        384,
+        -48
+      ],
+      "id": "c1844afc-e78a-421e-a309-e92882fcf9a4",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "10071",
+              "renameField": true,
+              "outputFieldName": "Goals"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -48
+      ],
+      "id": "13a06dd6-c39a-41f4-b0e5-8c3242314955",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "User Inputs"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -336,
+        240
+      ],
+      "id": "1c9d9133-3005-46a7-a586-0851fdab4215",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('When Executed by Another Workflow').item.json[\"User Inputs\"] }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "# Role: Microsoft Teams Message Analysis and Structuring Agent\n\n## 1. Objective\n\nYou are an AI agent responsible for interpreting user requests, extracting relevant information, and converting the request into a structured, consistent format that can be used to search, compare, and analyze Microsoft Teams messages.\n\nYour primary responsibilities are:\n- Understand the user's intent, even when the input contains spelling mistakes, grammatical errors, abbreviations, or incomplete sentences.\n- Extract the important entities, conditions, dates, deadlines, and actions.\n- Structure the extracted information into a predictable JSON format.\n- Prepare normalized search criteria that can be compared against Microsoft Teams messages.\n- Identify relevant messages, responses, pending actions, and follow-up requirements based only on the information provided by the user and the retrieved Teams data.\n\n## 2. Input Interpretation Rules\n\nWhen a user submits a request:\n\n1. Identify the primary intent, such as:\n   - Search for a Teams message.\n   - Find a conversation with a particular person.\n   - Check whether someone responded to a message.\n   - Identify pending requests or commitments.\n   - Send a new message.\n   - Schedule or prepare a follow-up.\n   - Check the status of a previously sent message.\n\n2. Extract relevant entities:\n   - Person or recipient name.\n   - Team, channel, or chat, if specified.\n   - Message subject or topic.\n   - Keywords and alternative search terms.\n   - Relevant date or date range.\n   - Deadline or follow-up time.\n   - Expected response or requested action.\n   - Follow-up conditions.\n\n3. Correct obvious spelling and grammatical errors without changing the user's intended meaning.\n\n4. Preserve the original user request for reference.\n\n5. Never invent a recipient, Teams chat ID, message ID, deadline, or other factual information that the user did not provide and that cannot be reliably resolved from available data.\n\n6. If essential information is missing, identify it explicitly rather than making assumptions.\n\n## 3. Microsoft Teams Message Matching\n\nWhen comparing a user request with retrieved Teams messages:\n\n- Compare message content, topic, keywords, sender, recipient, and timestamps where available.\n- Consider semantically equivalent phrases, synonyms, abbreviations, and reasonable variations in wording.\n- Distinguish between the original message and replies to that message.\n- Use message IDs, chat IDs, thread or reply relationships, and timestamps when available to establish context.\n- Do not treat a message as a response solely because it contains similar words.\n- Do not conclude that a person has not responded unless the available message data covers the relevant conversation and time period sufficiently.\n- Distinguish confirmed matches from possible matches.\n- Do not invent message content or claim that a message was sent, received, or read without supporting evidence.\n\n## 4. Follow-up Decision Rules\n\nWhen a user requests a follow-up:\n\n1. Identify the original request and the person expected to respond.\n2. Determine the relevant message or conversation using available Teams data.\n3. Check"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        432,
+        240
+      ],
+      "id": "5369113d-c1fe-4df0-9371-b965515295a4",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        384,
+        512
+      ],
+      "id": "64b605dd-2fdb-4429-8d13-5fd0c1822c02",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "voxtral-small-latest",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+      "typeVersion": 1,
+      "position": [
+        656,
+        512
+      ],
+      "id": "1c3e6794-4324-4735-b12f-8293fcd59180",
+      "name": "Mistral Cloud Chat Model",
+      "credentials": {
+        "mistralCloudApi": {
+          "id": "Egq7lET1tt5UyQcH",
+          "name": "Mistral Cloud account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "28rs2OCLC77gyIRg",
+          "mode": "list",
+          "cachedResultName": "Employee Details",
+          "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/28rs2OCLC77gyIRg"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "ManagerName",
+              "condition": "ilike",
+              "keyValue": "Matta Saikiran"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        144,
+        240
+      ],
+      "id": "a6dcb285-2b94-4c91-875a-0b61346834c4",
+      "name": "Get row(s)"
+    }
+  ],
+  "connections": {
+    "Fetching File Data from Folder ID": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Download file4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove Duplicates": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Remove Duplicates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mistral Cloud Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "User Inputs": "Send each of the following four people an individual one-to-one Microsoft Teams message (not a group chat): Thummanapally Virat Yashwanth, Gulla Abhishek Chowdary, Divya Bethapudi, Bandi Madhuri. They are trainees reporting to Matta Saikiran. Message to each, addressing them by first name: \"Hi <first name>, a quick check from Matta Saikiran: have you completed your goals sheet for this quarter (Q4 2026)? Please reply with a yes or no, and if it is not done yet, let me know when you expect to finish it.\" Do not schedule any follow-up. Do not message anyone else. If you cannot confidently resolve any of the four people in Teams, skip that person and tell me which one and why instead of guessing. Return the status and Teams message ID for each person."
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "9Ze9HSYzQgrqyiPy",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-13T12:24:45.993Z",
+      "updatedAt": "2026-10-13T12:24:45.993Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "9f40c198-accf-4c64-8778-553d6995edad",
+    "workflowId": "9Ze9HSYzQgrqyiPy",
+    "nodes": [
+      {
+        "parameters": {
+          "url": "=https://graph.microsoft.com/v1.0/sites/netorgft15042087.sharepoint.com,c96b94bf-501b-4761-9542-e730b3fc143a,29d64e9e-d3e3-4a07-9eac-518e04ebad4e/drive/root/children",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          128,
+          80
+        ],
+        "id": "3651775e-3e9a-4463-bb84-48f648c5753d",
+        "name": "Fetching File Data from Folder ID",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "ZNzUFVXAPBld9QkN",
+            "name": "BalaRam Teams Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "value",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1,
+        "position": [
+          1024,
+          80
+        ],
+        "id": "32dc8af5-93ac-49cc-a8e9-08fd58b9dc8b",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "site": {
+            "__rl": true,
+            "value": "root",
+            "mode": "id"
+          },
+          "folder": {
+            "__rl": true,
+            "value": "01SKB62CIAABBZLAXEE5H3VWDSX47YXGNZ",
+            "mode": "list",
+            "cachedResultName": "TGH-Policies"
+          },
+          "file": {
+            "__rl": true,
+            "value": "={{ $json.id }}",
+            "mode": "id"
+          },
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.microsoftSharePoint",
+        "typeVersion": 1,
+        "position": [
+          1248,
+          80
+        ],
+        "id": "b3e4a9c3-7eca-4f3e-a059-6e50fd58d069",
+        "name": "Download file4",
+        "credentials": {
+          "microsoftSharePointOAuth2Api": {
+            "id": "LoK2RN3JmAXwashl",
+            "name": "TGH AI Sharepoint Cred"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "file",
+          "operation": "download",
+          "site": {
+            "__rl": true,
+            "value": "netorgft15042087.sharepoint.com,45c09604-ea37-4c95-aa1a-1ef5e1de68cf,c165ee2e-e680-402b-9045-91144823c97c",
+            "mode": "list",
+            "cachedResultName": "TGH-FTE-Rewards-And-Recognition-Team Balaram",
+            "cachedResultUrl": "https://netorgft15042087.sharepoint.com/sites/TGH-FTE-Rewards-And-Recognition-TeamBalaram"
+          },
+          "folder": {
+            "__rl": true,
+            "value": "01YJFDOHPVPAADCLBSEJHIFOJMO5TKDA6B",
+            "mode": "list",
+            "cachedResultName": "Team Balaram"
+          },
+          "file": {
+            "__rl": true,
+            "value": "01YJFDOHPHGJMJPGR2FVBY3FWKQ3HMWRE3",
+            "mode": "list",
+            "cachedResultName": "Cherukuri Bala Rama Krishna.xlsx"
+          }
+        },
+        "type": "n8n-nodes-base.microsoftSharePoint",
+        "typeVersion": 2,
+        "position": [
+          -64,
+          -48
+        ],
+        "id": "32080032-baa2-4e8a-a677-cce1d83436f9",
+        "name": "Download file",
+        "credentials": {
+          "microsoftOAuth2Api": {
+            "id": "V9ZvtnEFVyCmxDAO",
+            "name": "Microsoft account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "xlsx",
+          "options": {
+            "sheetName": "Bala Krishna|| Oct-Dec 2026"
+          }
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          160,
+          -48
+        ],
+        "id": "f4f3bbef-4ef1-4ffe-ad50-fba4b78e1a0f",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "compare": "selectedFields",
+          "fieldsToCompare": "10071",
+          "options": {
+            "disableDotNotation": true,
+            "removeOtherFields": false
+          }
+        },
+        "type": "n8n-nodes-base.removeDuplicates",
+        "typeVersion": 2,
+        "position": [
+          608,
+          -48
+        ],
+        "id": "93d9da99-80fe-4e15-ac4a-a97d9f6af543",
+        "name": "Remove Duplicates"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ab016105-121b-4265-bfd6-6f4f182cb41d",
+                "name": "10071",
+                "value": "={{ String($json[\"10071\"] ?? \"\") }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          384,
+          -48
+        ],
+        "id": "c1844afc-e78a-421e-a309-e92882fcf9a4",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "fieldsToAggregate": {
+            "fieldToAggregate": [
+              {
+                "fieldToAggregate": "10071",
+                "renameField": true,
+                "outputFieldName": "Goals"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          832,
+          -48
+        ],
+        "id": "13a06dd6-c39a-41f4-b0e5-8c3242314955",
+        "name": "Aggregate"
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "User Inputs"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.2,
+        "position": [
+          -336,
+          240
+        ],
+        "id": "1c9d9133-3005-46a7-a586-0851fdab4215",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $('When Executed by Another Workflow').item.json[\"User Inputs\"] }}",
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "# Role: Microsoft Teams Message Analysis and Structuring Agent\n\n## 1. Objective\n\nYou are an AI agent responsible for interpreting user requests, extracting relevant information, and converting the request into a structured, consistent format that can be used to search, compare, and analyze Microsoft Teams messages.\n\nYour primary responsibilities are:\n- Understand the user's intent, even when the input contains spelling mistakes, grammatical errors, abbreviations, or incomplete sentences.\n- Extract the important entities, conditions, dates, deadlines, and actions.\n- Structure the extracted information into a predictable JSON format.\n- Prepare normalized search criteria that can be compared against Microsoft Teams messages.\n- Identify relevant messages, responses, pending actions, and follow-up requirements based only on the information provided by the user and the retrieved Teams data.\n\n## 2. Input Interpretation Rules\n\nWhen a user submits a request:\n\n1. Identify the primary intent, such as:\n   - Search for a Teams message.\n   - Find a conversation with a particular person.\n   - Check whether someone responded to a message.\n   - Identify pending requests or commitments.\n   - Send a new message.\n   - Schedule or prepare a follow-up.\n   - Check the status of a previously sent message.\n\n2. Extract relevant entities:\n   - Person or recipient name.\n   - Team, channel, or chat, if specified.\n   - Message subject or topic.\n   - Keywords and alternative search terms.\n   - Relevant date or date range.\n   - Deadline or follow-up time.\n   - Expected response or requested action.\n   - Follow-up conditions.\n\n3. Correct obvious spelling and grammatical errors without changing the user's intended meaning.\n\n4. Preserve the original user request for reference.\n\n5. Never invent a recipient, Teams chat ID, message ID, deadline, or other factual information that the user did not provide and that cannot be reliably resolved from available data.\n\n6. If essential information is missing, identify it explicitly rather than making assumptions.\n\n## 3. Microsoft Teams Message Matching\n\nWhen comparing a user request with retrieved Teams messages:\n\n- Compare message content, topic, keywords, sender, recipient, and timestamps where available.\n- Consider semantically equivalent phrases, synonyms, abbreviations, and reasonable variations in wording.\n- Distinguish between the original message and replies to that message.\n- Use message IDs, chat IDs, thread or reply relationships, and timestamps when available to establish context.\n- Do not treat a message as a response solely because it contains similar words.\n- Do not conclude that a person has not responded unless the available message data covers the relevant conversation and time period sufficiently.\n- Distinguish confirmed matches from possible matches.\n- Do not invent message content or claim that a message was sent, received, or read without supporting evidence.\n\n## 4. Follow-up Decision Rules\n\nWhen a user requests a follow-up:\n\n1. Identify the original request and the person expected to respond.\n2. Determine the relevant message or conversation using available Teams data.\n3. Check"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          432,
+          240
+        ],
+        "id": "5369113d-c1fe-4df0-9371-b965515295a4",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.5-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          384,
+          512
+        ],
+        "id": "64b605dd-2fdb-4429-8d13-5fd0c1822c02",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "KQBQgkPqPhjQnbPh",
+            "name": "Google Gemini(PaLM) Api account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": "voxtral-small-latest",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
+        "typeVersion": 1,
+        "position": [
+          656,
+          512
+        ],
+        "id": "1c3e6794-4324-4735-b12f-8293fcd59180",
+        "name": "Mistral Cloud Chat Model",
+        "credentials": {
+          "mistralCloudApi": {
+            "id": "Egq7lET1tt5UyQcH",
+            "name": "Mistral Cloud account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "value": "28rs2OCLC77gyIRg",
+            "mode": "list",
+            "cachedResultName": "Employee Details",
+            "cachedResultUrl": "/projects/2qHCdIvoXHur7xyh/datatables/28rs2OCLC77gyIRg"
+          },
+          "filters": {
+            "conditions": [
+              {
+                "keyName": "ManagerName",
+                "condition": "ilike",
+                "keyValue": "Matta Saikiran"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          144,
+          240
+        ],
+        "id": "a6dcb285-2b94-4c91-875a-0b61346834c4",
+        "name": "Get row(s)"
+      }
+    ],
+    "connections": {
+      "Fetching File Data from Folder ID": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Download file4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Download file": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Remove Duplicates": {
+        "main": [
+          [
+            {
+              "node": "Aggregate",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Remove Duplicates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get row(s)",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Mistral Cloud Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          []
+        ]
+      },
+      "Get row(s)": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 9f40c198",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-14T06:44:20.474Z",
+    "updatedAt": "2026-10-14T06:44:22.000Z"
+  }
+}
