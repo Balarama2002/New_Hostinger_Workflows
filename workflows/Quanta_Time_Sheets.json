@@ -1,0 +1,837 @@
+{
+  "id": "Shvcy9gztVZ9YPuC",
+  "name": "Quanta Time Sheets",
+  "active": true,
+  "activeVersionId": "e28ae1cd-dc68-43fb-b493-d514e042858a",
+  "createdAt": "2026-08-13T17:31:13.194Z",
+  "updatedAt": "2026-10-05T11:34:08.532Z",
+  "isArchived": false,
+  "versionId": "04ef2977-fba1-4928-ad6f-23d29d15bd69",
+  "triggerCount": 2,
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "xls",
+        "binaryPropertyName": "data0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [
+        672,
+        224
+      ],
+      "id": "6611613d-7cf5-4afe-beb9-c4d4cef2e9ef",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Number\": \" {{ $json.Number }}\",\n  \"Short description\": \"{{ $json[\"Short description\"] }}\",\n\"State\": \"{{ $json.State }}\",\n\"Tags\" : \"{{ $json.Tags }}\"\n}\n",
+        "includeOtherFields": true,
+        "include": "selected",
+        "includeFields": "=Number, ['Short description'],{{ $json.Tags }},{{ $json.State }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        224
+      ],
+      "id": "a0802f6b-6200-448f-99c7-da0698e357ab",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {
+          "fileName": "={{ $node[\"Webhook\"].json.headers.key }}_{{ $json.Month }}_{{ $node[\"Webhook\"].json.headers.year }}.xlsx"
+        }
+      },
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        2048,
+        240
+      ],
+      "id": "f823001e-7ea3-4c3b-a919-2e85ca7d3332",
+      "name": "Convert to File"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "09f25f2e-b15f-4547-bfaf-008307164cd7",
+              "leftValue": "={{ $('Webhook').item.json.headers.key }}",
+              "rightValue": "={{ $json[\"Assigned to\"] }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        896,
+        224
+      ],
+      "id": "3a34ba0d-3451-4d02-92d8-f51032a5a2a7",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"Date\": \"{{ $('Code in JavaScript1').item.json.sheetName }}\",\n\"Task Start Date\":\"{{ $('Code in JavaScript1').item.json.sheetName }}\",\n\"Task End Date\":\"{{ $('Code in JavaScript1').item.json.sheetName }}\",\n\"Environment\":\"Boomi\",\n\"Admin\\Dev\\Support\": \"Support\",\n  \"Task Description\": \" {{ $json.Number }} - {{ $json['Short description'] }}\",\n\"Complexity\": \"{{ $json.Tags }}\",\n\"Actual Efforts(hrs)\": 8,\n\"Status\": \"{{ $json.State }}\",\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        224
+      ],
+      "id": "7f17b5b3-9c50-4dcf-8039-f88d622851e7",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ===== USER INPUT =====\n// Ensure month and year are parsed as integers\nconst month = parseInt($input.first().json.headers.month, 10); // 1 = Jan\nconst year = parseInt($input.first().json.headers.year, 10);\n\n// Safely handle holidays whether passed as an array or a comma-separated string\nlet holidays = $input.first().json.headers.holidays || [];\nif (typeof holidays === 'string') {\n  holidays = holidays.split(',').map(h => h.trim());\n}\n// ======================\n\n// Calculate the number of days in the specific month\nconst days = new Date(year, month, 0).getDate();\n\n// Get the binary data from the first input item\nconst binaryData = $input.first().binary;\n\nconst output = [];\n\nfor (let d = 1; d <= days; d++) {\n  // JavaScript months are 0-indexed in the Date constructor (0 = Jan, 11 = Dec)\n  const date = new Date(year, month - 1, d);\n  const dayOfWeek = date.getDay(); // 0 = Sun, 6 = Sat\n\n  // Format strings with leading zeros\n  const dayStr = String(d).padStart(2, '0');\n  const monthStr = String(month).padStart(2, '0');\n\n  // Your sheet name format: DD-MM\n  const sheetName = `${dayStr}-${monthStr}`;\n  \n  // Your holiday format from headers: MM-DD\n  const holidayFormat = `${monthStr}-${dayStr}`;\n\n  const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);\n  \n  // Check if the current date is in the holidays array\n  // (Checks both MM-DD and DD-MM just in case the input varies)\n  const isHoliday = holidays.includes(holidayFormat) || holidays.includes(sheetName);\n\n  // Skip weekends + holidays\n  if (isWeekend || isHoliday) {\n    continue;\n  }\n\n  // Push valid dates to output with the attached binary data\n  output.push({\n    json: { sheetName: sheetName },\n    binary: binaryData\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        368
+      ],
+      "id": "698da743-d741-4ffa-b556-1131a09a7f3d",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        448,
+        368
+      ],
+      "id": "aba555d0-744e-43d3-bae8-0130013850a4",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "name": "Replace Me",
+      "typeVersion": 1,
+      "position": [
+        672,
+        416
+      ],
+      "id": "4a34e2c4-5b9d-4d1d-bbaf-b1856a1d9eeb"
+    },
+    {
+      "parameters": {
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "fc4158d5-4243-4048-90db-a6e6c16c70b3",
+      "name": "When chat message received",
+      "webhookId": "5526bc39-8253-4e82-9c15-9906b9d70458"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst currentYear = new Date().getFullYear();\n\nconst groupedByDate = {};\nconst result = [];\n\n// Month mapping\nconst monthNames = [\n  \"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\n  \"Jul\",\"Aug\",\"Sep\",\"Oct\",\"Nov\",\"Dec\"\n];\n\n// 🔹 Normalize DD-MM or DD-MM-YYYY → DD-MM-YYYY\nfunction normalizeDate(rawDate) {\n  const parts = rawDate.split(\"-\");\n\n  let dd, mm, yyyy;\n\n  if (parts.length === 2) {\n    // Format: DD-MM\n    [dd, mm] = parts;\n    yyyy = currentYear;\n  } \n  else if (parts.length === 3) {\n    // Format: DD-MM-YYYY\n    [dd, mm, yyyy] = parts;\n  } \n  else {\n    return null;\n  }\n\n  const dateObj = new Date(yyyy, mm - 1, dd);\n\n  const finalDD = String(dateObj.getDate()).padStart(2, \"0\");\n  const finalMM = String(dateObj.getMonth() + 1).padStart(2, \"0\");\n  const finalYYYY = dateObj.getFullYear();\n\n  return `${finalDD}-${finalMM}-${finalYYYY}`;\n}\n\n// 🔹 Step 1 — Group records\nfor (const item of items) {\n\n  const rawDate = item.json.Date;\n  if (!rawDate) continue;\n\n  const normalized = normalizeDate(rawDate);\n  if (!normalized) continue;\n\n  if (!groupedByDate[normalized]) {\n    groupedByDate[normalized] = {\n      descriptions: [],\n      base: item.json\n    };\n  }\n\n  if (item.json[\"Task Description\"]) {\n    groupedByDate[normalized].descriptions.push(\n      item.json[\"Task Description\"]\n    );\n  }\n}\n\n// 🔹 Detect month safely\nconst firstKey = Object.keys(groupedByDate)[0];\nif (!firstKey) {\n  return [];\n}\n\nconst parts = firstKey.split(\"-\");\nconst month = parseInt(parts[1], 10) - 1;  // second value is month now\nconst year = parseInt(parts[2], 10);\n\n// 🔹 Build full month\nconst start = new Date(year, month, 1);\nconst end = new Date(year, month + 1, 0);\n\n// 🔹 Step 2 — Generate full month data\nfor (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {\n\n  const dd = String(d.getDate()).padStart(2, \"0\");\n  const mm = String(d.getMonth() + 1).padStart(2, \"0\");\n  const yyyy = d.getFullYear();\n\n  const key = `${dd}-${mm}-${yyyy}`;\n  const monthName = monthNames[d.getMonth()];\n  const day = d.getDay();\n  const isWeekend = (day === 0 || day === 6);\n\n  if (groupedByDate[key]) {\n\n    const base = groupedByDate[key].base;\n\n    let comment = base.Comments || \"\";\n\n    if (isWeekend) {\n      comment = \"Weekend\";\n    }\n\n    result.push({\n      json: {\n        ...base,\n        Month: monthName,\n        Date: key,\n        \"Task Start Date\": key,\n        \"Task End Date\": key,\n        \"Task Description\": (isWeekend || comment === \"Holiday/Leave\")\n          ? \"\"\n          : groupedByDate[key].descriptions.join(\"\\n\"),\n        Comments: comment\n      }\n    });\n\n  } \n  else {\n\n    const comment = isWeekend ? \"Weekend\" : \"Holiday/Leave\";\n\n    result.push({\n      json: {\n        Month: monthName,\n        Date: key,\n        \"Task Start Date\": key,\n        \"Task End Date\": key,\n        Environment: \"Boomi\",\n        AdminDevSupport: \"Support\",\n        \"Task Description\": \"\",\n        Complexity: \"\",\n        \"Actual Efforts(hrs)\": 8,\n        Status: \"\",\n        Comments: comment\n      }\n    });\n\n  }\n}\n\nreturn result;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1568,
+        224
+      ],
+      "id": "7c9f583e-e78b-48fb-ae5f-ff1f01276ffe",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "5016c6b9-e937-463b-a8e1-56bc2b53c612",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        368
+      ],
+      "id": "9dad3da3-fa2e-4543-9fb5-6ab6864e9d47",
+      "name": "Webhook",
+      "webhookId": "5016c6b9-e937-463b-a8e1-56bc2b53c612"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $node[\"Webhook\"].json.headers.to_email}}",
+        "subject": "Quanta Timesheets",
+        "message": "Hi PFA Timesheets",
+        "options": {
+          "attachmentsUi": {
+            "attachmentsBinary": [
+              {}
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        240
+      ],
+      "id": "4618da86-fef8-482a-8b7f-0b27f8cf8224",
+      "name": "Send a message",
+      "webhookId": "c9e80ec8-a5fe-4355-9418-247eb5bf3a78",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "cb64fm81qdwwKgxM",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "98a1b515-d2d7-4d80-a979-3af682539488",
+              "leftValue": "={{ $json.Comments }}",
+              "rightValue": "Weekend",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        224
+      ],
+      "id": "1a1d57b4-07c6-4c6c-9669-9858fb6b2571",
+      "name": "If"
+    }
+  ],
+  "connections": {
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Convert to File": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Replace Me",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Replace Me": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Convert to File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1901759.hstgr.cloud",
+            "user-agent": "PostmanRuntime/2.10.1",
+            "content-length": "1077607",
+            "accept": "*/*",
+            "accept-encoding": "gzip, deflate, br",
+            "content-type": "multipart/form-data; boundary=--------------------------002365983793474914035648",
+            "holidays": "[7]",
+            "key": "Saikiran Matta",
+            "month": "8",
+            "postman-token": "2e874873-9313-445f-b8f6-312779be870d",
+            "to_email": "mengani.rakesh@techygeekhub.com",
+            "x-forwarded-for": "172.16.1.1",
+            "x-forwarded-host": "n8n.srv1901759.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "d1a9087137ce",
+            "x-real-ip": "172.16.1.1",
+            "year": "2026"
+          },
+          "params": {},
+          "query": {},
+          "body": {},
+          "webhookUrl": "https://n8n.srv1901759.hstgr.cloud/webhook/5016c6b9-e937-463b-a8e1-56bc2b53c612",
+          "executionMode": "production"
+        },
+        "binary": {
+          "data0": {
+            "mimeType": "application/vnd.ms-excel.sheet.macroenabled.12",
+            "fileExtension": "xlsm",
+            "data": "filesystem-v2",
+            "fileName": "2026 (Aug - Dec) (1).xlsm",
+            "id": "filesystem-v2:workflows/Shvcy9gztVZ9YPuC/executions/9948/binary_data/a1fbfa61-1a48-48cf-8eb4-941e622ca38d",
+            "fileSize": "1.08 MB",
+            "bytes": 1077347
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Shvcy9gztVZ9YPuC",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-08-13T17:31:13.196Z",
+      "updatedAt": "2026-08-13T17:31:13.196Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "e28ae1cd-dc68-43fb-b493-d514e042858a",
+    "workflowId": "Shvcy9gztVZ9YPuC",
+    "nodes": [
+      {
+        "parameters": {
+          "operation": "xls",
+          "binaryPropertyName": "data0",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.extractFromFile",
+        "typeVersion": 1.1,
+        "position": [
+          672,
+          224
+        ],
+        "id": "6611613d-7cf5-4afe-beb9-c4d4cef2e9ef",
+        "name": "Extract from File"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"Number\": \" {{ $json.Number }}\",\n  \"Short description\": \"{{ $json[\"Short description\"] }}\",\n\"State\": \"{{ $json.State }}\",\n\"Tags\" : \"{{ $json.Tags }}\"\n}\n",
+          "includeOtherFields": true,
+          "include": "selected",
+          "includeFields": "=Number, ['Short description'],{{ $json.Tags }},{{ $json.State }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1120,
+          224
+        ],
+        "id": "a0802f6b-6200-448f-99c7-da0698e357ab",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "operation": "xlsx",
+          "options": {
+            "fileName": "={{ $node[\"Webhook\"].json.headers.key }}_{{ $json.Month }}_{{ $node[\"Webhook\"].json.headers.year }}.xlsx"
+          }
+        },
+        "type": "n8n-nodes-base.convertToFile",
+        "typeVersion": 1.1,
+        "position": [
+          2048,
+          240
+        ],
+        "id": "f823001e-7ea3-4c3b-a919-2e85ca7d3332",
+        "name": "Convert to File"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "09f25f2e-b15f-4547-bfaf-008307164cd7",
+                "leftValue": "={{ $('Webhook').item.json.headers.key }}",
+                "rightValue": "={{ $json[\"Assigned to\"] }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.3,
+        "position": [
+          896,
+          224
+        ],
+        "id": "3a34ba0d-3451-4d02-92d8-f51032a5a2a7",
+        "name": "Filter"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"Date\": \"{{ $('Code in JavaScript1').item.json.sheetName }}\",\n\"Task Start Date\":\"{{ $('Code in JavaScript1').item.json.sheetName }}\",\n\"Task End Date\":\"{{ $('Code in JavaScript1').item.json.sheetName }}\",\n\"Environment\":\"Boomi\",\n\"Admin\\Dev\\Support\": \"Support\",\n  \"Task Description\": \" {{ $json.Number }} - {{ $json['Short description'] }}\",\n\"Complexity\": \"{{ $json.Tags }}\",\n\"Actual Efforts(hrs)\": 8,\n\"Status\": \"{{ $json.State }}\",\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1344,
+          224
+        ],
+        "id": "7f17b5b3-9c50-4dcf-8039-f88d622851e7",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "jsCode": "// ===== USER INPUT =====\nconst month = $input.first().json.headers.month;      // 1 = Jan\nconst year = $input.first().json.headers.year;\n\n// optional holidays (format: MM-DD)\n// leave [] empty if no holidays\nconst holidays =  $input.first().json.headers.holidays\n// ======================\n\nconst days = new Date(year, month, 0).getDate();\nconst binaryData = items[0].binary;\n\nconst output = [];\n\nfor (let d = 1; d <= days; d++) {\n\n  const date = new Date(year, month - 1, d);\n  const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat\n\n  const sheetName =\n    `${String(d).padStart(2,'0')}-${String(month).padStart(2,'0')}`;\n\n  const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);\n  const isHoliday = holidays.includes(sheetName);\n\n  // skip weekends + holidays\n  if (isWeekend || isHoliday) continue;\n\n  output.push({\n    json: { sheetName },\n    binary: binaryData\n  });\n}\n\nreturn output;\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          224,
+          368
+        ],
+        "id": "698da743-d741-4ffa-b556-1131a09a7f3d",
+        "name": "Code in JavaScript1"
+      },
+      {
+        "parameters": {
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitInBatches",
+        "typeVersion": 3,
+        "position": [
+          448,
+          368
+        ],
+        "id": "aba555d0-744e-43d3-bae8-0130013850a4",
+        "name": "Loop Over Items"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.noOp",
+        "name": "Replace Me",
+        "typeVersion": 1,
+        "position": [
+          672,
+          416
+        ],
+        "id": "4a34e2c4-5b9d-4d1d-bbaf-b1856a1d9eeb"
+      },
+      {
+        "parameters": {
+          "options": {
+            "allowFileUploads": true
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "typeVersion": 1.4,
+        "position": [
+          0,
+          0
+        ],
+        "id": "fc4158d5-4243-4048-90db-a6e6c16c70b3",
+        "name": "When chat message received",
+        "webhookId": "5526bc39-8253-4e82-9c15-9906b9d70458"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\nconst currentYear = new Date().getFullYear();\n\nconst groupedByDate = {};\nconst result = [];\n\n// Month mapping\nconst monthNames = [\n  \"Jan\",\"Feb\",\"Mar\",\"Apr\",\"May\",\"Jun\",\n  \"Jul\",\"Aug\",\"Sep\",\"Oct\",\"Nov\",\"Dec\"\n];\n\n// 🔹 Normalize DD-MM or DD-MM-YYYY → DD-MM-YYYY\nfunction normalizeDate(rawDate) {\n  const parts = rawDate.split(\"-\");\n\n  let dd, mm, yyyy;\n\n  if (parts.length === 2) {\n    // Format: DD-MM\n    [dd, mm] = parts;\n    yyyy = currentYear;\n  } \n  else if (parts.length === 3) {\n    // Format: DD-MM-YYYY\n    [dd, mm, yyyy] = parts;\n  } \n  else {\n    return null;\n  }\n\n  const dateObj = new Date(yyyy, mm - 1, dd);\n\n  const finalDD = String(dateObj.getDate()).padStart(2, \"0\");\n  const finalMM = String(dateObj.getMonth() + 1).padStart(2, \"0\");\n  const finalYYYY = dateObj.getFullYear();\n\n  return `${finalDD}-${finalMM}-${finalYYYY}`;\n}\n\n// 🔹 Step 1 — Group records\nfor (const item of items) {\n\n  const rawDate = item.json.Date;\n  if (!rawDate) continue;\n\n  const normalized = normalizeDate(rawDate);\n  if (!normalized) continue;\n\n  if (!groupedByDate[normalized]) {\n    groupedByDate[normalized] = {\n      descriptions: [],\n      base: item.json\n    };\n  }\n\n  if (item.json[\"Task Description\"]) {\n    groupedByDate[normalized].descriptions.push(\n      item.json[\"Task Description\"]\n    );\n  }\n}\n\n// 🔹 Detect month safely\nconst firstKey = Object.keys(groupedByDate)[0];\nif (!firstKey) {\n  return [];\n}\n\nconst parts = firstKey.split(\"-\");\nconst month = parseInt(parts[1], 10) - 1;  // second value is month now\nconst year = parseInt(parts[2], 10);\n\n// 🔹 Build full month\nconst start = new Date(year, month, 1);\nconst end = new Date(year, month + 1, 0);\n\n// 🔹 Step 2 — Generate full month data\nfor (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {\n\n  const dd = String(d.getDate()).padStart(2, \"0\");\n  const mm = String(d.getMonth() + 1).padStart(2, \"0\");\n  const yyyy = d.getFullYear();\n\n  const key = `${dd}-${mm}-${yyyy}`;\n  const monthName = monthNames[d.getMonth()];\n  const day = d.getDay();\n  const isWeekend = (day === 0 || day === 6);\n\n  if (groupedByDate[key]) {\n\n    const base = groupedByDate[key].base;\n\n    let comment = base.Comments || \"\";\n\n    if (isWeekend) {\n      comment = \"Weekend\";\n    }\n\n    result.push({\n      json: {\n        ...base,\n        Month: monthName,\n        Date: key,\n        \"Task Start Date\": key,\n        \"Task End Date\": key,\n        \"Task Description\": (isWeekend || comment === \"Holiday/Leave\")\n          ? \"\"\n          : groupedByDate[key].descriptions.join(\"\\n\"),\n        Comments: comment\n      }\n    });\n\n  } \n  else {\n\n    const comment = isWeekend ? \"Weekend\" : \"Holiday/Leave\";\n\n    result.push({\n      json: {\n        Month: monthName,\n        Date: key,\n        \"Task Start Date\": key,\n        \"Task End Date\": key,\n        Environment: \"Boomi\",\n        AdminDevSupport: \"Support\",\n        \"Task Description\": \"\",\n        Complexity: \"\",\n        \"Actual Efforts(hrs)\": 8,\n        Status: \"\",\n        Comments: comment\n      }\n    });\n\n  }\n}\n\nreturn result;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1568,
+          224
+        ],
+        "id": "7c9f583e-e78b-48fb-ae5f-ff1f01276ffe",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "5016c6b9-e937-463b-a8e1-56bc2b53c612",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          368
+        ],
+        "id": "9dad3da3-fa2e-4543-9fb5-6ab6864e9d47",
+        "name": "Webhook",
+        "webhookId": "5016c6b9-e937-463b-a8e1-56bc2b53c612"
+      },
+      {
+        "parameters": {
+          "sendTo": "={{ $node[\"Webhook\"].json.headers.to_email}}",
+          "subject": "Quanta Timesheets",
+          "message": "Hi PFA Timesheets",
+          "options": {
+            "attachmentsUi": {
+              "attachmentsBinary": [
+                {}
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.gmail",
+        "typeVersion": 2.2,
+        "position": [
+          2272,
+          240
+        ],
+        "id": "4618da86-fef8-482a-8b7f-0b27f8cf8224",
+        "name": "Send a message",
+        "webhookId": "c9e80ec8-a5fe-4355-9418-247eb5bf3a78",
+        "credentials": {
+          "gmailOAuth2": {
+            "id": "cb64fm81qdwwKgxM",
+            "name": "Gmail account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "98a1b515-d2d7-4d80-a979-3af682539488",
+                "leftValue": "={{ $json.Comments }}",
+                "rightValue": "Weekend",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          1792,
+          224
+        ],
+        "id": "1a1d57b4-07c6-4c6c-9669-9858fb6b2571",
+        "name": "If"
+      }
+    ],
+    "connections": {
+      "Extract from File": {
+        "main": [
+          [
+            {
+              "node": "Filter",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Convert to File": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Filter": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript1": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Loop Over Items": {
+        "main": [
+          [
+            {
+              "node": "Extract from File",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Replace Me",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Replace Me": {
+        "main": [
+          [
+            {
+              "node": "Loop Over Items",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [],
+          [
+            {
+              "node": "Convert to File",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version e28ae1cd",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-05T06:38:24.499Z",
+    "updatedAt": "2026-10-05T06:47:01.000Z"
+  }
+}
