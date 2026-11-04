@@ -1,0 +1,227 @@
+{
+  "id": "2r5MmzTeDrvZyT7s",
+  "name": "SWF_HR_Agent_Analytics_Feed",
+  "active": true,
+  "activeVersionId": "27e106a8-66e8-438e-92cd-c445a422ca3a",
+  "createdAt": "2026-10-08T05:27:18.560Z",
+  "updatedAt": "2026-10-17T06:10:12.715Z",
+  "isArchived": false,
+  "versionId": "27e106a8-66e8-438e-92cd-c445a422ca3a",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "id": "07eefcac-8df4-4699-ae9c-8a092404d4dd",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "hr-agent-analytics-live",
+        "responseMode": "responseNode",
+        "options": {
+          "allowedOrigins": "*"
+        }
+      },
+      "webhookId": "9c4209f0-3afd-4f75-ab00-d84144da76f8"
+    },
+    {
+      "id": "04f7f7fa-752c-4ba9-8255-63b1927ec910",
+      "name": "Get Audit Logs",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "0Xa3cI3xvJp6UKV4",
+          "mode": "list"
+        },
+        "returnAll": true
+      }
+    },
+    {
+      "id": "d3ac7ace-63ca-438d-9cc1-75b27943d650",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        448,
+        0
+      ],
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              {
+                "name": "Access-Control-Allow-Origin",
+                "value": "*"
+              },
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get Audit Logs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Audit Logs": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": true
+  },
+  "staticData": null,
+  "pinData": null,
+  "meta": {
+    "aiBuilderAssisted": true,
+    "builderVariant": "mcp"
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "2r5MmzTeDrvZyT7s",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-08T05:27:18.563Z",
+      "updatedAt": "2026-10-08T05:27:18.563Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "27e106a8-66e8-438e-92cd-c445a422ca3a",
+    "workflowId": "2r5MmzTeDrvZyT7s",
+    "nodes": [
+      {
+        "id": "07eefcac-8df4-4699-ae9c-8a092404d4dd",
+        "name": "Webhook",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.1,
+        "position": [
+          0,
+          0
+        ],
+        "parameters": {
+          "httpMethod": "GET",
+          "path": "hr-agent-analytics-live",
+          "responseMode": "responseNode",
+          "options": {
+            "allowedOrigins": "*"
+          }
+        },
+        "webhookId": "9c4209f0-3afd-4f75-ab00-d84144da76f8"
+      },
+      {
+        "id": "04f7f7fa-752c-4ba9-8255-63b1927ec910",
+        "name": "Get Audit Logs",
+        "type": "n8n-nodes-base.dataTable",
+        "typeVersion": 1.1,
+        "position": [
+          224,
+          0
+        ],
+        "parameters": {
+          "resource": "row",
+          "operation": "get",
+          "dataTableId": {
+            "__rl": true,
+            "value": "0Xa3cI3xvJp6UKV4",
+            "mode": "list"
+          },
+          "returnAll": true
+        }
+      },
+      {
+        "id": "d3ac7ace-63ca-438d-9cc1-75b27943d650",
+        "name": "Respond to Webhook",
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          448,
+          0
+        ],
+        "parameters": {
+          "respondWith": "allIncomingItems",
+          "options": {
+            "responseHeaders": {
+              "entries": [
+                {
+                  "name": "Access-Control-Allow-Origin",
+                  "value": "*"
+                },
+                {
+                  "name": "Content-Type",
+                  "value": "application/json"
+                }
+              ]
+            }
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Get Audit Logs",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Audit Logs": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri (via MCP)",
+    "name": "v1.0",
+    "description": "Initial release of live analytics API feed",
+    "autosaved": false,
+    "createdAt": "2026-10-08T05:27:18.564Z",
+    "updatedAt": "2026-10-08T05:27:18.564Z"
+  }
+}
