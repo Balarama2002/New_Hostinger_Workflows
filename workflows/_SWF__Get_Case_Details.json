@@ -1,0 +1,314 @@
+{
+  "id": "IfTHqCotpsGPa6em",
+  "name": "[SWF] Get_Case_Details",
+  "active": true,
+  "activeVersionId": "85ba906c-c567-4df1-b6aa-c9df95c20b72",
+  "createdAt": "2026-11-03T17:59:02.584Z",
+  "updatedAt": "2026-11-04T06:19:08.201Z",
+  "isArchived": false,
+  "versionId": "85ba906c-c567-4df1-b6aa-c9df95c20b72",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, CaseNumber, Subject, Description, Status, Priority, CreatedDate, LastModifiedDate FROM Case WHERE Customer_Id__c = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"\\\\'\") }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "85876f08-3243-4343-b7a6-3bd8d1175d42",
+      "name": "Get Cases",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "VlHF4T5DMFTy6KSY",
+          "name": "Mounika_Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_id"
+            },
+            {
+              "name": "order_id"
+            },
+            {
+              "name": "case_number"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "1a89e677-fe2f-4a9e-bdf0-dd085efa7bf2",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=SELECT t.external_id, t.order_id, t.last_status, date_format(t.updated_at, 'dd MMM') AS updated\nFROM workspace.agentic_support.request_tracker t\nWHERE t.customer_id = :customer_id AND t.kind = 'ticket'\nORDER BY t.created_at DESC LIMIT 5",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "customer_id",
+              "value": "={{ $('When Executed by Another Workflow').first().json.customer_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        0
+      ],
+      "id": "8e30c76a-32ac-4f8f-a3d6-82ba6ad54ce1",
+      "name": "Get Tickets",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "ZFuywACgqSLruVqu",
+          "name": "Mounika Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const trig = $('When Executed by Another Workflow').first().json;\nconst str = (v) => (v === undefined || v === null) ? '' : String(v);\n\nlet cases = $('Get Cases').all().map(i => i.json).filter(x => x && x.Id);\nlet tickets = $input.all().map(i => i.json).filter(x =>\n  x && (x.external_id !== undefined || x.order_id !== undefined || x.last_status !== undefined));\n\nconst ref = str(trig.order_id).trim().toLowerCase();\nconst want = str(trig.case_number).trim().toLowerCase();\n\nif (want !== '') {\n  cases = cases.filter(x => str(x.CaseNumber).toLowerCase() === want || str(x.Id).toLowerCase() === want);\n}\nif (ref !== '') {\n  cases = cases.filter(x => (str(x.Subject) + ' ' + str(x.Description)).toLowerCase().includes(ref));\n  tickets = tickets.filter(x => str(x.order_id).toLowerCase() === ref);\n}\ncases = cases\n  .sort((a, b) => {\n    const p = str(a.LastModifiedDate), q = str(b.LastModifiedDate);\n    return p < q ? -1 : p > q ? 1 : 0;\n  })\n  .reverse()\n  .slice(0, 5);\n\nconst day = (t) => str(t).slice(0, 10);\nconst words = (st) => {\n  switch (str(st).toLowerCase()) {\n    case 'new': return 'received and waiting to be picked up by our team';\n    case 'working':\n    case 'in progress':\n    case 'escalated': return 'being worked on by our team';\n    case 'on hold':\n    case 'waiting':\n    case 'pending': return 'on hold while we wait for more information';\n    case 'closed':\n    case 'resolved':\n    case 'done': return 'resolved by our team';\n    default: return \"currently marked '\" + str(st) + \"'\";\n  }\n};\n\nconst lines = cases.map(x =>\n  'Request \"' + str(x.Subject) + '\": ' + words(x.Status) +\n  ' (opened ' + day(x.CreatedDate) + ', last update ' + day(x.LastModifiedDate) +\n  '; reference ' + str(x.CaseNumber) + ')'\n);\ntickets.forEach(x => {\n  lines.push('Urgent request for order ' + str(x.order_id) + ': ' + words(x.last_status) +\n    ' (last update ' + str(x.updated) + ')');\n});\n\nif (lines.length === 0) {\n  return [{ json: { found: 'false', count: '0', summary: 'No open requests are on record for this customer.' } }];\n}\nreturn [{ json: { found: 'true', count: String(lines.length), summary: lines.join('\\n') } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "70b3a5d8-b277-428d-a609-2c71f2935e2f",
+      "name": "Process and format data"
+    }
+  ],
+  "connections": {
+    "Get Cases": {
+      "main": [
+        [
+          {
+            "node": "Get Tickets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Cases",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Tickets": {
+      "main": [
+        [
+          {
+            "node": "Process and format data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_id": "C999",
+          "order_id": "",
+          "case_number": ""
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "IfTHqCotpsGPa6em",
+      "projectId": "xuQhXJEHtH8zY0MB",
+      "createdAt": "2026-11-03T17:59:02.586Z",
+      "updatedAt": "2026-11-03T17:59:02.586Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "85ba906c-c567-4df1-b6aa-c9df95c20b72",
+    "workflowId": "IfTHqCotpsGPa6em",
+    "nodes": [
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT Id, CaseNumber, Subject, Description, Status, Priority, CreatedDate, LastModifiedDate FROM Case WHERE Customer_Id__c = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"\\\\'\") }}'"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "85876f08-3243-4343-b7a6-3bd8d1175d42",
+        "name": "Get Cases",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "VlHF4T5DMFTy6KSY",
+            "name": "Mounika_Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "customer_id"
+              },
+              {
+                "name": "order_id"
+              },
+              {
+                "name": "case_number"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "1a89e677-fe2f-4a9e-bdf0-dd085efa7bf2",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=SELECT t.external_id, t.order_id, t.last_status, date_format(t.updated_at, 'dd MMM') AS updated\nFROM workspace.agentic_support.request_tracker t\nWHERE t.customer_id = :customer_id AND t.kind = 'ticket'\nORDER BY t.created_at DESC LIMIT 5",
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "customer_id",
+                "value": "={{ $('When Executed by Another Workflow').first().json.customer_id }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          448,
+          0
+        ],
+        "id": "8e30c76a-32ac-4f8f-a3d6-82ba6ad54ce1",
+        "name": "Get Tickets",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "ZFuywACgqSLruVqu",
+            "name": "Mounika Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "const trig = $('When Executed by Another Workflow').first().json;\nconst str = (v) => (v === undefined || v === null) ? '' : String(v);\n\nlet cases = $('Get Cases').all().map(i => i.json).filter(x => x && x.Id);\nlet tickets = $input.all().map(i => i.json).filter(x =>\n  x && (x.external_id !== undefined || x.order_id !== undefined || x.last_status !== undefined));\n\nconst ref = str(trig.order_id).trim().toLowerCase();\nconst want = str(trig.case_number).trim().toLowerCase();\n\nif (want !== '') {\n  cases = cases.filter(x => str(x.CaseNumber).toLowerCase() === want || str(x.Id).toLowerCase() === want);\n}\nif (ref !== '') {\n  cases = cases.filter(x => (str(x.Subject) + ' ' + str(x.Description)).toLowerCase().includes(ref));\n  tickets = tickets.filter(x => str(x.order_id).toLowerCase() === ref);\n}\ncases = cases\n  .sort((a, b) => {\n    const p = str(a.LastModifiedDate), q = str(b.LastModifiedDate);\n    return p < q ? -1 : p > q ? 1 : 0;\n  })\n  .reverse()\n  .slice(0, 5);\n\nconst day = (t) => str(t).slice(0, 10);\nconst words = (st) => {\n  switch (str(st).toLowerCase()) {\n    case 'new': return 'received and waiting to be picked up by our team';\n    case 'working':\n    case 'in progress':\n    case 'escalated': return 'being worked on by our team';\n    case 'on hold':\n    case 'waiting':\n    case 'pending': return 'on hold while we wait for more information';\n    case 'closed':\n    case 'resolved':\n    case 'done': return 'resolved by our team';\n    default: return \"currently marked '\" + str(st) + \"'\";\n  }\n};\n\nconst lines = cases.map(x =>\n  'Request \"' + str(x.Subject) + '\": ' + words(x.Status) +\n  ' (opened ' + day(x.CreatedDate) + ', last update ' + day(x.LastModifiedDate) +\n  '; reference ' + str(x.CaseNumber) + ')'\n);\ntickets.forEach(x => {\n  lines.push('Urgent request for order ' + str(x.order_id) + ': ' + words(x.last_status) +\n    ' (last update ' + str(x.updated) + ')');\n});\n\nif (lines.length === 0) {\n  return [{ json: { found: 'false', count: '0', summary: 'No open requests are on record for this customer.' } }];\n}\nreturn [{ json: { found: 'true', count: String(lines.length), summary: lines.join('\\n') } }];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ],
+        "id": "70b3a5d8-b277-428d-a609-2c71f2935e2f",
+        "name": "Process and format data"
+      }
+    ],
+    "connections": {
+      "Get Cases": {
+        "main": [
+          [
+            {
+              "node": "Get Tickets",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get Cases",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Tickets": {
+        "main": [
+          [
+            {
+              "node": "Process and format data",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Mounika Valasani",
+    "name": "V1",
+    "description": "Initial",
+    "autosaved": true,
+    "createdAt": "2026-11-04T05:58:22.503Z",
+    "updatedAt": "2026-11-04T06:26:06.000Z"
+  }
+}
