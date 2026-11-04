@@ -1,0 +1,264 @@
+{
+  "id": "9SxpLgWnfxaPiUOJ",
+  "name": "MWF_Demo",
+  "active": true,
+  "activeVersionId": "5819ef6d-2b56-4d26-b2e0-c90c480453c6",
+  "createdAt": "2026-10-31T05:35:31.696Z",
+  "updatedAt": "2026-10-31T10:07:29.715Z",
+  "isArchived": false,
+  "versionId": "69b18128-b265-4482-a180-4f4fe740ddfa",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "initialMessages": "Hi there! 👋\nMy name is ShivaKesava. How can I assist you today?",
+        "options": {
+          "allowFileUploads": true
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        -32,
+        0
+      ],
+      "id": "77a8758f-6b73-420f-ab1e-b8b37ff4f198",
+      "name": "When chat message received",
+      "webhookId": "28c14938-d811-4a54-89d8-95d178eb4a84"
+    },
+    {
+      "parameters": {
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "You are a helpful assistant"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        192,
+        0
+      ],
+      "id": "41c658de-df5f-4002-ba23-4dcb7c43090c",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.1-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        232
+      ],
+      "id": "ee6ae530-9855-4fa6-93b1-e6aa9dcbd3e6",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yiIycEXW9ke1o2v6",
+          "name": "Yashwanth_gemini_model"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        328,
+        232
+      ],
+      "id": "8d56139b-53ec-47a1-bb0b-827bf2f2cffd",
+      "name": "Google Gemini Chat Model1",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "yiIycEXW9ke1o2v6",
+          "name": "Yashwanth_gemini_model"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "9SxpLgWnfxaPiUOJ",
+      "projectId": "Y7IGMMBOn70nLbTw",
+      "createdAt": "2026-10-31T05:35:31.699Z",
+      "updatedAt": "2026-10-31T05:35:31.699Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "5819ef6d-2b56-4d26-b2e0-c90c480453c6",
+    "workflowId": "9SxpLgWnfxaPiUOJ",
+    "nodes": [
+      {
+        "parameters": {
+          "public": true,
+          "initialMessages": "Hi there! 👋\nMy name is ShivaKesava. How can I assist you today?",
+          "options": {
+            "allowFileUploads": true
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+        "typeVersion": 1.5,
+        "position": [
+          0,
+          0
+        ],
+        "id": "77a8758f-6b73-420f-ab1e-b8b37ff4f198",
+        "name": "When chat message received",
+        "webhookId": "28c14938-d811-4a54-89d8-95d178eb4a84"
+      },
+      {
+        "parameters": {
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "You are a helpful assistant"
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "41c658de-df5f-4002-ba23-4dcb7c43090c",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.1-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          -32,
+          256
+        ],
+        "id": "ee6ae530-9855-4fa6-93b1-e6aa9dcbd3e6",
+        "name": "Google Gemini Chat Model",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "yiIycEXW9ke1o2v6",
+            "name": "Google Gemini(PaLM) Api account 7"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "modelName": "models/gemini-3.5-flash-lite",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+        "typeVersion": 1.2,
+        "position": [
+          208,
+          368
+        ],
+        "id": "8d56139b-53ec-47a1-bb0b-827bf2f2cffd",
+        "name": "Google Gemini Chat Model1",
+        "credentials": {
+          "googlePalmApi": {
+            "id": "yiIycEXW9ke1o2v6",
+            "name": "Google Gemini(PaLM) Api account 7"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "When chat message received": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Google Gemini Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Yashwanth Thummanapally",
+    "name": "Version 5819ef6d",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-31T06:03:40.846Z",
+    "updatedAt": "2026-10-31T06:27:28.000Z"
+  }
+}
