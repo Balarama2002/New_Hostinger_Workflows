@@ -4,9 +4,9 @@
   "active": false,
   "activeVersionId": null,
   "createdAt": "2026-11-04T11:32:14.488Z",
-  "updatedAt": "2026-11-04T17:56:38.318Z",
+  "updatedAt": "2026-11-04T18:39:55.913Z",
   "isArchived": false,
-  "versionId": "29c85ea3-7921-43d7-8211-236f1153f24c",
+  "versionId": "895ea040-554d-4e5e-90f1-c439c89e4c1e",
   "triggerCount": 0,
   "nodes": [
     {
@@ -40,7 +40,7 @@
       "typeVersion": 1.3,
       "position": [
         96,
-        0
+        144
       ],
       "id": "2b5350fb-d51f-44b8-ad12-56b48a3ec801",
       "name": "Address Change Skill Input"
@@ -59,8 +59,8 @@
       "type": "n8n-nodes-base.databricks",
       "typeVersion": 1,
       "position": [
-        512,
-        -16
+        544,
+        48
       ],
       "id": "611afc10-c5ef-4ac7-bb76-00416421bcd1",
       "name": "Execute a SQL query",
@@ -110,8 +110,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        288,
-        0
+        320,
+        144
       ],
       "id": "fb1cae07-2feb-4f6c-a366-c737c6f074f5",
       "name": "If1"
@@ -139,8 +139,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        464,
-        144
+        544,
+        240
       ],
       "id": "37d229d3-4b52-48de-b48b-163ea50958ec",
       "name": "Edit Fields1"
@@ -154,8 +154,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        896,
-        96
+        992,
+        144
       ],
       "id": "bfde4bec-a273-49fa-97bf-ae906f1db56e",
       "name": "Order Not Found Response"
@@ -188,8 +188,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        704,
-        -16
+        768,
+        48
       ],
       "id": "b190fc01-7ac8-4be8-9dda-3b5a5224d5c9",
       "name": "Check Order Exists"
@@ -203,7 +203,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1120,
+        1216,
         -160
       ],
       "id": "4f1e9907-b244-4c47-b20f-e4f9e2da4f57",
@@ -246,8 +246,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        928,
-        -112
+        992,
+        -48
       ],
       "id": "65528aa6-611e-48db-be7b-5b5a71630846",
       "name": "Check Country Change"
@@ -266,8 +266,8 @@
                 },
                 "conditions": [
                   {
-                    "leftValue": "",
-                    "rightValue": "",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "payment_pending",
                     "operator": {
                       "type": "string",
                       "operation": "equals"
@@ -277,19 +277,112 @@
                 ],
                 "combinator": "and"
               }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "2117be3a-547a-4895-af49-ed01ae77b485",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "packed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "e746b260-fc21-4d2d-a6d5-b6cacb1f28c8",
+                    "leftValue": "={{ $json.order_status }}",
+                    "rightValue": "shipped",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
             }
           ]
         },
-        "options": {}
+        "options": {
+          "fallbackOutput": "extra"
+        }
       },
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.5,
       "position": [
-        1168,
+        1216,
         32
       ],
       "id": "089d9b36-53dd-4774-804b-d8752e1903ff",
       "name": "Evaluate order status"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"decision\": \"eligible\",\n  \"route\": \"auto\",\n  \"tier\": \"T1\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"Not dispatched yet; address can be changed now\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1440,
+        -128
+      ],
+      "id": "85dcac65-fba4-499c-9477-4f7af11e9207",
+      "name": "Automatic Approval Response"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"decision\": \"eligible\",\n  \"route\": \"approval\",\n  \"tier\": \"T2\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"Already shipped; needs a carrier intercept request. Fee may apply and it is not guaranteed\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1440,
+        64
+      ],
+      "id": "f3e8dc9b-d432-4192-8a68-9caedac5c683",
+      "name": "Carrier Intercept Approval Response"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"decision\": \"decline\",\n  \"route\": \"decline\",\n  \"tier\": \"T0\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"{{ 'Order is ' + $json.order_status + '; address cannot be changed' }}\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1440,
+        256
+      ],
+      "id": "ec494c8d-8819-451b-a960-31b66e3ec68a",
+      "name": "Decline Response"
     }
   ],
   "connections": {
@@ -363,6 +456,38 @@
         [
           {
             "node": "Evaluate order status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate order status": {
+      "main": [
+        [
+          {
+            "node": "Automatic Approval Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Automatic Approval Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Carrier Intercept Approval Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Decline Response",
             "type": "main",
             "index": 0
           }
