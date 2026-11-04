@@ -1,0 +1,1185 @@
+{
+  "id": "6j5AWGtiTvT54rbP",
+  "name": "Whats'app Agent",
+  "active": true,
+  "activeVersionId": "f83462e8-ac32-43e2-ac4a-9fcd11291014",
+  "createdAt": "2026-10-09T16:34:02.117Z",
+  "updatedAt": "2026-10-20T12:48:16.789Z",
+  "isArchived": false,
+  "versionId": "f83462e8-ac32-43e2-ac4a-9fcd11291014",
+  "triggerCount": 3,
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "messages"
+        ],
+        "options": {}
+      },
+      "type": "n8n-nodes-base.whatsAppTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "10df7046-2d21-4939-9088-2c03941fe78c",
+      "name": "WhatsApp Trigger",
+      "webhookId": "c339b18c-6555-4b8e-8ab9-e29d384cfd22",
+      "credentials": {
+        "whatsAppTriggerApi": {
+          "id": "lwHaTPqLmVDpPmpA",
+          "name": "BalaRam Account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.messages[0].text.body }}",
+        "needsFallback": true,
+        "options": {
+          "systemMessage": "Go through the Question properly and answer those accoridng to the knowledge that you have "
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e6d547d9-8298-4e24-b3cd-4f5cf8a5ac0e",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "operation": "send",
+        "phoneNumberId": "1144933588705223",
+        "recipientPhoneNumber": "+91 8096909520",
+        "textBody": "={{ $json.output }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.whatsApp",
+      "typeVersion": 1.1,
+      "position": [
+        592,
+        0
+      ],
+      "id": "da109a4d-f6bf-452f-89c1-3696126c5628",
+      "name": "Send message",
+      "webhookId": "29a047ca-5fef-41d7-96aa-42ce9c641a34",
+      "credentials": {
+        "whatsAppApi": {
+          "id": "HWdR8vc4WWecAVAg",
+          "name": "WhatsApp account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        576,
+        224
+      ],
+      "id": "5919b9b7-d80e-4c84-b436-28449b4105f3",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "316c506e-e88a-408f-ac83-542a6764f4cf",
+              "leftValue": "={{ $json.name }}",
+              "rightValue": "BalaRam",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        800,
+        224
+      ],
+      "id": "f36492b8-cd50-4af0-b2ad-72f37da5ef02",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "errorMessage": "error"
+      },
+      "type": "n8n-nodes-base.stopAndError",
+      "typeVersion": 1,
+      "position": [
+        944,
+        16
+      ],
+      "id": "afea06ee-5b4a-48f3-acab-871eb296ab65",
+      "name": "Stop and Error"
+    },
+    {
+      "parameters": {
+        "resume": "webhook",
+        "limitWaitTime": true,
+        "resumeUnit": "seconds",
+        "options": {
+          "webhookSuffix": "hello"
+        }
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        848,
+        -64
+      ],
+      "id": "59e9a8b9-a1ba-4b91-a4cd-4b74a54072cf",
+      "name": "Wait",
+      "webhookId": "45c53c73-5552-492a-8b49-c4bbaeb22289"
+    },
+    {
+      "parameters": {
+        "resource": "execution",
+        "operation": "get",
+        "executionId": "13987",
+        "options": {
+          "activeWorkflows": true
+        },
+        "requestOptions": {}
+      },
+      "type": "n8n-nodes-base.n8n",
+      "typeVersion": 1,
+      "position": [
+        1360,
+        304
+      ],
+      "id": "1993f6de-6c6e-4074-a63c-df433bbb8f82",
+      "name": "Get an execution",
+      "credentials": {
+        "n8nApi": {
+          "id": "COMUzy87YRVxugXO",
+          "name": "n8n account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "tokenUsage",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1.1,
+      "position": [
+        1872,
+        304
+      ],
+      "id": "67e08bbe-3580-4d65-b1b2-7500b7760168",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nconst usageRecords = [];\n\nfunction findTokenUsage(obj) {\n  if (!obj || typeof obj !== 'object') return;\n\n  if (obj.tokenUsage && typeof obj.tokenUsage === 'object') {\n    const usage = obj.tokenUsage;\n\n    usageRecords.push({\n      \"Prompt Tokens\": usage.promptTokens ?? 0,\n      \"Completion Tokens\": usage.completionTokens ?? 0,\n      \"Total Tokens\": usage.totalTokens ?? 0,\n    });\n\n    return;\n  }\n\n  if (Array.isArray(obj)) {\n    for (const item of obj) {\n      findTokenUsage(item);\n    }\n  } else {\n    for (const value of Object.values(obj)) {\n      findTokenUsage(value);\n    }\n  }\n}\n\nfor (const item of items) {\n  findTokenUsage(item.json);\n}\n\nreturn [{\n  json: {\n    \"Token Usage Records\": usageRecords,\n    \"Prompt Tokens\": usageRecords.map(r => r[\"Prompt Tokens\"]),\n    \"Completion Tokens\": usageRecords.map(r => r[\"Completion Tokens\"]),\n    \"Total Tokens\": usageRecords.map(r => r[\"Total Tokens\"]),\n    \"Number of Records\": usageRecords.length,\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1520,
+        -64
+      ],
+      "id": "9cf8ea92-9a9f-488c-8963-fe05f8945bdd",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "sum",
+              "field": "tokenUsage.completionTokens"
+            },
+            {
+              "aggregation": "sum",
+              "field": "tokenUsage.promptTokens"
+            },
+            {
+              "aggregation": "sum",
+              "field": "tokenUsage.totalTokens"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        2096,
+        304
+      ],
+      "id": "7e1129d1-67cf-4c33-9b76-ce6d4600f1a9",
+      "name": "Summarize"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3c7821b6-ec2c-47eb-88af-564efe1a9336",
+              "name": "tokenUsage",
+              "value": "={{$jmespath(\n  $json,\n  \"data.resultData.runData.*[] | [?data.ai_languageModel] | [].{model: data.ai_languageModel[0][0].json.response.generations[0][0].generationInfo.model_name || inputOverride.ai_languageModel[0][0].json.options.model_name || inputOverride.ai_languageModel[0][0].json.options.model, tokenUsage: data.ai_languageModel[0][0].json.tokenUsage || data.ai_languageModel[0][0].json.tokenUsageEstimate}\"\n)}}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1632,
+        304
+      ],
+      "id": "6ab4164f-fd49-4f3a-a033-ddce20ffce26",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        64,
+        320
+      ],
+      "id": "1ffdfcd1-ee6e-4978-bcbd-b9a52048237b",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "QBYmsFldgsugA9Tf",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-super-120b-a12b:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        272,
+        304
+      ],
+      "id": "98e70f12-390d-4f51-89ef-83a2863cdd98",
+      "name": "OpenRouter Chat Model1",
+      "credentials": {
+        "openRouterApi": {
+          "id": "QBYmsFldgsugA9Tf",
+          "name": "OpenRouter account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-vapiai.vapiTrigger",
+      "typeVersion": 1,
+      "position": [
+        208,
+        512
+      ],
+      "id": "bf675ad0-1e19-4899-a5e3-afe24840a869",
+      "name": "Vapi Trigger",
+      "webhookId": "a6f15a1a-4d19-4d32-897c-5e7850c67dcf"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "8e9eaf79-442b-415d-b275-18f3605a4cfd",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        432,
+        512
+      ],
+      "id": "7edbc277-f437-4260-80de-3d50e98f1c22",
+      "name": "Webhook",
+      "webhookId": "8e9eaf79-442b-415d-b275-18f3605a4cfd"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ { \"success\": true, \"message\": $json.text } }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1440,
+        560
+      ],
+      "id": "6e89f4b2-9d6f-458e-b4ba-369165ab5084",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "agentId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gmvYDFcR8qKx0uzM",
+          "cachedResultName": "Teams Agent"
+        },
+        "message": "={{ $json.body.request }}",
+        "advanced": {}
+      },
+      "type": "n8n-nodes-base.messageAnAgent",
+      "typeVersion": 3.1,
+      "position": [
+        704,
+        480
+      ],
+      "id": "7bf1e0a3-96cf-4a77-a987-0140c90abc6f",
+      "name": "Message an Agent"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8ac55313-4994-40fc-b9ea-d5b2b7523296",
+              "name": "text",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1152,
+        544
+      ],
+      "id": "c0bccc84-1ace-43b0-8168-114ead60725d",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "WhatsApp Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Stop and Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Get an execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an execution": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenRouter Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Message an Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message an Agent": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "WhatsApp Trigger": [
+      {
+        "json": {
+          "messaging_product": "whatsapp",
+          "metadata": {
+            "display_phone_number": "15556695869",
+            "phone_number_id": "1144933588705223"
+          },
+          "contacts": [
+            {
+              "profile": {
+                "name": "Ram🤍"
+              },
+              "wa_id": "918125283697",
+              "user_id": "IN.2496457080865802"
+            }
+          ],
+          "messages": [
+            {
+              "from": "918125283697",
+              "from_user_id": "IN.2496457080865802",
+              "id": "wamid.HBgMOTE4MTI1MjgzNjk3FQIAEhggQUNEQUM4MkI5RDM3MENBMEE3NUU3RUJEMkVCM0JENzQA",
+              "timestamp": "1791564441",
+              "text": {
+                "body": "Can you give me the score card of last ind vs west Indies?"
+              },
+              "type": "text"
+            }
+          ],
+          "field": "messages"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "When clicking ‘Execute workflow’": [
+      {
+        "json": {
+          "name": "BalaRam"
+        }
+      },
+      {
+        "json": {
+          "name": "Krishna"
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1901759.hstgr.cloud",
+            "user-agent": "node-fetch/1.0 (+https://github.com/bitinn/node-fetch)",
+            "content-length": "70",
+            "accept": "*/*",
+            "accept-encoding": "gzip,deflate",
+            "content-type": "application/json",
+            "x-call-id": "01a15956-affd-7000-8d1f-dcbb2c9f3b24",
+            "x-forwarded-for": "35.92.165.219",
+            "x-forwarded-host": "n8n.srv1901759.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "a04e479490d7",
+            "x-real-ip": "35.92.165.219",
+            "x-vapi-secret": ""
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "request": "Send a message to Krishna Praveen saying 'Happy this 1'."
+          },
+          "webhookUrl": "https://n8n.srv1901759.hstgr.cloud/webhook/8e9eaf79-442b-415d-b275-18f3605a4cfd",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "6j5AWGtiTvT54rbP",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-09T16:34:02.121Z",
+      "updatedAt": "2026-10-09T16:34:02.121Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "f83462e8-ac32-43e2-ac4a-9fcd11291014",
+    "workflowId": "6j5AWGtiTvT54rbP",
+    "nodes": [
+      {
+        "parameters": {
+          "updates": [
+            "messages"
+          ],
+          "options": {}
+        },
+        "type": "n8n-nodes-base.whatsAppTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          0
+        ],
+        "id": "10df7046-2d21-4939-9088-2c03941fe78c",
+        "name": "WhatsApp Trigger",
+        "webhookId": "c339b18c-6555-4b8e-8ab9-e29d384cfd22",
+        "credentials": {
+          "whatsAppTriggerApi": {
+            "id": "lwHaTPqLmVDpPmpA",
+            "name": "BalaRam Account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "promptType": "define",
+          "text": "={{ $json.messages[0].text.body }}",
+          "needsFallback": true,
+          "options": {
+            "systemMessage": "Go through the Question properly and answer those accoridng to the knowledge that you have "
+          }
+        },
+        "type": "@n8n/n8n-nodes-langchain.agent",
+        "typeVersion": 3.1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "e6d547d9-8298-4e24-b3cd-4f5cf8a5ac0e",
+        "name": "AI Agent"
+      },
+      {
+        "parameters": {
+          "operation": "send",
+          "phoneNumberId": "1144933588705223",
+          "recipientPhoneNumber": "+91 8096909520",
+          "textBody": "={{ $json.output }}",
+          "additionalFields": {}
+        },
+        "type": "n8n-nodes-base.whatsApp",
+        "typeVersion": 1.1,
+        "position": [
+          592,
+          0
+        ],
+        "id": "da109a4d-f6bf-452f-89c1-3696126c5628",
+        "name": "Send message",
+        "webhookId": "29a047ca-5fef-41d7-96aa-42ce9c641a34",
+        "credentials": {
+          "whatsAppApi": {
+            "id": "HWdR8vc4WWecAVAg",
+            "name": "WhatsApp account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          576,
+          224
+        ],
+        "id": "5919b9b7-d80e-4c84-b436-28449b4105f3",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "316c506e-e88a-408f-ac83-542a6764f4cf",
+                "leftValue": "={{ $json.name }}",
+                "rightValue": "BalaRam",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          800,
+          224
+        ],
+        "id": "f36492b8-cd50-4af0-b2ad-72f37da5ef02",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "errorMessage": "error"
+        },
+        "type": "n8n-nodes-base.stopAndError",
+        "typeVersion": 1,
+        "position": [
+          944,
+          16
+        ],
+        "id": "afea06ee-5b4a-48f3-acab-871eb296ab65",
+        "name": "Stop and Error"
+      },
+      {
+        "parameters": {
+          "resume": "webhook",
+          "limitWaitTime": true,
+          "resumeUnit": "seconds",
+          "options": {
+            "webhookSuffix": "hello"
+          }
+        },
+        "type": "n8n-nodes-base.wait",
+        "typeVersion": 1.1,
+        "position": [
+          848,
+          -64
+        ],
+        "id": "59e9a8b9-a1ba-4b91-a4cd-4b74a54072cf",
+        "name": "Wait",
+        "webhookId": "45c53c73-5552-492a-8b49-c4bbaeb22289"
+      },
+      {
+        "parameters": {
+          "resource": "execution",
+          "operation": "get",
+          "executionId": "13987",
+          "options": {
+            "activeWorkflows": true
+          },
+          "requestOptions": {}
+        },
+        "type": "n8n-nodes-base.n8n",
+        "typeVersion": 1,
+        "position": [
+          1360,
+          304
+        ],
+        "id": "1993f6de-6c6e-4074-a63c-df433bbb8f82",
+        "name": "Get an execution",
+        "credentials": {
+          "n8nApi": {
+            "id": "COMUzy87YRVxugXO",
+            "name": "n8n account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fieldToSplitOut": "tokenUsage",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.splitOut",
+        "typeVersion": 1.1,
+        "position": [
+          1872,
+          304
+        ],
+        "id": "67e08bbe-3580-4d65-b1b2-7500b7760168",
+        "name": "Split Out"
+      },
+      {
+        "parameters": {
+          "jsCode": "const items = $input.all();\n\nconst usageRecords = [];\n\nfunction findTokenUsage(obj) {\n  if (!obj || typeof obj !== 'object') return;\n\n  if (obj.tokenUsage && typeof obj.tokenUsage === 'object') {\n    const usage = obj.tokenUsage;\n\n    usageRecords.push({\n      \"Prompt Tokens\": usage.promptTokens ?? 0,\n      \"Completion Tokens\": usage.completionTokens ?? 0,\n      \"Total Tokens\": usage.totalTokens ?? 0,\n    });\n\n    return;\n  }\n\n  if (Array.isArray(obj)) {\n    for (const item of obj) {\n      findTokenUsage(item);\n    }\n  } else {\n    for (const value of Object.values(obj)) {\n      findTokenUsage(value);\n    }\n  }\n}\n\nfor (const item of items) {\n  findTokenUsage(item.json);\n}\n\nreturn [{\n  json: {\n    \"Token Usage Records\": usageRecords,\n    \"Prompt Tokens\": usageRecords.map(r => r[\"Prompt Tokens\"]),\n    \"Completion Tokens\": usageRecords.map(r => r[\"Completion Tokens\"]),\n    \"Total Tokens\": usageRecords.map(r => r[\"Total Tokens\"]),\n    \"Number of Records\": usageRecords.length,\n  }\n}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1520,
+          -64
+        ],
+        "id": "9cf8ea92-9a9f-488c-8963-fe05f8945bdd",
+        "name": "Code in JavaScript"
+      },
+      {
+        "parameters": {
+          "fieldsToSummarize": {
+            "values": [
+              {
+                "aggregation": "sum",
+                "field": "tokenUsage.completionTokens"
+              },
+              {
+                "aggregation": "sum",
+                "field": "tokenUsage.promptTokens"
+              },
+              {
+                "aggregation": "sum",
+                "field": "tokenUsage.totalTokens"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.summarize",
+        "typeVersion": 1.1,
+        "position": [
+          2096,
+          304
+        ],
+        "id": "7e1129d1-67cf-4c33-9b76-ce6d4600f1a9",
+        "name": "Summarize"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "3c7821b6-ec2c-47eb-88af-564efe1a9336",
+                "name": "tokenUsage",
+                "value": "={{$jmespath(\n  $json,\n  \"data.resultData.runData.*[] | [?data.ai_languageModel] | [].{model: data.ai_languageModel[0][0].json.response.generations[0][0].generationInfo.model_name || inputOverride.ai_languageModel[0][0].json.options.model_name || inputOverride.ai_languageModel[0][0].json.options.model, tokenUsage: data.ai_languageModel[0][0].json.tokenUsage || data.ai_languageModel[0][0].json.tokenUsageEstimate}\"\n)}}",
+                "type": "array"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1632,
+          304
+        ],
+        "id": "6ab4164f-fd49-4f3a-a033-ddce20ffce26",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "model": "nvidia/nemotron-3-super-120b-a12b:free",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          64,
+          320
+        ],
+        "id": "1ffdfcd1-ee6e-4978-bcbd-b9a52048237b",
+        "name": "OpenRouter Chat Model",
+        "credentials": {
+          "openRouterApi": {
+            "id": "QBYmsFldgsugA9Tf",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "model": "nvidia/nemotron-3-super-120b-a12b:free",
+          "options": {}
+        },
+        "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+        "typeVersion": 1,
+        "position": [
+          272,
+          304
+        ],
+        "id": "98e70f12-390d-4f51-89ef-83a2863cdd98",
+        "name": "OpenRouter Chat Model1",
+        "credentials": {
+          "openRouterApi": {
+            "id": "QBYmsFldgsugA9Tf",
+            "name": "OpenRouter account"
+          }
+        }
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-vapiai.vapiTrigger",
+        "typeVersion": 1,
+        "position": [
+          208,
+          512
+        ],
+        "id": "bf675ad0-1e19-4899-a5e3-afe24840a869",
+        "name": "Vapi Trigger",
+        "webhookId": "a6f15a1a-4d19-4d32-897c-5e7850c67dcf"
+      },
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "8e9eaf79-442b-415d-b275-18f3605a4cfd",
+          "responseMode": "responseNode",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          432,
+          512
+        ],
+        "id": "7edbc277-f437-4260-80de-3d50e98f1c22",
+        "name": "Webhook",
+        "webhookId": "8e9eaf79-442b-415d-b275-18f3605a4cfd"
+      },
+      {
+        "parameters": {
+          "respondWith": "json",
+          "responseBody": "={{ { \"success\": true, \"message\": $json.text } }}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.respondToWebhook",
+        "typeVersion": 1.5,
+        "position": [
+          1440,
+          560
+        ],
+        "id": "6e89f4b2-9d6f-458e-b4ba-369165ab5084",
+        "name": "Respond to Webhook"
+      },
+      {
+        "parameters": {
+          "agentId": {
+            "__rl": true,
+            "mode": "list",
+            "value": "gmvYDFcR8qKx0uzM",
+            "cachedResultName": "Teams Agent"
+          },
+          "message": "={{ $json.body.request }}",
+          "advanced": {}
+        },
+        "type": "n8n-nodes-base.messageAnAgent",
+        "typeVersion": 3.1,
+        "position": [
+          704,
+          480
+        ],
+        "id": "7bf1e0a3-96cf-4a77-a987-0140c90abc6f",
+        "name": "Message an Agent"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8ac55313-4994-40fc-b9ea-d5b2b7523296",
+                "name": "text",
+                "value": "={{ $json.text }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1152,
+          544
+        ],
+        "id": "c0bccc84-1ace-43b0-8168-114ead60725d",
+        "name": "Edit Fields1"
+      }
+    ],
+    "connections": {
+      "WhatsApp Trigger": {
+        "main": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "AI Agent": {
+        "main": [
+          [
+            {
+              "node": "Send message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Stop and Error",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Wait",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Wait": {
+        "main": [
+          [
+            {
+              "node": "Get an execution",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get an execution": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Split Out": {
+        "main": [
+          [
+            {
+              "node": "Summarize",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          []
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "Split Out",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenRouter Chat Model": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OpenRouter Chat Model1": {
+        "ai_languageModel": [
+          [
+            {
+              "node": "AI Agent",
+              "type": "ai_languageModel",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "Message an Agent",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Message an Agent": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "Respond to Webhook",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version f83462e8",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-20T12:48:16.790Z",
+    "updatedAt": "2026-10-20T12:48:23.000Z"
+  }
+}
