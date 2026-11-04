@@ -1,0 +1,2815 @@
+{
+  "id": "akyc2lbYXYwuOphm",
+  "name": "WMG-02 - Refund Agent",
+  "active": true,
+  "activeVersionId": "fe94427c-91c6-44ca-8686-9cb0f91325d0",
+  "createdAt": "2026-10-27T06:13:42.497Z",
+  "updatedAt": "2026-10-29T07:16:27.174Z",
+  "isArchived": false,
+  "versionId": "fe94427c-91c6-44ca-8686-9cb0f91325d0",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n\"customer_id\": \"TSTC001\",\n\"order_id\": \"TSTO001\",\n\"request_type\": \"return_refund\",\n\"reason_code\": \"DEFECTIVE\",\n\"reason_text\": \"Test item defective\",\n\"risk_score\": 10,\n\"refunds_last_90d\": 0,\n\"tier\": \"T1\",\n\"confirmed\": true,\n\"item_unused\": true,\n\"evidence_ok\": true,\n\"wants_exception\": false,\n\"new_country\": \"\",\n\"approved_by\": \"Test Agent\",\n\"conversation_id\": \"TEST-CONV-001\"\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        1392,
+        2768
+      ],
+      "id": "3eda4f4c-0829-4535-b466-104bb33c7b8f",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{\n  {\n    success: false,\n    refund_created: false,\n    order_updated: false,\n    already_done: true,\n    refund_id: null,\n    order_id: $('Normalize Refund Input1').first().json.order_id ?? null,\n    status: 'rejected',\n    decision: 'decline',\n    route: 'decline',\n    amount: 0,\n    message: 'A refund already exists for this order. No duplicate refund was created.'\n  }\n}}",
+        "options": {}
+      },
+      "id": "ce8b5dd7-1dc8-43fc-8b5d-34573bb3d1c9",
+      "name": "Return Duplicate Refund Response",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2720,
+        2496
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "10ccd598-1581-4014-9d37-cf64bebd0cb3",
+              "leftValue": "={{ $json.success === false }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4960,
+        3280
+      ],
+      "id": "25688845-84ea-47bf-b50a-877239a9725c",
+      "name": "Step 17 - Check Validation Failure1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{\n  {\n    success: Boolean($json.success ?? false),\n    refund_created: Boolean($json.refund_created ?? false),\n    order_updated: Boolean($json.order_updated ?? false),\n    already_done: Boolean($json.already_done ?? false),\n    refund_id: $json.refund_id ?? null,\n    order_id: $json.order_id ?? null,\n    status: $json.status ?? 'rejected',\n    decision: $json.decision ?? 'decline',\n    route: $json.route ?? 'decline',\n    amount: Number($json.amount ?? 0),\n    message: $json.message ?? $json.reasons ?? 'Refund request was declined.'\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        5184,
+        2992
+      ],
+      "id": "22a8e619-39b8-4e1e-9e08-b9b9eaca687a",
+      "name": "Step 18 - Return Decline Response1"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{\n  {\n    success: false,\n    refund_created: Boolean($json.refund_created ?? false),\n    order_updated: false,\n    already_done: false,\n    refund_id: $json.refund_id ?? null,\n    order_id: $json.order_id ?? null,\n    status: $json.status ?? 'failed',\n    decision: $json.decision ?? 'decline',\n    route: $json.route ?? 'decline',\n    amount: Number($json.amount ?? 0),\n    message: $json.message ?? 'Refund could not be completed. A colleague will follow up.'\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        6304,
+        3184
+      ],
+      "id": "a3994c0b-10ed-4b4f-818a-378b4a0ec6e5",
+      "name": "Step 19 - Return Fallback Failure1"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "SELECT CONCAT('RF', UPPER(SUBSTRING(REPLACE(CAST(UUID() AS STRING), '-', ''), 1, 8))) AS next_id"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        3168,
+        2688
+      ],
+      "id": "7f1bbf21-6792-42b2-bc9e-8256d3ca4bcd",
+      "name": "Step 5 - Generate Next Refund ID",
+      "notesInFlow": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "CAmrECPc8Ms57ENy",
+          "name": "Databricks Connection ABD"
+        }
+      },
+      "notes": "Read-only query that returns the next sequential RFXXXX identifier. Concurrent executions can still race; ensure uniqueness for production use."
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const idData = $json;\nconst refundData = $('Calculate Refund Eligibility1').first().json;\n\nif (!idData.next_id) throw new Error('Step 5 did not return next_id.');\nif (!refundData.order_id || !refundData.request_type) {\n  throw new Error('Order ID and request type are required to log a refund request.');\n}\n\nconst requestType = String(refundData.request_type || '').trim().toLowerCase();\nconst orderAmount = Number(refundData.amount ?? 0);\nconst shippingFee = Number(refundData.shipping_fee ?? 0);\nconst returnRefundAmount = Number(refundData.return_refund_amount ?? 0);\nconst paymentMethod = String(refundData.payment_method || '').trim().toLowerCase();\n\n// For test logging, calculate the requested amount independently of eligibility.\n// This records the request value but does not execute a payment/refund.\nlet calculatedAmount;\nif (requestType === 'return_refund') {\n  calculatedAmount = returnRefundAmount;\n} else if (requestType === 'cancel' && paymentMethod === 'cod') {\n  calculatedAmount = 0;\n} else if (['damaged', 'wrong_item', 'delayed', 'lost', 'return', 'cancel'].includes(requestType)) {\n  calculatedAmount = orderAmount + shippingFee;\n} else {\n  calculatedAmount = Number(refundData.refund_amount ?? orderAmount + shippingFee);\n}\nif (!Number.isFinite(calculatedAmount) || calculatedAmount < 0) calculatedAmount = 0;\n\nconst decision = String(refundData.decision || 'decline').toLowerCase();\nconst route = String(refundData.route || 'decline').toLowerCase();\nconst confirmed = refundData.confirmed === true || String(refundData.confirmed).toLowerCase() === 'true';\nlet status;\nif (decision === 'eligible' && !confirmed) {\n  status = 'pending_confirmation';\n} else if (decision === 'eligible' && requestType === 'return_refund' && (String(refundData.inspection_status || '').toLowerCase() !== 'passed' || String(refundData.return_status || '').toLowerCase() !== 'inspected')) {\n  status = 'pending_inspection';\n} else if (decision === 'eligible' && route !== 'auto' && requestType !== 'return_refund') {\n  status = 'pending_approval';\n} else if (decision === 'eligible' && confirmed && (route === 'auto' || requestType === 'return_refund')) {\n  status = requestType === 'return_refund' ? 'initiated' : 'completed';\n} else if (decision === 'human' || route === 'human') {\n  status = 'pending_review';\n} else if (decision === 'need_evidence' || route === 'need_evidence') {\n  status = 'pending_evidence';\n} else {\n  status = 'rejected';\n}\n\nreturn {\n  json: {\n    ...refundData,\n    refund_id: String(idData.next_id),\n    return_id: refundData.latest_return_id ?? null,\n    amount: calculatedAmount,\n    refund_amount: calculatedAmount,\n    currency: refundData.return_currency || refundData.currency,\n    method: String(refundData.payment_method || '').toLowerCase() === 'cod' ? 'bank_upi' : 'original_payment',\n    status,\n    approved_by: refundData.approved_by ?? '',\n    decision_reason: String(refundData.reasons || 'No eligibility reason provided')\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3392,
+        2688
+      ],
+      "id": "91acecbb-563d-4dc1-b08a-c9d9780a8307",
+      "name": "Merge Refund Inputs with Generated ID",
+      "notesInFlow": true,
+      "notes": "Combines Step 5 next_id with the complete eligibility output by referencing Calculate Refund Eligibility2. Validates eligible + confirmed before passing fields to Step 6."
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "={{ `INSERT INTO workspace.agentic_support.refunds (\n  refund_id, order_id, return_id, refund_type, amount, currency,\n  method, status, route, approved_by, created_at\n)\nSELECT\n  '${String($json.refund_id ?? '').replace(/'/g, \"''\")}',\n  o.order_id,\n  ${$json.return_id ? `'${String($json.return_id).replace(/'/g, \"''\")}'` : 'NULL'},\n  CASE WHEN '${String($json.request_type ?? '').replace(/'/g, \"''\")}' = 'return_refund' THEN 'return'\n       ELSE '${String($json.request_type ?? '').replace(/'/g, \"''\")}' END,\n  CAST(${Math.max(0, Number($json.amount ?? $json.refund_amount ?? 0))} AS DECIMAL(18,2)),\n  o.currency,\n  '${String($json.method ?? '').replace(/'/g, \"''\")}',\n  '${String($json.status ?? 'rejected').replace(/'/g, \"''\")}',\n  '${String($json.route ?? 'decline').replace(/'/g, \"''\")}',\n  NULLIF('${String($json.approved_by ?? '').replace(/'/g, \"''\")}', ''),\n  CURRENT_TIMESTAMP()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '${String($json.order_id ?? '').replace(/'/g, \"''\")}'\n  AND '${String($json.refund_id ?? '').replace(/'/g, \"''\")}' <> ''\n  AND LENGTH('${String($json.refund_id ?? '').replace(/'/g, \"''\")}') <= 10` }}"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        3616,
+        2688
+      ],
+      "id": "d8e6dc0f-8b37-4787-a35a-ff444b2eaf27",
+      "name": "Step 6 - Insert Refund Record in Databricks",
+      "notesInFlow": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "CAmrECPc8Ms57ENy",
+          "name": "Databricks Connection ABD"
+        }
+      },
+      "notes": "Databricks insert consumes the enriched payload. Writes only when the eligibility/confirmation IF true branch reaches Step 5. Validate status enum and schema types in the target table before production."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3fa38098-269e-4239-ae47-bcaceb20aacc",
+              "name": "customer_id",
+              "value": "={{ $json.customer_id ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "f711d322-534e-4d4a-ab9b-e948c4d34f6c",
+              "name": "order_id",
+              "value": "={{ $json.order_id ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "cbc43421-0146-4079-838a-ecbaf06376f0",
+              "name": "reason_code",
+              "value": "={{ $json.reason_code ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "432c07a8-ee2f-49ae-9636-bc1bcffbff5b",
+              "name": "reason_text",
+              "value": "={{ $json.reason_text ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "654d12f5-a743-49bd-99a5-fb3075fb2202",
+              "name": "risk_score",
+              "value": "={{ ($json.risk_score) }}",
+              "type": "number"
+            },
+            {
+              "id": "770242eb-fb55-43b8-b36a-5f0fe97225f7",
+              "name": "refunds_last_90d",
+              "value": "={{ ($json.refunds_last_90d) }}",
+              "type": "number"
+            },
+            {
+              "id": "421550ab-9782-4b42-a3db-f485363965d9",
+              "name": "tier",
+              "value": "={{ $json.tier ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "c83ec45f-b99a-4d0b-bd2c-e93498f6b9ec",
+              "name": "confirmed",
+              "value": "={{ $json.confirmed }}",
+              "type": "boolean"
+            },
+            {
+              "id": "dacb72df-380e-4754-b20e-63155cb0d7fa",
+              "name": "conversation_id",
+              "value": "={{ $json.conversation_id ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "55b9fb32-41e7-465c-b5e2-9071aa6787da",
+              "name": "request_type",
+              "value": "={{ $json.request_type ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "7d097ca6-4927-434a-a8b1-ecaeb63d2f5e",
+              "name": "item_unused",
+              "value": "={{ $json.item_unused }}",
+              "type": "boolean"
+            },
+            {
+              "id": "8b3bc98b-fd1a-4115-8adc-c189f515449c",
+              "name": "evidence_ok",
+              "value": "={{ $json.evidence_ok }}",
+              "type": "boolean"
+            },
+            {
+              "id": "2d31ce35-032b-4935-8665-81d8ec596618",
+              "name": "wants_exception",
+              "value": "={{ $json.wants_exception }}",
+              "type": "boolean"
+            },
+            {
+              "id": "da41097e-7839-49eb-a3ff-ff02b591f243",
+              "name": "new_country",
+              "value": "={{ $json.new_country ?? '' }}",
+              "type": "string"
+            },
+            {
+              "id": "e7575756-7e02-4d66-b91c-919db3eb81ca",
+              "name": "approved_by",
+              "value": "={{ $json.approved_by ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1600,
+        2800
+      ],
+      "id": "4c1094d1-89df-4033-84b3-599fe76f42e2",
+      "name": "Normalize Refund Input1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f507c6af-3131-42c3-a0b8-45a6f75c2a00",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "47878c97-fe2f-4175-91dd-9835edf0992e",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "8643ec0b-36e3-4dbf-a27c-97847a8037ec",
+              "leftValue": "={{ $('When Executed by Another Workflow').first().json.risk_score }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "278fbc71-f02e-42ca-8382-cb1b8f17a441",
+              "leftValue": "={{ $('When Executed by Another Workflow').first().json.refunds_last_90d }}",
+              "rightValue": "",
+              "operator": {
+                "type": "number",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6dda6b19-73b2-453a-b76c-a2063d5f1c5d",
+              "leftValue": "={{ $json.tier }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9f516dcc-be02-45ff-bae8-722fa54d83d4",
+              "leftValue": "={{ $json.confirmed }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d25b368d-acaf-40dc-bb33-7f82d802a543",
+              "leftValue": "={{ $json.request_type }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "d272a566-a609-4bd8-9278-d63d45c22af4",
+              "leftValue": "={{ ['return_refund','return','cancel','damaged','wrong_item','delayed','lost','address_change'].includes(String($('When Executed by Another Workflow').first().json.request_type ?? '').trim().toLowerCase()) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1824,
+        2800
+      ],
+      "id": "caf98667-e6db-4d40-9751-98fe4ad246b3",
+      "name": "Validate Required Inputs1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "01a8df2a-926e-4b50-9241-be9e9ad030ac",
+              "name": "success",
+              "value": "={{ false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "39fdd121-b22f-4275-a3e1-d15cabfdf35c",
+              "name": "already_done",
+              "value": "={{ false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "65a206f2-d70e-4d13-b750-2b8246a9735c",
+              "name": "message",
+              "value": "Validation failed: one or more required input fields are missing or invalid.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4736,
+        3280
+      ],
+      "id": "7781b5e3-0654-4cdf-b895-d9852d620593",
+      "name": "Build Validation Error1"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "={{ `WITH cfg AS (\n  SELECT\n    MAX(CASE WHEN config_key='as_of_date' THEN CAST(config_value AS DATE) END) AS as_of_date,\n    MAX(CASE WHEN config_key='risk_score_escalate' THEN CAST(config_value AS INT) END) AS risk_score_escalate,\n    MAX(CASE WHEN config_key='serial_refund_threshold' THEN CAST(config_value AS INT) END) AS serial_refund_threshold,\n    MAX(CASE WHEN config_key='damage_report_days' THEN CAST(config_value AS INT) END) AS damage_report_days\n  FROM workspace.agentic_support.config\n),\nlatest_return AS (\n  SELECT return_id, order_id, reason_code, reason_text, resolution, status AS return_status,\n         refund_amount AS return_refund_amount, currency AS return_currency, created_at,\n         ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY created_at DESC, return_id DESC) AS rn\n  FROM workspace.agentic_support.returns\n),\nreturn_counts AS (\n  SELECT order_id, COUNT(DISTINCT return_id) AS return_count\n  FROM workspace.agentic_support.returns\n  GROUP BY order_id\n),\nrefund_counts AS (\n  SELECT order_id, COUNT(*) AS refund_count\n  FROM workspace.agentic_support.refunds\n  WHERE LOWER(COALESCE(status, '')) IN ('initiated', 'completed', 'processed', 'success')\n  GROUP BY order_id\n),\nlatest_inspection AS (\n  SELECT inspection_id, return_id, order_id, customer_id, kind AS inspection_kind,\n         status AS inspection_status, note AS inspection_note, inspector,\n         created_at AS inspection_created_at, completed_at AS inspection_completed_at,\n         ROW_NUMBER() OVER (PARTITION BY return_id ORDER BY created_at DESC, inspection_id DESC) AS rn\n  FROM workspace.agentic_support.inspections\n),\nauto_actions AS (\n  SELECT a.customer_id, COUNT(*) AS auto_actions_30d\n  FROM workspace.agentic_support.audit_log a\n  CROSS JOIN cfg c\n  WHERE a.route='auto'\n    AND a.decision='Executed'\n    AND a.event_time >= CAST(c.as_of_date - INTERVAL 30 DAYS AS TIMESTAMP)\n  GROUP BY a.customer_id\n)\nSELECT\n  o.order_id,\n  o.customer_id,\n  o.country,\n  o.currency,\n  o.amount,\n  o.shipping_fee,\n  o.payment_method,\n  o.status AS order_status,\n  o.refunded,\n  CASE WHEN LOWER(COALESCE(o.refunded, 'no')) = 'yes' OR COALESCE(fc.refund_count, 0) > 0 THEN TRUE ELSE FALSE END AS has_existing_refund,\n  s.status AS ship_status,\n  s.estimated_delivery,\n  s.delivered_date,\n  s.claim_status,\n  DATEDIFF(c.as_of_date, s.delivered_date) AS days_since_delivery,\n  CASE\n    WHEN s.status='delivered' THEN 0\n    WHEN s.estimated_delivery IS NULL THEN NULL\n    ELSE GREATEST(0, DATEDIFF(c.as_of_date, s.estimated_delivery))\n  END AS days_late,\n  p.return_window_days,\n  p.delay_threshold_days,\n  p.auto_limit,\n  p.approval_limit,\n  p.max_auto_actions_30d,\n  p.refund_method,\n  p.version AS policy_version,\n  COALESCE(rc.return_count, 0) AS return_count,\n  COALESCE(fc.refund_count, 0) AS refund_count,\n  lr.return_id AS latest_return_id,\n  lr.reason_code AS latest_return_reason_code,\n  lr.reason_text AS latest_return_reason_text,\n  lr.resolution AS latest_return_resolution,\n  lr.return_status,\n  lr.return_refund_amount,\n  lr.return_currency,\n  li.inspection_id AS latest_inspection_id,\n  li.inspection_kind,\n  li.inspection_status,\n  li.inspection_note,\n  li.inspector,\n  li.inspection_created_at,\n  li.inspection_completed_at,\n  COALESCE(aa.auto_actions_30d, 0) AS auto_actions_30d,\n  c.risk_score_escalate,\n  c.serial_refund_threshold,\n  c.damage_report_days\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s\n  ON s.order_id = o.order_id\nJOIN workspace.agentic_support.policies p\n  ON p.country = o.country AND p.currency = o.currency\nCROSS JOIN cfg c\nLEFT JOIN latest_return lr\n  ON lr.order_id = o.order_id AND lr.rn = 1\nLEFT JOIN return_counts rc\n  ON rc.order_id = o.order_id\nLEFT JOIN refund_counts fc\n  ON fc.order_id = o.order_id\nLEFT JOIN latest_inspection li\n  ON li.return_id = lr.return_id AND li.rn = 1\nLEFT JOIN auto_actions aa\n  ON aa.customer_id = o.customer_id\nWHERE o.order_id='${String($json.order_id ?? '').replace(/'/g, \"''\")}'\n  AND o.customer_id='${String($json.customer_id ?? '').replace(/'/g, \"''\")}'` }}"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2048,
+        2688
+      ],
+      "id": "30339069-d147-4162-8a0e-5f879285c91d",
+      "name": "Execute a SQL query",
+      "notesInFlow": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "CAmrECPc8Ms57ENy",
+          "name": "Databricks Connection ABD"
+        }
+      },
+      "notes": "Read-only SQL lookup using the existing Databricks connector. Includes existing-refund flag, distinct return count, latest return details, and latest inspection for that return. No refund writes."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "990814c1-16b6-4246-a8f8-f0c284eb1c6e",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "c86f197e-af44-4439-8791-ca75f5af1d1b",
+      "name": "Check Order Found1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2272,
+        2688
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "07d43335-40ee-4a64-a2c3-b4be75be290b",
+              "leftValue": "={{ $json.has_existing_refund === true || $json.has_existing_refund === 'true' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a50e2e19-32c9-4c07-947c-c84fa5000afb",
+      "name": "Check Existing Refund1",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        2560
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "52392ed6-f744-4bcf-90ca-d9b22b2865df",
+              "name": "success",
+              "value": "={{ false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "92717e11-ac68-4dd7-9ae2-a8aad93747be",
+              "name": "already_done",
+              "value": "={{ false }}",
+              "type": "boolean"
+            },
+            {
+              "id": "8fae0f6a-65b6-4418-a8de-3638507d42dd",
+              "name": "decision",
+              "value": "decline",
+              "type": "string"
+            },
+            {
+              "id": "2767129f-ccc0-4ed6-8668-4e89eb7e865f",
+              "name": "message",
+              "value": "Order not found for the supplied order ID and customer ID.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "670cfd42-cdd8-4273-91a7-ef71abde4348",
+      "name": "Build Order Not Found Response1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        4960,
+        3072
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "\n// Step 2 — Calculate refund amount and check eligibility.\n// Reads the current input item containing request and Databricks fields.\n// This node only evaluates eligibility; it does not write to databases.\n\nconst request = $('Normalize Refund Input1').first().json;\nconst dbData = $input.first()?.json || {};\nconst input = { ...request, ...dbData };\n\nconst rt = String(input.request_type || '').trim().toLowerCase();\nconst risk = Number(input.risk_score ?? 0);\nconst refunds90 = Number(input.refunds_last_90d ?? 0);\nconst custTier = String(input.tier || '').trim().toLowerCase();\n\nconst unused =\n  input.item_unused === true ||\n  String(input.item_unused).toLowerCase() === 'true';\n\nconst evidence =\n  input.evidence_ok === true ||\n  String(input.evidence_ok).toLowerCase() === 'true';\n\nconst exception =\n  input.wants_exception === true ||\n  String(input.wants_exception).toLowerCase() === 'true';\n\nconst newCountry = String(input.new_country || '')\n  .trim()\n  .toUpperCase();\n\nconst orderStatus = String(input.order_status || '').toLowerCase();\nconst shipStatus = String(input.ship_status || '').toLowerCase();\nconst claimStatus = String(input.claim_status || '').toLowerCase();\nconst returnStatus = String(input.return_status || '').toLowerCase();\nconst inspectionStatus = String(input.inspection_status || '').toLowerCase();\nconst returnResolution = String(input.latest_return_resolution || '').toLowerCase();\n\nconst refunded = String(input.refunded || '').toLowerCase();\nconst hasExistingRefund =\n  String(input.has_existing_refund).toLowerCase() === 'true';\n\nconst refundCount = Number(input.refund_count || 0);\nconst returnCount = Number(input.return_count || 0);\n\nconst build = (\n  decision,\n  route,\n  resultTier,\n  reasons,\n  amount = 0,\n  daysLeft = 0\n) => ({\n  ...input,\n  decision,\n  route,\n  tier: resultTier,\n  refund_amount: Number(amount || 0),\n  currency: String(input.return_currency || input.currency || ''),\n  days_remaining: Number(daysLeft || 0),\n  reasons: Array.isArray(reasons) ? reasons.join('; ') : String(reasons),\n  policy_version: String(input.policy_version || '')\n});\n\nconst decline = (message, days = 0) =>\n  build('decline', 'decline', 'T0', message, 0, days);\n\nconst human = (message, days = 0) =>\n  build('human', 'human', 'T3', message, 0, days);\n\nconst byAmount = (refund, reasons, days) => {\n  const autoLimit = Number(input.auto_limit || 0);\n  const approvalLimit = Number(input.approval_limit || 0);\n  const autoActions = Number(input.auto_actions_30d || 0);\n  const maxAutoActions = Number(input.max_auto_actions_30d || 0);\n\n  if (refund <= autoLimit) {\n    if (autoActions >= maxAutoActions) {\n      return build(\n        'eligible',\n        'approval',\n        'T2',\n        [...reasons, 'Auto-action limit reached'],\n        refund,\n        days\n      );\n    }\n\n    return build('eligible', 'auto', 'T1', reasons, refund, days);\n  }\n\n  if (refund <= approvalLimit) {\n    return build('eligible', 'approval', 'T2', reasons, refund, days);\n  }\n\n  return human(\n    [...reasons, 'Refund exceeds approval limit'],\n    days\n  );\n};\n\nlet result;\n\nif (!input.order_id) {\n  result = decline('Order not found for this customer');\n\n} else if (!rt) {\n  result = decline(\n    'Missing request_type: ensure the incoming payload is passed to this node'\n  );\n\n} else {\n  const amount = Number(input.amount || 0);\n  const fee = Number(input.shipping_fee || 0);\n\n  if (\n    rt !== 'address_change' &&\n    (\n      refunded === 'yes' ||\n      hasExistingRefund ||\n      refundCount > 0\n    )\n  ) {\n    result = decline('Already refunded');\n\n  } else if (\n    rt !== 'address_change' &&\n    rt !== 'return_refund' &&\n    returnCount > 0\n  ) {\n    result = decline('A return is already in progress for this order');\n\n  } else if (orderStatus === 'cancelled') {\n    result = decline('Order is already cancelled');\n\n  } else if (\n    risk >= Number(input.risk_score_escalate || 70) ||\n    refunds90 >= Number(input.serial_refund_threshold || 3)\n  ) {\n    result = human('Risk gate: customer needs human review');\n\n  } else if (rt === 'return') {\n    if (orderStatus !== 'delivered') {\n      result = decline('Order not delivered yet');\n\n    } else {\n      const days = Number(input.days_since_delivery || 0);\n      const left = Number(input.return_window_days || 0) - days;\n\n      if (left < 0) {\n        result = (exception || custTier === 'vip')\n          ? human(\n              `Outside the ${input.return_window_days}-day window; exception request`,\n              left\n            )\n          : decline(\n              `Delivered ${days} days ago; return window is ${input.return_window_days} days`,\n              left\n            );\n\n      } else if (!unused) {\n        result = decline('Item must be unused', left);\n\n      } else {\n        result = byAmount(amount, ['Return'], left);\n      }\n    }\n\n  } else if (rt === 'return_refund') {\n    if (returnCount === 0 || !input.latest_return_id) {\n      result = decline('No return found for this order; create the return first');\n\n    } else if (\n      returnStatus !== 'inspected' ||\n      inspectionStatus !== 'passed'\n    ) {\n      result = decline(\n        `The return is ${returnStatus || 'unknown'} and inspection has not passed`\n      );\n\n    } else if (returnResolution === 'exchange') {\n      result = decline('The latest return resolution is exchange, not refund');\n\n    } else {\n      result = byAmount(\n        Number(input.return_refund_amount || 0),\n        ['Refund for the returned item'],\n        0\n      );\n    }\n\n  } else if (rt === 'damaged' || rt === 'wrong_item') {\n    if (orderStatus !== 'delivered') {\n      result = decline('Order not delivered yet');\n\n    } else if (\n      Number(input.days_since_delivery || 0) >\n      Number(input.damage_report_days || 7)\n    ) {\n      result = human(\n        `Reported ${input.days_since_delivery} days after delivery; limit is ${input.damage_report_days} days`\n      );\n\n    } else if (!evidence) {\n      result = build(\n        'need_evidence',\n        'need_evidence',\n        'T0',\n        'Need a specific description or photo of the problem',\n        0,\n        0\n      );\n\n    } else {\n      result = byAmount(\n        amount + fee,\n        [`${rt} refund including shipping`],\n        0\n      );\n    }\n\n  } else if (rt === 'delayed') {\n    const late = Number(input.days_late || 0);\n\n    if (late <= Number(input.delay_threshold_days || 0)) {\n      result = decline(\n        `${late} days late; threshold is ${input.delay_threshold_days}. Share the ETA`\n      );\n\n    } else {\n      result = byAmount(amount + fee, [`Delayed ${late} days`], 0);\n    }\n\n  } else if (rt === 'lost') {\n    if (shipStatus !== 'lost') {\n      result = decline('Carrier has not marked it lost');\n\n    } else {\n      result = byAmount(amount + fee, ['Lost in transit'], 0);\n    }\n\n  } else if (rt === 'not_received') {\n    if (shipStatus !== 'delivered') {\n      result = decline('Carrier does not show it delivered; use tracking');\n\n    } else if (claimStatus === 'raised') {\n      result = decline('A carrier claim is already open');\n\n    } else {\n      result = build(\n        'eligible',\n        'auto',\n        'T1',\n        'Raise a carrier claim; follow up within 48 hours; no instant refund',\n        0,\n        0\n      );\n    }\n\n  } else if (rt === 'cancel') {\n    if (!['payment_pending', 'packed'].includes(orderStatus)) {\n      result = decline('Already shipped or delivered');\n\n    } else {\n      result = byAmount(\n        String(input.payment_method || '').toLowerCase() === 'cod'\n          ? 0\n          : amount + fee,\n        ['Cancellation'],\n        0\n      );\n    }\n\n  } else if (rt === 'address_change') {\n    const country = String(input.country || '').toUpperCase();\n\n    if (newCountry && newCountry !== country) {\n      result = human('Address in a different country needs human review');\n\n    } else if (['payment_pending', 'packed'].includes(orderStatus)) {\n      result = build(\n        'eligible',\n        'auto',\n        'T1',\n        'Not dispatched yet; address can be changed now',\n        0,\n        0\n      );\n\n    } else if (orderStatus === 'shipped') {\n      result = build(\n        'eligible',\n        'approval',\n        'T2',\n        'Already shipped; needs a carrier intercept request. Fee may apply and it is not guaranteed',\n        0,\n        0\n      );\n\n    } else {\n      result = decline(\n        `Order is ${orderStatus || 'unknown'}; address cannot be changed`\n      );\n    }\n\n  } else {\n    result = decline(`Unknown request type: ${rt}`);\n  }\n}\n\nreturn [{ json: result }];\n\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2736,
+        2688
+      ],
+      "id": "b21f4ebc-5bdb-48b1-b44a-df836c51b8e1",
+      "name": "Calculate Refund Eligibility1",
+      "notesInFlow": true,
+      "notes": "Step 2 from the original refund plan. Read-only eligibility calculation only; no refund writes. Uses the SQL lookup row plus original request fields."
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "44e5a615-cab9-41f9-8b6a-482a40e1aa74",
+              "leftValue": "={{ $json.decision }}",
+              "rightValue": "eligible",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "99a2d288-e943-434b-8122-4a46324e13a5",
+              "leftValue": "={{ $json.confirmed }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2944,
+        2688
+      ],
+      "id": "c360f8ca-e8a0-4234-8d54-3f02c6489add",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "71a68e53-14b8-47ce-b201-ed1571d917e4",
+              "leftValue": "={{ Number($json.num_inserted_rows ?? $json.num_affected_rows ?? $json.rows_affected ?? 0) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        3840,
+        2688
+      ],
+      "id": "79ede5d5-81ec-42ef-a037-4b4e1bf32f30",
+      "name": "Step 7 - Check Refund Inserted"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "79112708-9874-4945-8898-a1d07192356e",
+              "leftValue": "={{ $node['Merge Refund Inputs with Generated ID'].json.decision }}",
+              "rightValue": "eligible",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "b1bef05c-9e8d-4a8a-ac56-4ad8d023190e",
+              "leftValue": "={{ $node['Merge Refund Inputs with Generated ID'].json.confirmed === true || String($node['Merge Refund Inputs with Generated ID'].json.confirmed).toLowerCase() === 'true' }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            },
+            {
+              "id": "63be8ec6-e1fb-4265-bcdc-15efd80ca156",
+              "leftValue": "={{ ['initiated','completed'].includes(String($node['Merge Refund Inputs with Generated ID'].json.status || '').toLowerCase()) }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4064,
+        2592
+      ],
+      "id": "8b8c60ae-ea1d-48bf-8d6e-902935f6711f",
+      "name": "Check Refund Authorized Before Updating Order"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "={{ `UPDATE workspace.agentic_support.orders SET refunded = 'yes', status = CASE WHEN '${String($node['Merge Refund Inputs with Generated ID'].json.request_type ?? '').replace(/'/g, \"''\")}' = 'return_refund' THEN 'returned' ELSE status END WHERE order_id = '${String($node['Merge Refund Inputs with Generated ID'].json.order_id ?? '').replace(/'/g, \"''\")}' AND customer_id = '${String($node['Merge Refund Inputs with Generated ID'].json.customer_id ?? '').replace(/'/g, \"''\")}'` }}"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        4288,
+        2512
+      ],
+      "id": "5c4fc642-cc35-4c58-adb4-e810b70e9cd7",
+      "name": "Step 8 - Update Order Status",
+      "credentials": {
+        "databricksApi": {
+          "id": "CAmrECPc8Ms57ENy",
+          "name": "Databricks Connection ABD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "={{ `INSERT INTO workspace.agentic_support.order_events (order_id, customer_id, event, detail) VALUES ('${String($node['Merge Refund Inputs with Generated ID'].json.order_id ?? '').replace(/'/g, \"''\")}', '${String($node['Merge Refund Inputs with Generated ID'].json.customer_id ?? '').replace(/'/g, \"''\")}', 'refund_started', NULLIF('${String('Refund initiated after eligibility and confirmation checks.').replace(/'/g, \"''\")}', ''))` }}"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        4512,
+        2512
+      ],
+      "id": "e18b19e7-bac6-465f-80d4-f9b02d55b140",
+      "name": "Step 9 - Log Refund Started Event",
+      "credentials": {
+        "databricksApi": {
+          "id": "CAmrECPc8Ms57ENy",
+          "name": "Databricks Connection ABD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7709cf68-22d2-4a4e-b735-c727770ba980",
+              "leftValue": "={{ Number($node['Step 8 - Update Order Status'].json.num_affected_rows ?? $node['Step 8 - Update Order Status'].json.rows_affected ?? 0) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        4736,
+        2512
+      ],
+      "id": "58b6afc2-7d73-40dc-94b4-10f293c90e44",
+      "name": "Step 10 - Check Order Update Successful"
+    },
+    {
+      "parameters": {
+        "jsCode": "const insertResult = $node['Step 6 - Insert Refund Record in Databricks'].json || {};\nconst data = $node['Merge Refund Inputs with Generated ID'].json || {};\nconst inserted = Number(insertResult.num_inserted_rows ?? insertResult.num_affected_rows ?? insertResult.rows_affected ?? 0) > 0;\nconst declinedReason = String(data.reasons || data.decision_reason || 'Refund was not eligible and confirmed for processing.');\nreturn { json: {\n  success: inserted,\n  refund_created: inserted,\n  order_updated: false,\n  refund_id: data.refund_id ?? null,\n  order_id: data.order_id ?? null,\n  status: data.status ?? 'rejected',\n  decision: data.decision ?? 'decline',\n  route: data.route ?? 'decline',\n  amount: data.amount ?? 0,\n  already_done: /already refunded/i.test(declinedReason),\n  message: inserted\n    ? (String(data.decision || '').toLowerCase() === 'eligible' && String(data.confirmed).toLowerCase() === 'true'\n        ? 'Refund request was logged. Order status was not changed because the order update did not complete.'\n        : declinedReason)\n    : 'Refund request could not be confirmed as inserted; order status was not changed.'\n} };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4960,
+        2688
+      ],
+      "id": "c4f53192-69e7-48b1-a3f9-bb5ceaf9e100",
+      "name": "Return Logged Request Without Order Update"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $node['Merge Refund Inputs with Generated ID'].json || {};\nconst update = $node['Step 8 - Update Order Status'].json || {};\nreturn { json: { success: true, refund_created: true, order_updated: true, refund_id: data.refund_id ?? null, order_id: data.order_id ?? null, status: data.status ?? null, amount: data.amount ?? 0, message: 'Refund record inserted and order status updated successfully. Continue to Salesforce actions.' } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4960,
+        2464
+      ],
+      "id": "0c1c591e-be5f-4480-bea2-79e55ce08bfb",
+      "name": "Step 10 - Ready for Salesforce Actions"
+    },
+    {
+      "parameters": {
+        "jsCode": "return { json: { success: false, refund_created: false, order_updated: false, order_id: $node['Merge Refund Inputs with Generated ID'].json.order_id ?? null, refund_id: $node['Merge Refund Inputs with Generated ID'].json.refund_id ?? null, message: 'Refund INSERT did not report an affected/inserted row. Order was not updated.' } };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4960,
+        2880
+      ],
+      "id": "03a02221-6ac0-4971-ba52-c148dd0cf81e",
+      "name": "Return Refund Insert Failure"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT FIELDS(ALL)\nFROM Contact\nWHERE Customer_Id__c = '{{ $(\"When Executed by Another Workflow\").item.json.customer_id }}' LIMIT 100\n"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        5184,
+        2464
+      ],
+      "id": "53870ed5-3576-4d01-a9a9-2c192454b601",
+      "name": "Perform a query",
+      "alwaysOutputData": true,
+      "notesInFlow": false,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "Kowag3lTT96HnOXw",
+          "name": "Salesforce ABD Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "64d64607-139c-45df-8627-5258b8a99875",
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        5408,
+        2464
+      ],
+      "id": "6d996b9a-d9f6-4e81-bec8-eccbcbf7d4b3",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $json.Id }}",
+        "updateFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "Refunds_Last_90d__c",
+                "value": "={{ Number($json[\"Refunds Last 90 Days\"] || 0) + 1 }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        5632,
+        2416
+      ],
+      "id": "786d9a8c-c2dd-48f5-bc62-0f3fa6a5569b",
+      "name": "Update a contact",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "Kowag3lTT96HnOXw",
+          "name": "Salesforce ABD Connection"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "e81ec69db859d79b",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.audit_log (\n    customer_id,\n    order_id,\n    agent,\n    decision,\n    amount,\n    currency,\n    route,\n    approved_by,\n    policy_version,\n    reason\n)\nVALUES (\n    '{{ $(\"When Executed by Another Workflow\").item.json.customer_id }}',\n    NULLIF('{{ $(\"When Executed by Another Workflow\").item.json.order_id }}', ''),\n    'WatchMate Genie',\n    '{{ $(\"Calculate Refund Eligibility1\").item.json.decision }}',\n    NULLIF({{ Number($(\"Calculate Refund Eligibility1\").item.json.refund_amount ?? 0) }}, 0),\n    '{{ $(\"Check Order Found1\").item.json.currency }}',\n    '{{ $(\"Calculate Refund Eligibility1\").item.json.route }}',\n    NULLIF('{{ $(\"Calculate Refund Eligibility1\").item.json.approved_by ?? \"\" }}', ''),\n    NULLIF('{{ $(\"Calculate Refund Eligibility1\").item.json.policy_version ?? \"\" }}', ''),\n    NULLIF('{{ $(\"Calculate Refund Eligibility1\").item.json.reasons ?? \"\" }}', '')\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        5856,
+        2416
+      ],
+      "id": "4ce59c46-6c57-4b64-8aeb-d059fd3b7bf8",
+      "name": "Execute a SQL query2",
+      "credentials": {
+        "databricksApi": {
+          "id": "CAmrECPc8Ms57ENy",
+          "name": "Databricks Connection ABD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "10d102d0-ef05-40cf-b607-1ca06bd26f60",
+              "leftValue": "={{ Number($json.num_affected_rows ?? $json.rows_affected ?? $json.num_inserted_rows ?? 0) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        6080,
+        2416
+      ],
+      "id": "4a404992-352f-494c-8cbe-3fc5e4a832d3",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{\n  {\n    success: true,\n    already_done: false,\n    refund_id: $('Step 5 - Generate Next Refund ID').item.json.next_id,\n    refund_amount: Number($(\"Calculate Refund Eligibility1\").item.json.refund_amount ?? 0),\n    currency: $(\"Check Order Found1\").item.json.currency ?? null,\n    message: \"Refund request processed and audit log recorded successfully.\"\n  }\n}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        6304,
+        2368
+      ],
+      "id": "cd5ea69e-fcb2-46c8-9d84-e7d8fa1fcb4d",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\": true,\n  \"refund_created\": true,\n  \"order_updated\": false,\n  \"already_done\": false,\n  \"refund_id\": null,\n  \"order_id\": \"{{$json.order_id}}\",\n  \"status\": \"rejected\",\n  \"decision\": \"decline\",\n  \"route\": \"decline\",\n  \"amount\": \"{{ $json.amount }}\",\n  \"message\": \"{{ $json.reasons }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3232,
+        2944
+      ],
+      "id": "893f5c2d-551c-43de-9f8d-b232fe0c24f2",
+      "name": "Edit Fields2"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Refund Input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 17 - Check Validation Failure1": {
+      "main": [
+        [
+          {
+            "node": "Step 18 - Return Decline Response1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Step 19 - Return Fallback Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 5 - Generate Next Refund ID": {
+      "main": [
+        [
+          {
+            "node": "Merge Refund Inputs with Generated ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Refund Inputs with Generated ID": {
+      "main": [
+        [
+          {
+            "node": "Step 6 - Insert Refund Record in Databricks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 6 - Insert Refund Record in Databricks": {
+      "main": [
+        [
+          {
+            "node": "Step 7 - Check Refund Inserted",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Refund Input1": {
+      "main": [
+        [
+          {
+            "node": "Validate Required Inputs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Required Inputs1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Validation Error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Validation Error1": {
+      "main": [
+        [
+          {
+            "node": "Step 17 - Check Validation Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Check Order Found1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Order Found1": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Refund1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Order Not Found Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Refund1": {
+      "main": [
+        [
+          {
+            "node": "Return Duplicate Refund Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Calculate Refund Eligibility1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Order Not Found Response1": {
+      "main": [
+        [
+          {
+            "node": "Step 18 - Return Decline Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Refund Eligibility1": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Step 5 - Generate Next Refund ID",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 7 - Check Refund Inserted": {
+      "main": [
+        [
+          {
+            "node": "Check Refund Authorized Before Updating Order",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Refund Insert Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Refund Authorized Before Updating Order": {
+      "main": [
+        [
+          {
+            "node": "Step 8 - Update Order Status",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Logged Request Without Order Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 8 - Update Order Status": {
+      "main": [
+        [
+          {
+            "node": "Step 9 - Log Refund Started Event",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 9 - Log Refund Started Event": {
+      "main": [
+        [
+          {
+            "node": "Step 10 - Check Order Update Successful",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 10 - Check Order Update Successful": {
+      "main": [
+        [
+          {
+            "node": "Step 10 - Ready for Salesforce Actions",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Logged Request Without Order Update",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Logged Request Without Order Update": {
+      "main": [
+        [
+          {
+            "node": "Step 18 - Return Decline Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Step 10 - Ready for Salesforce Actions": {
+      "main": [
+        [
+          {
+            "node": "Perform a query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Return Refund Insert Failure": {
+      "main": [
+        [
+          {
+            "node": "Step 18 - Return Decline Response1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "Update a contact",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Step 19 - Return Fallback Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a contact": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Step 19 - Return Fallback Failure1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        []
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_id": "TSTC001",
+          "order_id": "TSTO001",
+          "request_type": "return_refund",
+          "reason_code": "",
+          "reason_text": "Testing",
+          "risk_score": 0,
+          "refunds_last_90d": 0,
+          "tier": "Standard",
+          "confirmed": true,
+          "item_unused": false,
+          "evidence_ok": false,
+          "wants_exception": false,
+          "new_country": "",
+          "approved_by": "",
+          "conversation_id": ""
+        }
+      }
+    ],
+    "Step 18 - Return Decline Response1": [
+      {
+        "json": {
+          "success": false,
+          "refund_created": false,
+          "order_updated": false,
+          "already_done": false,
+          "refund_id": null,
+          "order_id": null,
+          "status": "rejected",
+          "decision": "decline",
+          "route": "decline",
+          "amount": 0,
+          "message": "Validation failed: one or more required input fields are missing or invalid."
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "akyc2lbYXYwuOphm",
+      "projectId": "XwSOn9YzATIAWsYj",
+      "createdAt": "2026-10-27T06:13:42.499Z",
+      "updatedAt": "2026-10-27T06:13:42.499Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "fe94427c-91c6-44ca-8686-9cb0f91325d0",
+    "workflowId": "akyc2lbYXYwuOphm",
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "jsonExample",
+          "jsonExample": "{\n\"customer_id\": \"TSTC001\",\n\"order_id\": \"TSTO001\",\n\"request_type\": \"return_refund\",\n\"reason_code\": \"DEFECTIVE\",\n\"reason_text\": \"Test item defective\",\n\"risk_score\": 10,\n\"refunds_last_90d\": 0,\n\"tier\": \"T1\",\n\"confirmed\": true,\n\"item_unused\": true,\n\"evidence_ok\": true,\n\"wants_exception\": false,\n\"new_country\": \"\",\n\"approved_by\": \"Test Agent\",\n\"conversation_id\": \"TEST-CONV-001\"\n}"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          1392,
+          2768
+        ],
+        "id": "3eda4f4c-0829-4535-b466-104bb33c7b8f",
+        "name": "When Executed by Another Workflow",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{\n  {\n    success: false,\n    refund_created: false,\n    order_updated: false,\n    already_done: true,\n    refund_id: null,\n    order_id: $('Normalize Refund Input1').first().json.order_id ?? null,\n    status: 'rejected',\n    decision: 'decline',\n    route: 'decline',\n    amount: 0,\n    message: 'A refund already exists for this order. No duplicate refund was created.'\n  }\n}}",
+          "options": {}
+        },
+        "id": "ce8b5dd7-1dc8-43fc-8b5d-34573bb3d1c9",
+        "name": "Return Duplicate Refund Response",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2720,
+          2496
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "10ccd598-1581-4014-9d37-cf64bebd0cb3",
+                "leftValue": "={{ $json.success === false }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4960,
+          3280
+        ],
+        "id": "25688845-84ea-47bf-b50a-877239a9725c",
+        "name": "Step 17 - Check Validation Failure1"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{\n  {\n    success: Boolean($json.success ?? false),\n    refund_created: Boolean($json.refund_created ?? false),\n    order_updated: Boolean($json.order_updated ?? false),\n    already_done: Boolean($json.already_done ?? false),\n    refund_id: $json.refund_id ?? null,\n    order_id: $json.order_id ?? null,\n    status: $json.status ?? 'rejected',\n    decision: $json.decision ?? 'decline',\n    route: $json.route ?? 'decline',\n    amount: Number($json.amount ?? 0),\n    message: $json.message ?? $json.reasons ?? 'Refund request was declined.'\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          5184,
+          2992
+        ],
+        "id": "22a8e619-39b8-4e1e-9e08-b9b9eaca687a",
+        "name": "Step 18 - Return Decline Response1"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{\n  {\n    success: false,\n    refund_created: Boolean($json.refund_created ?? false),\n    order_updated: false,\n    already_done: false,\n    refund_id: $json.refund_id ?? null,\n    order_id: $json.order_id ?? null,\n    status: $json.status ?? 'failed',\n    decision: $json.decision ?? 'decline',\n    route: $json.route ?? 'decline',\n    amount: Number($json.amount ?? 0),\n    message: $json.message ?? 'Refund could not be completed. A colleague will follow up.'\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          6304,
+          3184
+        ],
+        "id": "a3994c0b-10ed-4b4f-818a-378b4a0ec6e5",
+        "name": "Step 19 - Return Fallback Failure1"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "SELECT CONCAT('RF', UPPER(SUBSTRING(REPLACE(CAST(UUID() AS STRING), '-', ''), 1, 8))) AS next_id"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          3168,
+          2688
+        ],
+        "id": "7f1bbf21-6792-42b2-bc9e-8256d3ca4bcd",
+        "name": "Step 5 - Generate Next Refund ID",
+        "notesInFlow": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "CAmrECPc8Ms57ENy",
+            "name": "Databricks Connection ABD"
+          }
+        },
+        "notes": "Read-only query that returns the next sequential RFXXXX identifier. Concurrent executions can still race; ensure uniqueness for production use."
+      },
+      {
+        "parameters": {
+          "mode": "runOnceForEachItem",
+          "jsCode": "const idData = $json;\nconst refundData = $('Calculate Refund Eligibility1').first().json;\n\nif (!idData.next_id) throw new Error('Step 5 did not return next_id.');\nif (!refundData.order_id || !refundData.request_type) {\n  throw new Error('Order ID and request type are required to log a refund request.');\n}\n\nconst requestType = String(refundData.request_type || '').trim().toLowerCase();\nconst orderAmount = Number(refundData.amount ?? 0);\nconst shippingFee = Number(refundData.shipping_fee ?? 0);\nconst returnRefundAmount = Number(refundData.return_refund_amount ?? 0);\nconst paymentMethod = String(refundData.payment_method || '').trim().toLowerCase();\n\n// For test logging, calculate the requested amount independently of eligibility.\n// This records the request value but does not execute a payment/refund.\nlet calculatedAmount;\nif (requestType === 'return_refund') {\n  calculatedAmount = returnRefundAmount;\n} else if (requestType === 'cancel' && paymentMethod === 'cod') {\n  calculatedAmount = 0;\n} else if (['damaged', 'wrong_item', 'delayed', 'lost', 'return', 'cancel'].includes(requestType)) {\n  calculatedAmount = orderAmount + shippingFee;\n} else {\n  calculatedAmount = Number(refundData.refund_amount ?? orderAmount + shippingFee);\n}\nif (!Number.isFinite(calculatedAmount) || calculatedAmount < 0) calculatedAmount = 0;\n\nconst decision = String(refundData.decision || 'decline').toLowerCase();\nconst route = String(refundData.route || 'decline').toLowerCase();\nconst confirmed = refundData.confirmed === true || String(refundData.confirmed).toLowerCase() === 'true';\nlet status;\nif (decision === 'eligible' && !confirmed) {\n  status = 'pending_confirmation';\n} else if (decision === 'eligible' && requestType === 'return_refund' && (String(refundData.inspection_status || '').toLowerCase() !== 'passed' || String(refundData.return_status || '').toLowerCase() !== 'inspected')) {\n  status = 'pending_inspection';\n} else if (decision === 'eligible' && route !== 'auto' && requestType !== 'return_refund') {\n  status = 'pending_approval';\n} else if (decision === 'eligible' && confirmed && (route === 'auto' || requestType === 'return_refund')) {\n  status = requestType === 'return_refund' ? 'initiated' : 'completed';\n} else if (decision === 'human' || route === 'human') {\n  status = 'pending_review';\n} else if (decision === 'need_evidence' || route === 'need_evidence') {\n  status = 'pending_evidence';\n} else {\n  status = 'rejected';\n}\n\nreturn {\n  json: {\n    ...refundData,\n    refund_id: String(idData.next_id),\n    return_id: refundData.latest_return_id ?? null,\n    amount: calculatedAmount,\n    refund_amount: calculatedAmount,\n    currency: refundData.return_currency || refundData.currency,\n    method: String(refundData.payment_method || '').toLowerCase() === 'cod' ? 'bank_upi' : 'original_payment',\n    status,\n    approved_by: refundData.approved_by ?? '',\n    decision_reason: String(refundData.reasons || 'No eligibility reason provided')\n  }\n};"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          3392,
+          2688
+        ],
+        "id": "91acecbb-563d-4dc1-b08a-c9d9780a8307",
+        "name": "Merge Refund Inputs with Generated ID",
+        "notesInFlow": true,
+        "notes": "Combines Step 5 next_id with the complete eligibility output by referencing Calculate Refund Eligibility2. Validates eligible + confirmed before passing fields to Step 6."
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "={{ `INSERT INTO workspace.agentic_support.refunds (\n  refund_id, order_id, return_id, refund_type, amount, currency,\n  method, status, route, approved_by, created_at\n)\nSELECT\n  '${String($json.refund_id ?? '').replace(/'/g, \"''\")}',\n  o.order_id,\n  ${$json.return_id ? `'${String($json.return_id).replace(/'/g, \"''\")}'` : 'NULL'},\n  CASE WHEN '${String($json.request_type ?? '').replace(/'/g, \"''\")}' = 'return_refund' THEN 'return'\n       ELSE '${String($json.request_type ?? '').replace(/'/g, \"''\")}' END,\n  CAST(${Math.max(0, Number($json.amount ?? $json.refund_amount ?? 0))} AS DECIMAL(18,2)),\n  o.currency,\n  '${String($json.method ?? '').replace(/'/g, \"''\")}',\n  '${String($json.status ?? 'rejected').replace(/'/g, \"''\")}',\n  '${String($json.route ?? 'decline').replace(/'/g, \"''\")}',\n  NULLIF('${String($json.approved_by ?? '').replace(/'/g, \"''\")}', ''),\n  CURRENT_TIMESTAMP()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '${String($json.order_id ?? '').replace(/'/g, \"''\")}'\n  AND '${String($json.refund_id ?? '').replace(/'/g, \"''\")}' <> ''\n  AND LENGTH('${String($json.refund_id ?? '').replace(/'/g, \"''\")}') <= 10` }}"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          3616,
+          2688
+        ],
+        "id": "d8e6dc0f-8b37-4787-a35a-ff444b2eaf27",
+        "name": "Step 6 - Insert Refund Record in Databricks",
+        "notesInFlow": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "CAmrECPc8Ms57ENy",
+            "name": "Databricks Connection ABD"
+          }
+        },
+        "notes": "Databricks insert consumes the enriched payload. Writes only when the eligibility/confirmation IF true branch reaches Step 5. Validate status enum and schema types in the target table before production."
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "3fa38098-269e-4239-ae47-bcaceb20aacc",
+                "name": "customer_id",
+                "value": "={{ $json.customer_id ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "f711d322-534e-4d4a-ab9b-e948c4d34f6c",
+                "name": "order_id",
+                "value": "={{ $json.order_id ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "cbc43421-0146-4079-838a-ecbaf06376f0",
+                "name": "reason_code",
+                "value": "={{ $json.reason_code ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "432c07a8-ee2f-49ae-9636-bc1bcffbff5b",
+                "name": "reason_text",
+                "value": "={{ $json.reason_text ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "654d12f5-a743-49bd-99a5-fb3075fb2202",
+                "name": "risk_score",
+                "value": "={{ ($json.risk_score) }}",
+                "type": "number"
+              },
+              {
+                "id": "770242eb-fb55-43b8-b36a-5f0fe97225f7",
+                "name": "refunds_last_90d",
+                "value": "={{ ($json.refunds_last_90d) }}",
+                "type": "number"
+              },
+              {
+                "id": "421550ab-9782-4b42-a3db-f485363965d9",
+                "name": "tier",
+                "value": "={{ $json.tier ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "c83ec45f-b99a-4d0b-bd2c-e93498f6b9ec",
+                "name": "confirmed",
+                "value": "={{ $json.confirmed }}",
+                "type": "boolean"
+              },
+              {
+                "id": "dacb72df-380e-4754-b20e-63155cb0d7fa",
+                "name": "conversation_id",
+                "value": "={{ $json.conversation_id ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "55b9fb32-41e7-465c-b5e2-9071aa6787da",
+                "name": "request_type",
+                "value": "={{ $json.request_type ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "7d097ca6-4927-434a-a8b1-ecaeb63d2f5e",
+                "name": "item_unused",
+                "value": "={{ $json.item_unused }}",
+                "type": "boolean"
+              },
+              {
+                "id": "8b3bc98b-fd1a-4115-8adc-c189f515449c",
+                "name": "evidence_ok",
+                "value": "={{ $json.evidence_ok }}",
+                "type": "boolean"
+              },
+              {
+                "id": "2d31ce35-032b-4935-8665-81d8ec596618",
+                "name": "wants_exception",
+                "value": "={{ $json.wants_exception }}",
+                "type": "boolean"
+              },
+              {
+                "id": "da41097e-7839-49eb-a3ff-ff02b591f243",
+                "name": "new_country",
+                "value": "={{ $json.new_country ?? '' }}",
+                "type": "string"
+              },
+              {
+                "id": "e7575756-7e02-4d66-b91c-919db3eb81ca",
+                "name": "approved_by",
+                "value": "={{ $json.approved_by ?? '' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          1600,
+          2800
+        ],
+        "id": "4c1094d1-89df-4033-84b3-599fe76f42e2",
+        "name": "Normalize Refund Input1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "f507c6af-3131-42c3-a0b8-45a6f75c2a00",
+                "leftValue": "={{ $json.customer_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "47878c97-fe2f-4175-91dd-9835edf0992e",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "8643ec0b-36e3-4dbf-a27c-97847a8037ec",
+                "leftValue": "={{ $('When Executed by Another Workflow').first().json.risk_score }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "278fbc71-f02e-42ca-8382-cb1b8f17a441",
+                "leftValue": "={{ $('When Executed by Another Workflow').first().json.refunds_last_90d }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "number",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "6dda6b19-73b2-453a-b76c-a2063d5f1c5d",
+                "leftValue": "={{ $json.tier }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "9f516dcc-be02-45ff-bae8-722fa54d83d4",
+                "leftValue": "={{ $json.confirmed }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "d25b368d-acaf-40dc-bb33-7f82d802a543",
+                "leftValue": "={{ $json.request_type }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "d272a566-a609-4bd8-9278-d63d45c22af4",
+                "leftValue": "={{ ['return_refund','return','cancel','damaged','wrong_item','delayed','lost','address_change'].includes(String($('When Executed by Another Workflow').first().json.request_type ?? '').trim().toLowerCase()) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1824,
+          2800
+        ],
+        "id": "caf98667-e6db-4d40-9751-98fe4ad246b3",
+        "name": "Validate Required Inputs1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "01a8df2a-926e-4b50-9241-be9e9ad030ac",
+                "name": "success",
+                "value": "={{ false }}",
+                "type": "boolean"
+              },
+              {
+                "id": "39fdd121-b22f-4275-a3e1-d15cabfdf35c",
+                "name": "already_done",
+                "value": "={{ false }}",
+                "type": "boolean"
+              },
+              {
+                "id": "65a206f2-d70e-4d13-b750-2b8246a9735c",
+                "name": "message",
+                "value": "Validation failed: one or more required input fields are missing or invalid.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          4736,
+          3280
+        ],
+        "id": "7781b5e3-0654-4cdf-b895-d9852d620593",
+        "name": "Build Validation Error1"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "={{ `WITH cfg AS (\n  SELECT\n    MAX(CASE WHEN config_key='as_of_date' THEN CAST(config_value AS DATE) END) AS as_of_date,\n    MAX(CASE WHEN config_key='risk_score_escalate' THEN CAST(config_value AS INT) END) AS risk_score_escalate,\n    MAX(CASE WHEN config_key='serial_refund_threshold' THEN CAST(config_value AS INT) END) AS serial_refund_threshold,\n    MAX(CASE WHEN config_key='damage_report_days' THEN CAST(config_value AS INT) END) AS damage_report_days\n  FROM workspace.agentic_support.config\n),\nlatest_return AS (\n  SELECT return_id, order_id, reason_code, reason_text, resolution, status AS return_status,\n         refund_amount AS return_refund_amount, currency AS return_currency, created_at,\n         ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY created_at DESC, return_id DESC) AS rn\n  FROM workspace.agentic_support.returns\n),\nreturn_counts AS (\n  SELECT order_id, COUNT(DISTINCT return_id) AS return_count\n  FROM workspace.agentic_support.returns\n  GROUP BY order_id\n),\nrefund_counts AS (\n  SELECT order_id, COUNT(*) AS refund_count\n  FROM workspace.agentic_support.refunds\n  WHERE LOWER(COALESCE(status, '')) IN ('initiated', 'completed', 'processed', 'success')\n  GROUP BY order_id\n),\nlatest_inspection AS (\n  SELECT inspection_id, return_id, order_id, customer_id, kind AS inspection_kind,\n         status AS inspection_status, note AS inspection_note, inspector,\n         created_at AS inspection_created_at, completed_at AS inspection_completed_at,\n         ROW_NUMBER() OVER (PARTITION BY return_id ORDER BY created_at DESC, inspection_id DESC) AS rn\n  FROM workspace.agentic_support.inspections\n),\nauto_actions AS (\n  SELECT a.customer_id, COUNT(*) AS auto_actions_30d\n  FROM workspace.agentic_support.audit_log a\n  CROSS JOIN cfg c\n  WHERE a.route='auto'\n    AND a.decision='Executed'\n    AND a.event_time >= CAST(c.as_of_date - INTERVAL 30 DAYS AS TIMESTAMP)\n  GROUP BY a.customer_id\n)\nSELECT\n  o.order_id,\n  o.customer_id,\n  o.country,\n  o.currency,\n  o.amount,\n  o.shipping_fee,\n  o.payment_method,\n  o.status AS order_status,\n  o.refunded,\n  CASE WHEN LOWER(COALESCE(o.refunded, 'no')) = 'yes' OR COALESCE(fc.refund_count, 0) > 0 THEN TRUE ELSE FALSE END AS has_existing_refund,\n  s.status AS ship_status,\n  s.estimated_delivery,\n  s.delivered_date,\n  s.claim_status,\n  DATEDIFF(c.as_of_date, s.delivered_date) AS days_since_delivery,\n  CASE\n    WHEN s.status='delivered' THEN 0\n    WHEN s.estimated_delivery IS NULL THEN NULL\n    ELSE GREATEST(0, DATEDIFF(c.as_of_date, s.estimated_delivery))\n  END AS days_late,\n  p.return_window_days,\n  p.delay_threshold_days,\n  p.auto_limit,\n  p.approval_limit,\n  p.max_auto_actions_30d,\n  p.refund_method,\n  p.version AS policy_version,\n  COALESCE(rc.return_count, 0) AS return_count,\n  COALESCE(fc.refund_count, 0) AS refund_count,\n  lr.return_id AS latest_return_id,\n  lr.reason_code AS latest_return_reason_code,\n  lr.reason_text AS latest_return_reason_text,\n  lr.resolution AS latest_return_resolution,\n  lr.return_status,\n  lr.return_refund_amount,\n  lr.return_currency,\n  li.inspection_id AS latest_inspection_id,\n  li.inspection_kind,\n  li.inspection_status,\n  li.inspection_note,\n  li.inspector,\n  li.inspection_created_at,\n  li.inspection_completed_at,\n  COALESCE(aa.auto_actions_30d, 0) AS auto_actions_30d,\n  c.risk_score_escalate,\n  c.serial_refund_threshold,\n  c.damage_report_days\nFROM workspace.agentic_support.orders o\nLEFT JOIN workspace.agentic_support.shipments s\n  ON s.order_id = o.order_id\nJOIN workspace.agentic_support.policies p\n  ON p.country = o.country AND p.currency = o.currency\nCROSS JOIN cfg c\nLEFT JOIN latest_return lr\n  ON lr.order_id = o.order_id AND lr.rn = 1\nLEFT JOIN return_counts rc\n  ON rc.order_id = o.order_id\nLEFT JOIN refund_counts fc\n  ON fc.order_id = o.order_id\nLEFT JOIN latest_inspection li\n  ON li.return_id = lr.return_id AND li.rn = 1\nLEFT JOIN auto_actions aa\n  ON aa.customer_id = o.customer_id\nWHERE o.order_id='${String($json.order_id ?? '').replace(/'/g, \"''\")}'\n  AND o.customer_id='${String($json.customer_id ?? '').replace(/'/g, \"''\")}'` }}"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2048,
+          2688
+        ],
+        "id": "30339069-d147-4162-8a0e-5f879285c91d",
+        "name": "Execute a SQL query",
+        "notesInFlow": true,
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "CAmrECPc8Ms57ENy",
+            "name": "Databricks Connection ABD"
+          }
+        },
+        "notes": "Read-only SQL lookup using the existing Databricks connector. Includes existing-refund flag, distinct return count, latest return details, and latest inspection for that return. No refund writes."
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "990814c1-16b6-4246-a8f8-f0c284eb1c6e",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "c86f197e-af44-4439-8791-ca75f5af1d1b",
+        "name": "Check Order Found1",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2272,
+          2688
+        ]
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "07d43335-40ee-4a64-a2c3-b4be75be290b",
+                "leftValue": "={{ $json.has_existing_refund === true || $json.has_existing_refund === 'true' }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "id": "a50e2e19-32c9-4c07-947c-c84fa5000afb",
+        "name": "Check Existing Refund1",
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          2464,
+          2560
+        ]
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "52392ed6-f744-4bcf-90ca-d9b22b2865df",
+                "name": "success",
+                "value": "={{ false }}",
+                "type": "boolean"
+              },
+              {
+                "id": "92717e11-ac68-4dd7-9ae2-a8aad93747be",
+                "name": "already_done",
+                "value": "={{ false }}",
+                "type": "boolean"
+              },
+              {
+                "id": "8fae0f6a-65b6-4418-a8de-3638507d42dd",
+                "name": "decision",
+                "value": "decline",
+                "type": "string"
+              },
+              {
+                "id": "2767129f-ccc0-4ed6-8668-4e89eb7e865f",
+                "name": "message",
+                "value": "Order not found for the supplied order ID and customer ID.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "id": "670cfd42-cdd8-4273-91a7-ef71abde4348",
+        "name": "Build Order Not Found Response1",
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.4,
+        "position": [
+          4960,
+          3072
+        ]
+      },
+      {
+        "parameters": {
+          "jsCode": "\n// Step 2 — Calculate refund amount and check eligibility.\n// Reads the current input item containing request and Databricks fields.\n// This node only evaluates eligibility; it does not write to databases.\n\nconst request = $('Normalize Refund Input1').first().json;\nconst dbData = $input.first()?.json || {};\nconst input = { ...request, ...dbData };\n\nconst rt = String(input.request_type || '').trim().toLowerCase();\nconst risk = Number(input.risk_score ?? 0);\nconst refunds90 = Number(input.refunds_last_90d ?? 0);\nconst custTier = String(input.tier || '').trim().toLowerCase();\n\nconst unused =\n  input.item_unused === true ||\n  String(input.item_unused).toLowerCase() === 'true';\n\nconst evidence =\n  input.evidence_ok === true ||\n  String(input.evidence_ok).toLowerCase() === 'true';\n\nconst exception =\n  input.wants_exception === true ||\n  String(input.wants_exception).toLowerCase() === 'true';\n\nconst newCountry = String(input.new_country || '')\n  .trim()\n  .toUpperCase();\n\nconst orderStatus = String(input.order_status || '').toLowerCase();\nconst shipStatus = String(input.ship_status || '').toLowerCase();\nconst claimStatus = String(input.claim_status || '').toLowerCase();\nconst returnStatus = String(input.return_status || '').toLowerCase();\nconst inspectionStatus = String(input.inspection_status || '').toLowerCase();\nconst returnResolution = String(input.latest_return_resolution || '').toLowerCase();\n\nconst refunded = String(input.refunded || '').toLowerCase();\nconst hasExistingRefund =\n  String(input.has_existing_refund).toLowerCase() === 'true';\n\nconst refundCount = Number(input.refund_count || 0);\nconst returnCount = Number(input.return_count || 0);\n\nconst build = (\n  decision,\n  route,\n  resultTier,\n  reasons,\n  amount = 0,\n  daysLeft = 0\n) => ({\n  ...input,\n  decision,\n  route,\n  tier: resultTier,\n  refund_amount: Number(amount || 0),\n  currency: String(input.return_currency || input.currency || ''),\n  days_remaining: Number(daysLeft || 0),\n  reasons: Array.isArray(reasons) ? reasons.join('; ') : String(reasons),\n  policy_version: String(input.policy_version || '')\n});\n\nconst decline = (message, days = 0) =>\n  build('decline', 'decline', 'T0', message, 0, days);\n\nconst human = (message, days = 0) =>\n  build('human', 'human', 'T3', message, 0, days);\n\nconst byAmount = (refund, reasons, days) => {\n  const autoLimit = Number(input.auto_limit || 0);\n  const approvalLimit = Number(input.approval_limit || 0);\n  const autoActions = Number(input.auto_actions_30d || 0);\n  const maxAutoActions = Number(input.max_auto_actions_30d || 0);\n\n  if (refund <= autoLimit) {\n    if (autoActions >= maxAutoActions) {\n      return build(\n        'eligible',\n        'approval',\n        'T2',\n        [...reasons, 'Auto-action limit reached'],\n        refund,\n        days\n      );\n    }\n\n    return build('eligible', 'auto', 'T1', reasons, refund, days);\n  }\n\n  if (refund <= approvalLimit) {\n    return build('eligible', 'approval', 'T2', reasons, refund, days);\n  }\n\n  return human(\n    [...reasons, 'Refund exceeds approval limit'],\n    days\n  );\n};\n\nlet result;\n\nif (!input.order_id) {\n  result = decline('Order not found for this customer');\n\n} else if (!rt) {\n  result = decline(\n    'Missing request_type: ensure the incoming payload is passed to this node'\n  );\n\n} else {\n  const amount = Number(input.amount || 0);\n  const fee = Number(input.shipping_fee || 0);\n\n  if (\n    rt !== 'address_change' &&\n    (\n      refunded === 'yes' ||\n      hasExistingRefund ||\n      refundCount > 0\n    )\n  ) {\n    result = decline('Already refunded');\n\n  } else if (\n    rt !== 'address_change' &&\n    rt !== 'return_refund' &&\n    returnCount > 0\n  ) {\n    result = decline('A return is already in progress for this order');\n\n  } else if (orderStatus === 'cancelled') {\n    result = decline('Order is already cancelled');\n\n  } else if (\n    risk >= Number(input.risk_score_escalate || 70) ||\n    refunds90 >= Number(input.serial_refund_threshold || 3)\n  ) {\n    result = human('Risk gate: customer needs human review');\n\n  } else if (rt === 'return') {\n    if (orderStatus !== 'delivered') {\n      result = decline('Order not delivered yet');\n\n    } else {\n      const days = Number(input.days_since_delivery || 0);\n      const left = Number(input.return_window_days || 0) - days;\n\n      if (left < 0) {\n        result = (exception || custTier === 'vip')\n          ? human(\n              `Outside the ${input.return_window_days}-day window; exception request`,\n              left\n            )\n          : decline(\n              `Delivered ${days} days ago; return window is ${input.return_window_days} days`,\n              left\n            );\n\n      } else if (!unused) {\n        result = decline('Item must be unused', left);\n\n      } else {\n        result = byAmount(amount, ['Return'], left);\n      }\n    }\n\n  } else if (rt === 'return_refund') {\n    if (returnCount === 0 || !input.latest_return_id) {\n      result = decline('No return found for this order; create the return first');\n\n    } else if (\n      returnStatus !== 'inspected' ||\n      inspectionStatus !== 'passed'\n    ) {\n      result = decline(\n        `The return is ${returnStatus || 'unknown'} and inspection has not passed`\n      );\n\n    } else if (returnResolution === 'exchange') {\n      result = decline('The latest return resolution is exchange, not refund');\n\n    } else {\n      result = byAmount(\n        Number(input.return_refund_amount || 0),\n        ['Refund for the returned item'],\n        0\n      );\n    }\n\n  } else if (rt === 'damaged' || rt === 'wrong_item') {\n    if (orderStatus !== 'delivered') {\n      result = decline('Order not delivered yet');\n\n    } else if (\n      Number(input.days_since_delivery || 0) >\n      Number(input.damage_report_days || 7)\n    ) {\n      result = human(\n        `Reported ${input.days_since_delivery} days after delivery; limit is ${input.damage_report_days} days`\n      );\n\n    } else if (!evidence) {\n      result = build(\n        'need_evidence',\n        'need_evidence',\n        'T0',\n        'Need a specific description or photo of the problem',\n        0,\n        0\n      );\n\n    } else {\n      result = byAmount(\n        amount + fee,\n        [`${rt} refund including shipping`],\n        0\n      );\n    }\n\n  } else if (rt === 'delayed') {\n    const late = Number(input.days_late || 0);\n\n    if (late <= Number(input.delay_threshold_days || 0)) {\n      result = decline(\n        `${late} days late; threshold is ${input.delay_threshold_days}. Share the ETA`\n      );\n\n    } else {\n      result = byAmount(amount + fee, [`Delayed ${late} days`], 0);\n    }\n\n  } else if (rt === 'lost') {\n    if (shipStatus !== 'lost') {\n      result = decline('Carrier has not marked it lost');\n\n    } else {\n      result = byAmount(amount + fee, ['Lost in transit'], 0);\n    }\n\n  } else if (rt === 'not_received') {\n    if (shipStatus !== 'delivered') {\n      result = decline('Carrier does not show it delivered; use tracking');\n\n    } else if (claimStatus === 'raised') {\n      result = decline('A carrier claim is already open');\n\n    } else {\n      result = build(\n        'eligible',\n        'auto',\n        'T1',\n        'Raise a carrier claim; follow up within 48 hours; no instant refund',\n        0,\n        0\n      );\n    }\n\n  } else if (rt === 'cancel') {\n    if (!['payment_pending', 'packed'].includes(orderStatus)) {\n      result = decline('Already shipped or delivered');\n\n    } else {\n      result = byAmount(\n        String(input.payment_method || '').toLowerCase() === 'cod'\n          ? 0\n          : amount + fee,\n        ['Cancellation'],\n        0\n      );\n    }\n\n  } else if (rt === 'address_change') {\n    const country = String(input.country || '').toUpperCase();\n\n    if (newCountry && newCountry !== country) {\n      result = human('Address in a different country needs human review');\n\n    } else if (['payment_pending', 'packed'].includes(orderStatus)) {\n      result = build(\n        'eligible',\n        'auto',\n        'T1',\n        'Not dispatched yet; address can be changed now',\n        0,\n        0\n      );\n\n    } else if (orderStatus === 'shipped') {\n      result = build(\n        'eligible',\n        'approval',\n        'T2',\n        'Already shipped; needs a carrier intercept request. Fee may apply and it is not guaranteed',\n        0,\n        0\n      );\n\n    } else {\n      result = decline(\n        `Order is ${orderStatus || 'unknown'}; address cannot be changed`\n      );\n    }\n\n  } else {\n    result = decline(`Unknown request type: ${rt}`);\n  }\n}\n\nreturn [{ json: result }];\n\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2736,
+          2688
+        ],
+        "id": "b21f4ebc-5bdb-48b1-b44a-df836c51b8e1",
+        "name": "Calculate Refund Eligibility1",
+        "notesInFlow": true,
+        "notes": "Step 2 from the original refund plan. Read-only eligibility calculation only; no refund writes. Uses the SQL lookup row plus original request fields."
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "44e5a615-cab9-41f9-8b6a-482a40e1aa74",
+                "leftValue": "={{ $json.decision }}",
+                "rightValue": "eligible",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "99a2d288-e943-434b-8122-4a46324e13a5",
+                "leftValue": "={{ $json.confirmed }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          2944,
+          2688
+        ],
+        "id": "c360f8ca-e8a0-4234-8d54-3f02c6489add",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "71a68e53-14b8-47ce-b201-ed1571d917e4",
+                "leftValue": "={{ Number($json.num_inserted_rows ?? $json.num_affected_rows ?? $json.rows_affected ?? 0) }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          3840,
+          2688
+        ],
+        "id": "79ede5d5-81ec-42ef-a037-4b4e1bf32f30",
+        "name": "Step 7 - Check Refund Inserted"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "79112708-9874-4945-8898-a1d07192356e",
+                "leftValue": "={{ $node['Merge Refund Inputs with Generated ID'].json.decision }}",
+                "rightValue": "eligible",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              },
+              {
+                "id": "b1bef05c-9e8d-4a8a-ac56-4ad8d023190e",
+                "leftValue": "={{ $node['Merge Refund Inputs with Generated ID'].json.confirmed === true || String($node['Merge Refund Inputs with Generated ID'].json.confirmed).toLowerCase() === 'true' }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              },
+              {
+                "id": "63be8ec6-e1fb-4265-bcdc-15efd80ca156",
+                "leftValue": "={{ ['initiated','completed'].includes(String($node['Merge Refund Inputs with Generated ID'].json.status || '').toLowerCase()) }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4064,
+          2592
+        ],
+        "id": "8b8c60ae-ea1d-48bf-8d6e-902935f6711f",
+        "name": "Check Refund Authorized Before Updating Order"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "={{ `UPDATE workspace.agentic_support.orders SET refunded = 'yes', status = CASE WHEN '${String($node['Merge Refund Inputs with Generated ID'].json.request_type ?? '').replace(/'/g, \"''\")}' = 'return_refund' THEN 'returned' ELSE status END WHERE order_id = '${String($node['Merge Refund Inputs with Generated ID'].json.order_id ?? '').replace(/'/g, \"''\")}' AND customer_id = '${String($node['Merge Refund Inputs with Generated ID'].json.customer_id ?? '').replace(/'/g, \"''\")}'` }}"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          4288,
+          2512
+        ],
+        "id": "5c4fc642-cc35-4c58-adb4-e810b70e9cd7",
+        "name": "Step 8 - Update Order Status",
+        "credentials": {
+          "databricksApi": {
+            "id": "CAmrECPc8Ms57ENy",
+            "name": "Databricks Connection ABD"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "={{ `INSERT INTO workspace.agentic_support.order_events (order_id, customer_id, event, detail) VALUES ('${String($node['Merge Refund Inputs with Generated ID'].json.order_id ?? '').replace(/'/g, \"''\")}', '${String($node['Merge Refund Inputs with Generated ID'].json.customer_id ?? '').replace(/'/g, \"''\")}', 'refund_started', NULLIF('${String('Refund initiated after eligibility and confirmation checks.').replace(/'/g, \"''\")}', ''))` }}"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          4512,
+          2512
+        ],
+        "id": "e18b19e7-bac6-465f-80d4-f9b02d55b140",
+        "name": "Step 9 - Log Refund Started Event",
+        "credentials": {
+          "databricksApi": {
+            "id": "CAmrECPc8Ms57ENy",
+            "name": "Databricks Connection ABD"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "id": "7709cf68-22d2-4a4e-b735-c727770ba980",
+                "leftValue": "={{ Number($node['Step 8 - Update Order Status'].json.num_affected_rows ?? $node['Step 8 - Update Order Status'].json.rows_affected ?? 0) }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          4736,
+          2512
+        ],
+        "id": "58b6afc2-7d73-40dc-94b4-10f293c90e44",
+        "name": "Step 10 - Check Order Update Successful"
+      },
+      {
+        "parameters": {
+          "jsCode": "const insertResult = $node['Step 6 - Insert Refund Record in Databricks'].json || {};\nconst data = $node['Merge Refund Inputs with Generated ID'].json || {};\nconst inserted = Number(insertResult.num_inserted_rows ?? insertResult.num_affected_rows ?? insertResult.rows_affected ?? 0) > 0;\nconst declinedReason = String(data.reasons || data.decision_reason || 'Refund was not eligible and confirmed for processing.');\nreturn { json: {\n  success: inserted,\n  refund_created: inserted,\n  order_updated: false,\n  refund_id: data.refund_id ?? null,\n  order_id: data.order_id ?? null,\n  status: data.status ?? 'rejected',\n  decision: data.decision ?? 'decline',\n  route: data.route ?? 'decline',\n  amount: data.amount ?? 0,\n  already_done: /already refunded/i.test(declinedReason),\n  message: inserted\n    ? (String(data.decision || '').toLowerCase() === 'eligible' && String(data.confirmed).toLowerCase() === 'true'\n        ? 'Refund request was logged. Order status was not changed because the order update did not complete.'\n        : declinedReason)\n    : 'Refund request could not be confirmed as inserted; order status was not changed.'\n} };"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4960,
+          2688
+        ],
+        "id": "c4f53192-69e7-48b1-a3f9-bb5ceaf9e100",
+        "name": "Return Logged Request Without Order Update"
+      },
+      {
+        "parameters": {
+          "jsCode": "const data = $node['Merge Refund Inputs with Generated ID'].json || {};\nconst update = $node['Step 8 - Update Order Status'].json || {};\nreturn { json: { success: true, refund_created: true, order_updated: true, refund_id: data.refund_id ?? null, order_id: data.order_id ?? null, status: data.status ?? null, amount: data.amount ?? 0, message: 'Refund record inserted and order status updated successfully. Continue to Salesforce actions.' } };"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4960,
+          2464
+        ],
+        "id": "0c1c591e-be5f-4480-bea2-79e55ce08bfb",
+        "name": "Step 10 - Ready for Salesforce Actions"
+      },
+      {
+        "parameters": {
+          "jsCode": "return { json: { success: false, refund_created: false, order_updated: false, order_id: $node['Merge Refund Inputs with Generated ID'].json.order_id ?? null, refund_id: $node['Merge Refund Inputs with Generated ID'].json.refund_id ?? null, message: 'Refund INSERT did not report an affected/inserted row. Order was not updated.' } };"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          4960,
+          2880
+        ],
+        "id": "03a02221-6ac0-4971-ba52-c148dd0cf81e",
+        "name": "Return Refund Insert Failure"
+      },
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT FIELDS(ALL)\nFROM Contact\nWHERE Customer_Id__c = '{{ $(\"When Executed by Another Workflow\").item.json.customer_id }}' LIMIT 100\n"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          5184,
+          2464
+        ],
+        "id": "53870ed5-3576-4d01-a9a9-2c192454b601",
+        "name": "Perform a query",
+        "alwaysOutputData": true,
+        "notesInFlow": false,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "Kowag3lTT96HnOXw",
+            "name": "Salesforce ABD Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "64d64607-139c-45df-8627-5258b8a99875",
+                "leftValue": "={{ $json.Id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          5408,
+          2464
+        ],
+        "id": "6d996b9a-d9f6-4e81-bec8-eccbcbf7d4b3",
+        "name": "If6"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $json.Id }}",
+          "updateFields": {
+            "customFieldsUi": {
+              "customFieldsValues": [
+                {
+                  "fieldId": "Refunds_Last_90d__c",
+                  "value": "={{ Number($json[\"Refunds Last 90 Days\"] || 0) + 1 }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          5632,
+          2416
+        ],
+        "id": "786d9a8c-c2dd-48f5-bc62-0f3fa6a5569b",
+        "name": "Update a contact",
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "Kowag3lTT96HnOXw",
+            "name": "Salesforce ABD Connection"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "e81ec69db859d79b",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.audit_log (\n    customer_id,\n    order_id,\n    agent,\n    decision,\n    amount,\n    currency,\n    route,\n    approved_by,\n    policy_version,\n    reason\n)\nVALUES (\n    '{{ $(\"When Executed by Another Workflow\").item.json.customer_id }}',\n    NULLIF('{{ $(\"When Executed by Another Workflow\").item.json.order_id }}', ''),\n    'WatchMate Genie',\n    '{{ $(\"Calculate Refund Eligibility1\").item.json.decision }}',\n    NULLIF({{ Number($(\"Calculate Refund Eligibility1\").item.json.refund_amount ?? 0) }}, 0),\n    '{{ $(\"Check Order Found1\").item.json.currency }}',\n    '{{ $(\"Calculate Refund Eligibility1\").item.json.route }}',\n    NULLIF('{{ $(\"Calculate Refund Eligibility1\").item.json.approved_by ?? \"\" }}', ''),\n    NULLIF('{{ $(\"Calculate Refund Eligibility1\").item.json.policy_version ?? \"\" }}', ''),\n    NULLIF('{{ $(\"Calculate Refund Eligibility1\").item.json.reasons ?? \"\" }}', '')\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          5856,
+          2416
+        ],
+        "id": "4ce59c46-6c57-4b64-8aeb-d059fd3b7bf8",
+        "name": "Execute a SQL query2",
+        "credentials": {
+          "databricksApi": {
+            "id": "CAmrECPc8Ms57ENy",
+            "name": "Databricks Connection ABD"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "10d102d0-ef05-40cf-b607-1ca06bd26f60",
+                "leftValue": "={{ Number($json.num_affected_rows ?? $json.rows_affected ?? $json.num_inserted_rows ?? 0) }}",
+                "rightValue": 0,
+                "operator": {
+                  "type": "number",
+                  "operation": "gt"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          6080,
+          2416
+        ],
+        "id": "4a404992-352f-494c-8cbe-3fc5e4a832d3",
+        "name": "If7"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={{\n  {\n    success: true,\n    already_done: false,\n    refund_id: $('Step 5 - Generate Next Refund ID').item.json.next_id,\n    refund_amount: Number($(\"Calculate Refund Eligibility1\").item.json.refund_amount ?? 0),\n    currency: $(\"Check Order Found1\").item.json.currency ?? null,\n    message: \"Refund request processed and audit log recorded successfully.\"\n  }\n}}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          6304,
+          2368
+        ],
+        "id": "cd5ea69e-fcb2-46c8-9d84-e7d8fa1fcb4d",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"success\": true,\n  \"refund_created\": true,\n  \"order_updated\": false,\n  \"already_done\": false,\n  \"refund_id\": null,\n  \"order_id\": \"{{$json.order_id}}\",\n  \"status\": \"rejected\",\n  \"decision\": \"decline\",\n  \"route\": \"decline\",\n  \"amount\": \"{{ $json.amount }}\",\n  \"message\": \"{{ $json.reasons }}\"\n} ",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          3232,
+          2944
+        ],
+        "id": "893f5c2d-551c-43de-9f8d-b232fe0c24f2",
+        "name": "Edit Fields2"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Normalize Refund Input1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 17 - Check Validation Failure1": {
+        "main": [
+          [
+            {
+              "node": "Step 18 - Return Decline Response1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Step 19 - Return Fallback Failure1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 5 - Generate Next Refund ID": {
+        "main": [
+          [
+            {
+              "node": "Merge Refund Inputs with Generated ID",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Merge Refund Inputs with Generated ID": {
+        "main": [
+          [
+            {
+              "node": "Step 6 - Insert Refund Record in Databricks",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 6 - Insert Refund Record in Databricks": {
+        "main": [
+          [
+            {
+              "node": "Step 7 - Check Refund Inserted",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Normalize Refund Input1": {
+        "main": [
+          [
+            {
+              "node": "Validate Required Inputs1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Required Inputs1": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Build Validation Error1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Validation Error1": {
+        "main": [
+          [
+            {
+              "node": "Step 17 - Check Validation Failure1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Check Order Found1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Order Found1": {
+        "main": [
+          [
+            {
+              "node": "Check Existing Refund1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Build Order Not Found Response1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Existing Refund1": {
+        "main": [
+          [
+            {
+              "node": "Return Duplicate Refund Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Calculate Refund Eligibility1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build Order Not Found Response1": {
+        "main": [
+          [
+            {
+              "node": "Step 18 - Return Decline Response1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Calculate Refund Eligibility1": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Step 5 - Generate Next Refund ID",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 7 - Check Refund Inserted": {
+        "main": [
+          [
+            {
+              "node": "Check Refund Authorized Before Updating Order",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Refund Insert Failure",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Refund Authorized Before Updating Order": {
+        "main": [
+          [
+            {
+              "node": "Step 8 - Update Order Status",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Logged Request Without Order Update",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 8 - Update Order Status": {
+        "main": [
+          [
+            {
+              "node": "Step 9 - Log Refund Started Event",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 9 - Log Refund Started Event": {
+        "main": [
+          [
+            {
+              "node": "Step 10 - Check Order Update Successful",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 10 - Check Order Update Successful": {
+        "main": [
+          [
+            {
+              "node": "Step 10 - Ready for Salesforce Actions",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Return Logged Request Without Order Update",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Return Logged Request Without Order Update": {
+        "main": [
+          [
+            {
+              "node": "Step 18 - Return Decline Response1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Step 10 - Ready for Salesforce Actions": {
+        "main": [
+          [
+            {
+              "node": "Perform a query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Return Refund Insert Failure": {
+        "main": [
+          [
+            {
+              "node": "Step 18 - Return Decline Response1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Perform a query": {
+        "main": [
+          [
+            {
+              "node": "If6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If6": {
+        "main": [
+          [
+            {
+              "node": "Update a contact",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Step 19 - Return Fallback Failure1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a contact": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query2": {
+        "main": [
+          [
+            {
+              "node": "If7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If7": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Step 19 - Return Fallback Failure1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          []
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Abdul Shaik",
+    "name": "Version fe94427c",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-10-29T07:11:00.578Z",
+    "updatedAt": "2026-10-29T07:11:07.000Z"
+  }
+}
