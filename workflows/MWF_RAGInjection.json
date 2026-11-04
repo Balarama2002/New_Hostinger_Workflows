@@ -1,0 +1,228 @@
+{
+  "id": "UMBJwQouFeJ10uSr",
+  "name": "MWF_RAGInjection",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-10-24T06:57:10.067Z",
+  "updatedAt": "2026-10-28T13:11:57.608Z",
+  "isArchived": false,
+  "versionId": "6ba6acf9-8df6-4c30-91a9-c737adec24f4",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        -64
+      ],
+      "id": "91b8c22a-aad6-4f51-ac84-b1b2369c9765",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "1Z2moHeaDDafAXbcxQWGCrg1yfwH6c0XJ",
+          "mode": "list",
+          "cachedResultName": "Northwind_Employee_Handbook_2026.pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1Z2moHeaDDafAXbcxQWGCrg1yfwH6c0XJ/view?usp=drivesdk"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        -80,
+        -64
+      ],
+      "id": "47da367a-3904-458d-be97-78e70dd99d6e",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lMIBASivX1vQtTh5",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.2,
+      "position": [
+        144,
+        -64
+      ],
+      "id": "8b2d9aaf-5194-4141-aa5f-9571db0e8d57",
+      "name": "Extract from File"
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "pineconeIndex": {
+          "__rl": true,
+          "value": "n8n-hr-rag-v2",
+          "mode": "list",
+          "cachedResultName": "n8n-hr-rag-v2"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
+      "typeVersion": 1.3,
+      "position": [
+        400,
+        -64
+      ],
+      "id": "b3cde301-1a7a-41dc-b399-645fbd90284b",
+      "name": "Pinecone Vector Store",
+      "credentials": {
+        "pineconeApi": {
+          "id": "xPBgEbGVdrdZwy8Q",
+          "name": "PineconeNikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        384,
+        176
+      ],
+      "id": "0e211576-6f1e-46c7-997e-53dc8db6fe33",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "dJENxknmNYddZ8ia",
+          "name": "Google Gemini(PaLM) Api - Nikhitha"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "textSplittingMode": "custom",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        512,
+        224
+      ],
+      "id": "7ebba9fe-eece-49ea-8afa-4d274206db78",
+      "name": "Default Data Loader"
+    },
+    {
+      "parameters": {
+        "chunkSize": 500,
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        592,
+        384
+      ],
+      "id": "88e54b7f-2d12-423a-9a75-12bac9fe8393",
+      "name": "Recursive Character Text Splitter"
+    }
+  ],
+  "connections": {
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Extract from File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from File": {
+      "main": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Pinecone Vector Store",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recursive Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "UMBJwQouFeJ10uSr",
+      "projectId": "gpVAwDGe6y6vwU0o",
+      "createdAt": "2026-10-24T06:57:10.068Z",
+      "updatedAt": "2026-10-24T06:57:10.068Z"
+    }
+  ],
+  "activeVersion": null
+}
