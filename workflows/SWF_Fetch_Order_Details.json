@@ -2,11 +2,11 @@
   "id": "ahwAUj8iiJXv2egu",
   "name": "SWF_Fetch_Order-Details",
   "active": true,
-  "activeVersionId": "2b62a860-1c27-4396-a294-ff157d163a97",
+  "activeVersionId": "079e0b98-3a18-46e1-b05e-e06152b89a7c",
   "createdAt": "2026-10-30T17:35:00.257Z",
-  "updatedAt": "2026-10-31T09:46:54.210Z",
+  "updatedAt": "2026-11-05T12:51:01.740Z",
   "isArchived": false,
-  "versionId": "2b62a860-1c27-4396-a294-ff157d163a97",
+  "versionId": "079e0b98-3a18-46e1-b05e-e06152b89a7c",
   "triggerCount": 0,
   "nodes": [
     {
@@ -36,12 +36,12 @@
       "parameters": {
         "warehouseId": {
           "__rl": true,
-          "value": "e81ec69db859d79b",
+          "value": "322f5fdc0a818d07",
           "mode": "list",
           "cachedResultName": "Serverless Starter Warehouse",
-          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
         },
-        "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}'"
+        "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = 'C004'"
       },
       "type": "n8n-nodes-base.databricks",
       "typeVersion": 1,
@@ -54,8 +54,8 @@
       "alwaysOutputData": true,
       "credentials": {
         "databricksApi": {
-          "id": "nBIZhBJ0GFaP90bZ",
-          "name": "Databricks account -Prashanth"
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
         }
       }
     },
@@ -240,10 +240,10 @@
       "parameters": {
         "warehouseId": {
           "__rl": true,
-          "value": "e81ec69db859d79b",
+          "value": "322f5fdc0a818d07",
           "mode": "list",
           "cachedResultName": "Serverless Starter Warehouse",
-          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
         },
         "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}' and o.status = '{{ $json.status.toLowerCase() }}' "
       },
@@ -258,8 +258,8 @@
       "alwaysOutputData": true,
       "credentials": {
         "databricksApi": {
-          "id": "nBIZhBJ0GFaP90bZ",
-          "name": "Databricks account -Prashanth"
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
         }
       }
     }
@@ -352,7 +352,7 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "customer_id": "C059"
+          "customer_id": "C004"
         }
       }
     ]
@@ -371,7 +371,7 @@
     }
   ],
   "activeVersion": {
-    "versionId": "2b62a860-1c27-4396-a294-ff157d163a97",
+    "versionId": "079e0b98-3a18-46e1-b05e-e06152b89a7c",
     "workflowId": "ahwAUj8iiJXv2egu",
     "nodes": [
       {
@@ -401,12 +401,12 @@
         "parameters": {
           "warehouseId": {
             "__rl": true,
-            "value": "e81ec69db859d79b",
+            "value": "322f5fdc0a818d07",
             "mode": "list",
             "cachedResultName": "Serverless Starter Warehouse",
-            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
           },
-          "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}'"
+          "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = 'C004'"
         },
         "type": "n8n-nodes-base.databricks",
         "typeVersion": 1,
@@ -419,8 +419,8 @@
         "alwaysOutputData": true,
         "credentials": {
           "databricksApi": {
-            "id": "nBIZhBJ0GFaP90bZ",
-            "name": "Databricks account -Prashanth"
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
           }
         }
       },
@@ -605,10 +605,10 @@
         "parameters": {
           "warehouseId": {
             "__rl": true,
-            "value": "e81ec69db859d79b",
+            "value": "322f5fdc0a818d07",
             "mode": "list",
             "cachedResultName": "Serverless Starter Warehouse",
-            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
           },
           "query": "=SELECT * FROM workspace.agentic_support.orders o where o.customer_id = '{{ $json.customer_id }}' and o.status = '{{ $json.status.toLowerCase() }}' "
         },
@@ -623,8 +623,8 @@
         "alwaysOutputData": true,
         "credentials": {
           "databricksApi": {
-            "id": "nBIZhBJ0GFaP90bZ",
-            "name": "Databricks account -Prashanth"
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
           }
         }
       }
@@ -709,10 +709,10 @@
     },
     "nodeGroups": [],
     "authors": "Bala Rama Krishna Cherukuri",
-    "name": "Version 2b62a860",
+    "name": "Version 079e0b98",
     "description": "",
     "autosaved": true,
-    "createdAt": "2026-10-30T20:35:10.026Z",
-    "updatedAt": "2026-10-30T20:35:19.000Z"
+    "createdAt": "2026-11-05T12:50:21.501Z",
+    "updatedAt": "2026-11-05T12:50:44.000Z"
   }
 }
