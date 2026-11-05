@@ -1,0 +1,1758 @@
+{
+  "id": "TiEhPmZzAWeNdf3h",
+  "name": "Duplicate SWF_Create_return",
+  "active": true,
+  "activeVersionId": "5b4e197c-2d4b-4a5d-a05c-0f317ceb111a",
+  "createdAt": "2026-11-05T07:00:56.782Z",
+  "updatedAt": "2026-11-05T14:01:36.264Z",
+  "isArchived": false,
+  "versionId": "7f4a465b-ef79-4e31-8d71-8965b4933e3e",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "\n  {\n    \"customer_id\": \"C013\",\n    \"order_id\": \"O1013\",\n    \"reason_code\": \"size_fit\",\n    \"reason_text\": \"The watch is a bit too small for my wrist.\",\n    \"risk_score\": 0,\n    \"refunds_last_90d\": 0,\n    \"tier\": \"standard\",\n    \"confirmed\": true,\n    \"approved_by\": \"\",\n    \"conversation_id\": \"MSG-99910\",\n    \"item_unused\": true,\n    \"whatsapp_phone\": \"919876543213\",\n    \"language\": \"en\"\n  }\n"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -544,
+        -240
+      ],
+      "id": "ee908e70-f4c6-4baa-9017-2a06fb6e9f66",
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n \n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n \n    DATEDIFF(\n        CAST(c.asof AS DATE),\n        CAST(s.delivered_date AS DATE)\n    ) AS days_since_delivery,\n \n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(\n            0,\n            DATEDIFF(\n                CAST(c.asof AS DATE),\n                CAST(s.estimated_delivery AS DATE)\n            )\n        )\n    END AS days_late,\n \n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n \n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) AS return_count,\n \n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS refund_count,\n \n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(CAST(c.asof AS DATE), 30)\n    ) AS auto_actions_30d,\n \n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n        LIMIT 1\n    ) AS risk_score_escalate,\n \n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n        LIMIT 1\n    ) AS serial_refund_threshold,\n \n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n        LIMIT 1\n    ) AS damage_report_days\n \nFROM workspace.agentic_support.orders o\n \nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n \nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n \nCROSS JOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n    LIMIT 1\n) c\n \nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}' "
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        -96,
+        -240
+      ],
+      "id": "ec191020-90f6-45a0-aa68-6b838e4dec72",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items\nfor (const item of $input.all()) {\n  \n  // 1. Gather Inputs\n  // Get trigger parameters from the initial trigger node\n  const triggerData = $('When Executed by Another Workflow').first().json;\n  // Get database row from Databricks query node\n  const sqlData = item.json; \n  \n  const row = sqlData && sqlData.order_id ? sqlData : null;\n\n  // Format and cast all input variables exactly as defined in the skill\n  const rt = String(triggerData.request_type || 'return').toLowerCase().trim(); \n  const risk = parseInt(triggerData.risk_score || 0, 10);\n  const refunds90 = parseInt(triggerData.refunds_last_90d || 0, 10);\n  const cust_tier = String(triggerData.tier || '').toLowerCase().trim();\n  \n  // Check item_unused: supports explicit boolean/string or inferred from customer description\n  const reasonText = String(triggerData.reason_text || '').toLowerCase();\n  const unusedParam = String(triggerData.item_unused).toLowerCase();\n  const unused = unusedParam === 'true' || \n                 triggerData.item_unused === true || \n                 reasonText.includes('unworn') || \n                 reasonText.includes('unused') || \n                 reasonText.includes('original packaging');\n\n  const evidence = String(triggerData.evidence_ok) === 'true' || triggerData.evidence_ok === true;\n  const exception = String(triggerData.wants_exception) === 'true' || triggerData.wants_exception === true;\n  const new_country = String(triggerData.new_country || '').trim().toUpperCase();\n\n  const confirmed = String(triggerData.confirmed) === 'true' || triggerData.confirmed === true;\n  const approved_by = String(triggerData.approved_by || '').trim();\n  const approved = approved_by.length > 0;\n\n  // Helper functions matching Ruby closures\n  function build(decision, route, tier, reasons, amount, days_left) {\n    return {\n      decision: decision,\n      route: route,\n      tier: tier,\n      refund_amount: parseFloat(amount) || 0.0,\n      currency: row ? String(row.currency || '') : '',\n      days_remaining: parseInt(days_left || 0, 10),\n      reasons: Array.isArray(reasons) ? reasons.join('; ') : String(reasons),\n      policy_version: row ? String(row.policy_version || '') : ''\n    };\n  }\n\n  function decline(msg, left = 0) { \n    return build('decline', 'decline', 'T0', msg, 0, left); \n  }\n  \n  function human(msg, left = 0) { \n    return build('human', 'human', 'T3', msg, 0, left); \n  }\n\n  function by_amount(refund, reasons, left = 0) {\n    const auto_limit = parseFloat(row.auto_limit || 0);\n    const approval_limit = parseFloat(row.approval_limit || 0);\n    const auto_actions_30d = parseInt(row.auto_actions_30d || 0, 10);\n    const max_auto_actions_30d = parseInt(row.max_auto_actions_30d || 0, 10);\n\n    let reasonArr = Array.isArray(reasons) ? reasons : [reasons];\n\n    if (refund <= auto_limit) {\n      if (auto_actions_30d >= max_auto_actions_30d) {\n        reasonArr.push('Auto-action limit reached');\n        return build('eligible', 'approval', 'T2', reasonArr, refund, left);\n      } else {\n        return build('eligible', 'auto', 'T1', reasonArr, refund, left);\n      }\n    } else if (refund <= approval_limit) {\n      return build('eligible', 'approval', 'T2', reasonArr, refund, left);\n    } else {\n      return build('human', 'human', 'T3', reasonArr, refund, left);\n    }\n  }\n\n  const amount = row ? parseFloat(row.amount || 0) : 0.0;\n  const fee = row ? parseFloat(row.shipping_fee || 0) : 0.0;\n\n  // -------------------------------------------------------------\n  // PART 1: Full Step-2 Business Logic Engine\n  // -------------------------------------------------------------\n  let decision_output;\n\n  if (!row) {\n    decision_output = decline('Order not found for this customer');\n  } else if (rt !== 'address_change' && (String(row.refunded).toLowerCase() === 'yes' || parseInt(row.refund_count || 0, 10) > 0)) {\n    decision_output = decline('Already refunded');\n  } else if (rt !== 'address_change' && parseInt(row.return_count || 0, 10) > 0) {\n    decision_output = decline('A return is already in progress for this order; the refund follows after inspection');\n  } else if (row.order_status === 'cancelled') {\n    decision_output = decline('Order is already cancelled');\n  } else if (risk >= parseInt(row.risk_score_escalate || 0, 10) || refunds90 >= parseInt(row.serial_refund_threshold || 0, 10)) {\n    decision_output = human('Risk gate: customer needs human review');\n  } else if (rt === 'return') {\n    if (row.order_status !== 'delivered') {\n      decision_output = decline('Order not delivered yet');\n    } else {\n      const days = parseInt(row.days_since_delivery || 0, 10);\n      const return_window_days = parseInt(row.return_window_days || 0, 10);\n      const left = return_window_days - days;\n\n      if (left < 0) {\n        if (exception || cust_tier === 'vip') {\n          decision_output = human(`Outside the ${return_window_days}-day window; exception request`, left);\n        } else {\n          decision_output = decline(`Delivered ${days} days ago; return window is ${return_window_days} days`, left);\n        }\n      } else if (!unused) {\n        decision_output = decline('Item must be unused', left);\n      } else {\n        decision_output = by_amount(amount, ['Return'], left);\n      }\n    }\n  } else if (rt === 'damaged' || rt === 'wrong_item') {\n    if (row.order_status !== 'delivered') {\n      decision_output = decline('Order not delivered yet');\n    } else {\n      const days = parseInt(row.days_since_delivery || 0, 10);\n      const damage_report_days = parseInt(row.damage_report_days || 0, 10);\n      if (days > damage_report_days) {\n        decision_output = human(`Reported ${days} days after delivery; limit is ${damage_report_days} days`);\n      } else if (!evidence) {\n        decision_output = build('need_evidence', 'need_evidence', 'T0', 'Need a specific description or photo of the problem', 0, 0);\n      } else {\n        decision_output = by_amount(amount + fee, [`${rt} refund including shipping`], 0);\n      }\n    }\n  } else if (rt === 'delayed') {\n    const late = parseInt(row.days_late || 0, 10);\n    const delay_threshold_days = parseInt(row.delay_threshold_days || 0, 10);\n    if (late <= delay_threshold_days) {\n      decision_output = decline(`${late} days late; threshold is ${delay_threshold_days}. Share the ETA`);\n    } else {\n      decision_output = by_amount(amount + fee, [`Delayed ${late} days`], 0);\n    }\n  } else if (rt === 'lost') {\n    if (row.ship_status !== 'lost') {\n      decision_output = decline('Carrier has not marked it lost');\n    } else {\n      decision_output = by_amount(amount + fee, ['Lost in transit'], 0);\n    }\n  } else if (rt === 'not_received') {\n    if (row.ship_status !== 'delivered') {\n      decision_output = decline('Carrier does not show it delivered; use tracking');\n    } else if (row.claim_status === 'raised') {\n      decision_output = decline('A carrier claim is already open');\n    } else {\n      decision_output = build('eligible', 'auto', 'T1', 'Raise a carrier claim; follow up within 48 hours; no instant refund', 0, 0);\n    }\n  } else if (rt === 'cancel') {\n    if (!['payment_pending', 'packed'].includes(row.order_status)) {\n      decision_output = decline('Already shipped or delivered; cannot cancel');\n    } else {\n      const refund = row.payment_method === 'cod' ? 0.0 : amount + fee;\n      decision_output = by_amount(refund, ['Cancellation'], 0);\n    }\n  } else if (rt === 'address_change') {\n    if (new_country !== '' && new_country !== String(row.country || '').toUpperCase()) {\n      decision_output = human('Address in a different country needs human review');\n    } else if (['payment_pending', 'packed'].includes(row.order_status)) {\n      decision_output = build('eligible', 'auto', 'T1', 'Not dispatched yet; address can be changed now', 0, 0);\n    } else if (row.order_status === 'shipped') {\n      decision_output = build('eligible', 'approval', 'T2', 'Already shipped; needs a carrier intercept request. Fee may apply and it is not guaranteed', 0, 0);\n    } else {\n      decision_output = decline(`Order is ${row.order_status}; address cannot be changed`);\n    }\n  } else {\n    decision_output = decline('Unknown request type');\n  }\n\n  // -------------------------------------------------------------\n  // PART 2: Full Step-3 Validation Engine\n  // -------------------------------------------------------------\n  let validation_output = {};\n  const reasons_str = String(decision_output.reasons || '').toLowerCase();\n\n  if (!confirmed) {\n    validation_output = { \n      allowed: false, \n      already_done: false, \n      message: 'The customer has not confirmed yet.' \n    };\n  } else if (decision_output.decision !== 'eligible') {\n    validation_output = {\n      allowed: false,\n      already_done: reasons_str.includes('already'),\n      message: `Not allowed: ${decision_output.reasons}`\n    };\n  } else if (decision_output.route === 'auto' || (decision_output.route === 'approval' && approved)) {\n    validation_output = { \n      allowed: true, \n      already_done: false, \n      message: 'OK' \n    };\n  } else {\n    validation_output = { \n      allowed: false, \n      already_done: false, \n      message: 'This needs approval or a person. Escalate instead.' \n    };\n  }\n\n  // -------------------------------------------------------------\n  // PART 3: Expose Outputs to n8n\n  // -------------------------------------------------------------\n  item.json.decision_output = decision_output;\n  item.json.validation_output = validation_output;\n\n  // Flattened outputs for simple referencing in n8n nodes\n  item.json.allowed = validation_output.allowed;\n  item.json.already_done = validation_output.already_done;\n  item.json.message = validation_output.message;\n  item.json.refund_amount = decision_output.refund_amount;\n  item.json.currency = decision_output.currency;\n  item.json.decision = decision_output.decision;\n  item.json.route = decision_output.route;\n  item.json.reasons = decision_output.reasons;\n}\n\nreturn $input.all();\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        352,
+        -336
+      ],
+      "id": "078578fd-1111-452d-b0a4-0d5cc3ac1602",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "5a6adcee-ff50-48e7-a08b-83f2fc485ce7",
+              "leftValue": "={{ $json.validation_output.allowed }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        576,
+        -336
+      ],
+      "id": "dcb54e10-6033-4905-96a3-e865f97a033c",
+      "name": "If",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "SELECT CONCAT('R', LPAD(COALESCE(MAX(CAST(REGEXP_EXTRACT(return_id, '^R([0-9]+)$', 1) AS INT)), 0) + 1, 4, '0')) AS next_id\nFROM workspace.agentic_support.returns\nWHERE return_id RLIKE '^R[0-9]+$'"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -432
+      ],
+      "id": "8eb63360-90d6-4a3d-90cc-035703f753c9",
+      "name": "Execute a SQL query1",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.returns\n(\n    return_id,\n    order_id,\n    reason_code,\n    reason_text,\n    resolution,\n    status,\n    label_url,\n    refund_amount,\n    currency,\n    created_at\n)\nSELECT\n    '{{ $json.next_id }}',\n    o.order_id,\n    NULLIF('{{ $('When Executed by Another Workflow').item.json.reason_code }}', ''),\n    NULLIF('{{ $('When Executed by Another Workflow').item.json.reason_text }}', ''),\n    'refund',\n    'awaiting_inspection',\n    CONCAT('https://watchmate.example/return/', '{{ $json.next_id }}'),\n    CAST({{ $('Code in JavaScript').item.json.refund_amount || 0 }} AS DECIMAL(10, 2)),\n    o.currency,\n    CURRENT_DATE()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '{{ $('Code in JavaScript').item.json.order_id }}';"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        -432
+      ],
+      "id": "25b5d79b-5ebf-4b73-a54f-2cfd4a587e4b",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=UPDATE workspace.agentic_support.orders\nSET status = 'return_requested'\nWHERE order_id = \"{{ $('Edit Fields3').item.json.order_id }}\" AND customer_id = \"{{ $('Edit Fields3').item.json.customer_id }}\""
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1472,
+        -432
+      ],
+      "id": "d147e300-843f-4600-9fe5-29de4e019f2a",
+      "name": "Execute a SQL query3",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "39849ea4-6a74-47ce-9496-7b67b151e43b",
+              "leftValue": "={{ $json.num_affected_rows }}",
+              "rightValue": "1",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1248,
+        -432
+      ],
+      "id": "59a682e4-8a59-4b4b-8ff8-3702d1bc96cd",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.order_events\n(\n    order_id,\n    customer_id,\n    event,\n    detail\n)\nVALUES\n(\n    '{{ $('Edit Fields3').item.json.order_id }}',\n    '{{ $('Edit Fields3').item.json.customer_id }}',\n    'Return requested',\n    '{{ $('Edit Fields3').item.json.reason_text }}'\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1680,
+        -432
+      ],
+      "id": "6e26fb9d-f4ea-41e7-94a1-d3c0bb00ed99",
+      "name": "Execute a SQL query4",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "case",
+        "type": "Other",
+        "additionalFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "Customer_Id__c",
+                "value": "={{ $('Edit Fields3').item.json.customer_id }}"
+              }
+            ]
+          },
+          "subject": "={{ \"Inspect return \" + $('Execute a SQL query1').first().json.next_id + \" - order \" + $('When Executed by Another Workflow').first().json.order_id }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        1920,
+        -432
+      ],
+      "id": "5cdc78b6-c11d-471d-959d-7429472db29a",
+      "name": "Create a case",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "1t4ZmWrUeFc3x60U",
+          "name": "Customer-Service Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT CaseNumber FROM Case WHERE Id = '{{ $json.id }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        2144,
+        -432
+      ],
+      "id": "6080e1a3-1e10-4be5-b31b-633bd72b0bf1",
+      "name": "Perform a query",
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "1t4ZmWrUeFc3x60U",
+          "name": "Customer-Service Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.inspections\n(\n    return_id,\n    order_id,\n    customer_id,\n    kind,\n    jira_key,\n    status\n)\nVALUES\n(\n    '{{ $('Execute a SQL query1').item.json.next_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}',\n    'return',\n    '{{ $('Create a case').item.json.id }}',\n    'pending'\n);"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2368,
+        -432
+      ],
+      "id": "9a5178f2-4844-4a26-b0d9-88b35ced3fe0",
+      "name": "Execute a SQL query5",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.request_tracker (\n    kind, \n    external_system, \n    external_id, \n    external_alt, \n    customer_id, \n    order_id, \n    return_id, \n    whatsapp_phone, \n    language, \n    last_status\n)\nVALUES (\n    'inspection', \n    'salesforce', \n    '{{ $('Create a case').item.json.id }}', \n    NULLIF('{{ $('Perform a query').item.json.CaseNumber }}', ''), \n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}', \n    NULLIF('{{ $('When Executed by Another Workflow').item.json.order_id }}', ''), \n    NULLIF('{{ $('Execute a SQL query1').item.json.next_id }}', ''),\n    NULLIF(REPLACE(REPLACE('{{ $('When Executed by Another Workflow').item.json.whatsapp_phone }}', '+', ''), ' ', ''), ''), \n    NULLIF('{{ $('When Executed by Another Workflow').item.json.language }}', ''), \n    'New'\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2592,
+        -432
+      ],
+      "id": "6fbd52ea-befc-4553-a040-aa3a4a79a808",
+      "name": "Execute a SQL query6",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id, FirstName, Phone, Refunds_Last_90d__c FROM Contact WHERE Customer_Id__c = '{{ $('When Executed by Another Workflow').item.json.customer_id }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        2816,
+        -432
+      ],
+      "id": "0c18dcf1-5a6c-47b3-b18f-50a1ca3bcd08",
+      "name": "Perform a query1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "1t4ZmWrUeFc3x60U",
+          "name": "Customer-Service Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "d2aa597b-b967-49b1-b989-2d22878cc201",
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3040,
+        -432
+      ],
+      "id": "b5257050-3929-425e-a959-4e3905c8e290",
+      "name": "If2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $('Perform a query1').item.json.Id }}",
+        "updateFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "Refunds_Last_90d__c",
+                "value": "={{ ($('Perform a query1').item.json.Refunds_Last_90d__c || 0) + 1 }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        3264,
+        -448
+      ],
+      "id": "b9caa834-be43-4ced-96e7-78a69fc354b2",
+      "name": "Update a contact",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "1t4ZmWrUeFc3x60U",
+          "name": "Customer-Service Agent"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.audit_log (\n    customer_id, \n    order_id, \n    agent, \n    decision, \n    amount, \n    currency, \n    route, \n    approved_by, \n    policy_version, \n    reason\n)\nVALUES (\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}', \n    NULLIF('{{ $('When Executed by Another Workflow').item.json.order_id }}', ''), \n    'WatchMate Genie', \n    'Executed', \n    NULLIF({{ $('Code in JavaScript').item.json.amount }}, 0.0), \n    NULLIF('{{ $('Code in JavaScript').item.json.currency }}', ''), \n    NULLIF('{{ $('Code in JavaScript').item.json.decision_output.route }}', ''),\n    NULLIF('{{ $('When Executed by Another Workflow').item.json.approved_by }}', ''), \n    NULLIF('{{ $('Code in JavaScript').item.json.policy_version }}', ''), \n    'Refund {{ $('Execute a SQL query1').item.json.next_id }} : {{ $('When Executed by Another Workflow').item.json.reason_code }}'\n)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        3488,
+        -432
+      ],
+      "id": "727e0477-a356-4705-abe1-2323593c9147",
+      "name": "Execute a SQL query7",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7891975f-1847-4521-b90c-6a9495bc584e",
+              "leftValue": "={{ $json.num_affected_rows }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        3712,
+        -432
+      ],
+      "id": "1f975e4c-1a9c-422d-90c5-ae32cacf27fb",
+      "name": "If3",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"success\": true,\n  \"already_done\": false,\n  \"return_id\": \"{{ $('Execute a SQL query1').item.json.next_id }}\",\n  \"label_url\": \"https://watchmate.example/return/{{ $('Execute a SQL query1').item.json.next_id }}\",\n  \"refund_amount\": {{ $('Code in JavaScript').item.json.decision_output.refund_amount || 0 }},\n  \"currency\": \"{{ $('Code in JavaScript').item.json.decision_output.currency }}\",\n  \"next_steps\": \"{{ $('Code in JavaScript').item.json.decision_output.currency === 'AED' ? 'Ship the watch within 7 days using the prepaid label. Our team inspects it when it arrives, and the refund starts once it passes inspection: 5-10 business days to reach you.' : 'Ship the watch within 7 days using the prepaid label. Our team inspects it when it arrives, and the refund starts once it passes inspection: 5-7 business days to reach you.' }}\",\n  \"message\": \"Return created. Waiting for inspection.\"\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        3952,
+        -448
+      ],
+      "id": "2fd2a6b5-d34b-4b0e-9eea-1d58d469bc6e",
+      "name": "Edit Fields",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1d2681a9-7a7b-46e8-ac99-278aac3fa0db",
+              "name": "Success",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "27895c3f-2fdd-4b13-ac91-c40499e90d15",
+              "name": "Message",
+              "value": "={{ $('Code in JavaScript').item.json.validation_output.message || $('Code in JavaScript').item.json.decision_output.reasons || \"Return could not be processed automatically.\" }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        800,
+        -240
+      ],
+      "id": "f46a6494-4517-4283-8868-61d0f7d17893",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "3e5f539c-d8da-4b6c-aaa1-fffb1b929fab",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        128,
+        -240
+      ],
+      "id": "c386f953-3b98-481a-b4fa-e0536930a471",
+      "name": "If4",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d49de750-3826-413c-8e8c-41eb86d7e725",
+              "name": "Output ",
+              "value": "There are no Orders with this details",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        352,
+        -144
+      ],
+      "id": "effcff6a-7afc-4015-8ac2-e4b63478c1e4",
+      "name": "Edit Fields2",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n    \"customer_id\": \"{{ $json.customer_id }}\",\n    \"order_id\": \"{{ $json.order_id }}\",\n    \"reason_code\": \"{{ $json.reason_code }}\",\n    \"reason_text\": \"{{ $json.reason_text }}\",\n    \"risk_score\": \"{{ $json.risk_score }}\",\n    \"refunds_last_90d\": \"{{ $json.refunds_last_90d }}\",\n    \"tier\": \"{{ $json.tier }}\",\n    \"confirmed\": \"{{ $json.confirmed }}\",\n    \"approved_by\": \"{{ $json.approved_by }}\",\n    \"conversation_id\": \"{{ $json.conversation_id }}\",\n    \"item_unused\": \"{{ $json.item_unused }}\",\n    \"whatsapp_phone\": \"{{ $json.whatsapp_phone }}\",\n    \"language\": \"{{ $json.language }}\"\n  }",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -320,
+        -240
+      ],
+      "id": "3c99014b-39b3-4123-a359-752e19a94726",
+      "name": "Edit Fields3",
+      "alwaysOutputData": true
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query3": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query4": {
+      "main": [
+        [
+          {
+            "node": "Create a case",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a case": {
+      "main": [
+        [
+          {
+            "node": "Perform a query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query5": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query6": {
+      "main": [
+        [
+          {
+            "node": "Perform a query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Perform a query1": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Update a contact",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update a contact": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query7": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_id": "C004",
+          "order_id": "O1215",
+          "reason_code": "size_fit",
+          "reason_text": "I do not like the fit (same issue as previous order)",
+          "risk_score": 15,
+          "refunds_last_90d": 0,
+          "tier": "standard",
+          "confirmed": true,
+          "approved_by": "none",
+          "item_unused": true,
+          "language": "en"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [
+    {
+      "id": "4NFlM1OuNYCMjgn2",
+      "name": "Return",
+      "createdAt": "2026-11-05T07:00:52.668Z",
+      "updatedAt": "2026-11-05T07:00:52.668Z"
+    }
+  ],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "TiEhPmZzAWeNdf3h",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-11-05T07:00:56.789Z",
+      "updatedAt": "2026-11-05T07:00:56.789Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "5b4e197c-2d4b-4a5d-a05c-0f317ceb111a",
+    "workflowId": "TiEhPmZzAWeNdf3h",
+    "nodes": [
+      {
+        "parameters": {
+          "inputSource": "jsonExample",
+          "jsonExample": "\n  {\n    \"customer_id\": \"C013\",\n    \"order_id\": \"O1013\",\n    \"reason_code\": \"size_fit\",\n    \"reason_text\": \"The watch is a bit too small for my wrist.\",\n    \"risk_score\": 0,\n    \"refunds_last_90d\": 0,\n    \"tier\": \"standard\",\n    \"confirmed\": true,\n    \"approved_by\": \"\",\n    \"conversation_id\": \"MSG-99910\",\n    \"item_unused\": true,\n    \"whatsapp_phone\": \"919876543213\",\n    \"language\": \"en\"\n  }\n"
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -544,
+          -240
+        ],
+        "id": "ee908e70-f4c6-4baa-9017-2a06fb6e9f66",
+        "name": "When Executed by Another Workflow",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n \n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n \n    DATEDIFF(\n        CAST(c.asof AS DATE),\n        CAST(s.delivered_date AS DATE)\n    ) AS days_since_delivery,\n \n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(\n            0,\n            DATEDIFF(\n                CAST(c.asof AS DATE),\n                CAST(s.estimated_delivery AS DATE)\n            )\n        )\n    END AS days_late,\n \n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n \n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) AS return_count,\n \n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS refund_count,\n \n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(CAST(c.asof AS DATE), 30)\n    ) AS auto_actions_30d,\n \n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n        LIMIT 1\n    ) AS risk_score_escalate,\n \n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n        LIMIT 1\n    ) AS serial_refund_threshold,\n \n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n        LIMIT 1\n    ) AS damage_report_days\n \nFROM workspace.agentic_support.orders o\n \nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n \nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n \nCROSS JOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n    LIMIT 1\n) c\n \nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}' "
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          -96,
+          -240
+        ],
+        "id": "ec191020-90f6-45a0-aa68-6b838e4dec72",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "// Loop over input items\nfor (const item of $input.all()) {\n  \n  // 1. Gather Inputs\n  // Get trigger parameters from the initial trigger node\n  const triggerData = $('When Executed by Another Workflow').first().json;\n  // Get database row from Databricks query node\n  const sqlData = item.json; \n  \n  const row = sqlData && sqlData.order_id ? sqlData : null;\n\n  // Format and cast all input variables exactly as defined in the skill\n  const rt = String(triggerData.request_type || 'return').toLowerCase().trim(); \n  const risk = parseInt(triggerData.risk_score || 0, 10);\n  const refunds90 = parseInt(triggerData.refunds_last_90d || 0, 10);\n  const cust_tier = String(triggerData.tier || '').toLowerCase().trim();\n  \n  // Check item_unused: supports explicit boolean/string or inferred from customer description\n  const reasonText = String(triggerData.reason_text || '').toLowerCase();\n  const unusedParam = String(triggerData.item_unused).toLowerCase();\n  const unused = unusedParam === 'true' || \n                 triggerData.item_unused === true || \n                 reasonText.includes('unworn') || \n                 reasonText.includes('unused') || \n                 reasonText.includes('original packaging');\n\n  const evidence = String(triggerData.evidence_ok) === 'true' || triggerData.evidence_ok === true;\n  const exception = String(triggerData.wants_exception) === 'true' || triggerData.wants_exception === true;\n  const new_country = String(triggerData.new_country || '').trim().toUpperCase();\n\n  const confirmed = String(triggerData.confirmed) === 'true' || triggerData.confirmed === true;\n  const approved_by = String(triggerData.approved_by || '').trim();\n  const approved = approved_by.length > 0;\n\n  // Helper functions matching Ruby closures\n  function build(decision, route, tier, reasons, amount, days_left) {\n    return {\n      decision: decision,\n      route: route,\n      tier: tier,\n      refund_amount: parseFloat(amount) || 0.0,\n      currency: row ? String(row.currency || '') : '',\n      days_remaining: parseInt(days_left || 0, 10),\n      reasons: Array.isArray(reasons) ? reasons.join('; ') : String(reasons),\n      policy_version: row ? String(row.policy_version || '') : ''\n    };\n  }\n\n  function decline(msg, left = 0) { \n    return build('decline', 'decline', 'T0', msg, 0, left); \n  }\n  \n  function human(msg, left = 0) { \n    return build('human', 'human', 'T3', msg, 0, left); \n  }\n\n  function by_amount(refund, reasons, left = 0) {\n    const auto_limit = parseFloat(row.auto_limit || 0);\n    const approval_limit = parseFloat(row.approval_limit || 0);\n    const auto_actions_30d = parseInt(row.auto_actions_30d || 0, 10);\n    const max_auto_actions_30d = parseInt(row.max_auto_actions_30d || 0, 10);\n\n    let reasonArr = Array.isArray(reasons) ? reasons : [reasons];\n\n    if (refund <= auto_limit) {\n      if (auto_actions_30d >= max_auto_actions_30d) {\n        reasonArr.push('Auto-action limit reached');\n        return build('eligible', 'approval', 'T2', reasonArr, refund, left);\n      } else {\n        return build('eligible', 'auto', 'T1', reasonArr, refund, left);\n      }\n    } else if (refund <= approval_limit) {\n      return build('eligible', 'approval', 'T2', reasonArr, refund, left);\n    } else {\n      return build('human', 'human', 'T3', reasonArr, refund, left);\n    }\n  }\n\n  const amount = row ? parseFloat(row.amount || 0) : 0.0;\n  const fee = row ? parseFloat(row.shipping_fee || 0) : 0.0;\n\n  // -------------------------------------------------------------\n  // PART 1: Full Step-2 Business Logic Engine\n  // -------------------------------------------------------------\n  let decision_output;\n\n  if (!row) {\n    decision_output = decline('Order not found for this customer');\n  } else if (rt !== 'address_change' && (String(row.refunded).toLowerCase() === 'yes' || parseInt(row.refund_count || 0, 10) > 0)) {\n    decision_output = decline('Already refunded');\n  } else if (rt !== 'address_change' && parseInt(row.return_count || 0, 10) > 0) {\n    decision_output = decline('A return is already in progress for this order; the refund follows after inspection');\n  } else if (row.order_status === 'cancelled') {\n    decision_output = decline('Order is already cancelled');\n  } else if (risk >= parseInt(row.risk_score_escalate || 0, 10) || refunds90 >= parseInt(row.serial_refund_threshold || 0, 10)) {\n    decision_output = human('Risk gate: customer needs human review');\n  } else if (rt === 'return') {\n    if (row.order_status !== 'delivered') {\n      decision_output = decline('Order not delivered yet');\n    } else {\n      const days = parseInt(row.days_since_delivery || 0, 10);\n      const return_window_days = parseInt(row.return_window_days || 0, 10);\n      const left = return_window_days - days;\n\n      if (left < 0) {\n        if (exception || cust_tier === 'vip') {\n          decision_output = human(`Outside the ${return_window_days}-day window; exception request`, left);\n        } else {\n          decision_output = decline(`Delivered ${days} days ago; return window is ${return_window_days} days`, left);\n        }\n      } else if (!unused) {\n        decision_output = decline('Item must be unused', left);\n      } else {\n        decision_output = by_amount(amount, ['Return'], left);\n      }\n    }\n  } else if (rt === 'damaged' || rt === 'wrong_item') {\n    if (row.order_status !== 'delivered') {\n      decision_output = decline('Order not delivered yet');\n    } else {\n      const days = parseInt(row.days_since_delivery || 0, 10);\n      const damage_report_days = parseInt(row.damage_report_days || 0, 10);\n      if (days > damage_report_days) {\n        decision_output = human(`Reported ${days} days after delivery; limit is ${damage_report_days} days`);\n      } else if (!evidence) {\n        decision_output = build('need_evidence', 'need_evidence', 'T0', 'Need a specific description or photo of the problem', 0, 0);\n      } else {\n        decision_output = by_amount(amount + fee, [`${rt} refund including shipping`], 0);\n      }\n    }\n  } else if (rt === 'delayed') {\n    const late = parseInt(row.days_late || 0, 10);\n    const delay_threshold_days = parseInt(row.delay_threshold_days || 0, 10);\n    if (late <= delay_threshold_days) {\n      decision_output = decline(`${late} days late; threshold is ${delay_threshold_days}. Share the ETA`);\n    } else {\n      decision_output = by_amount(amount + fee, [`Delayed ${late} days`], 0);\n    }\n  } else if (rt === 'lost') {\n    if (row.ship_status !== 'lost') {\n      decision_output = decline('Carrier has not marked it lost');\n    } else {\n      decision_output = by_amount(amount + fee, ['Lost in transit'], 0);\n    }\n  } else if (rt === 'not_received') {\n    if (row.ship_status !== 'delivered') {\n      decision_output = decline('Carrier does not show it delivered; use tracking');\n    } else if (row.claim_status === 'raised') {\n      decision_output = decline('A carrier claim is already open');\n    } else {\n      decision_output = build('eligible', 'auto', 'T1', 'Raise a carrier claim; follow up within 48 hours; no instant refund', 0, 0);\n    }\n  } else if (rt === 'cancel') {\n    if (!['payment_pending', 'packed'].includes(row.order_status)) {\n      decision_output = decline('Already shipped or delivered; cannot cancel');\n    } else {\n      const refund = row.payment_method === 'cod' ? 0.0 : amount + fee;\n      decision_output = by_amount(refund, ['Cancellation'], 0);\n    }\n  } else if (rt === 'address_change') {\n    if (new_country !== '' && new_country !== String(row.country || '').toUpperCase()) {\n      decision_output = human('Address in a different country needs human review');\n    } else if (['payment_pending', 'packed'].includes(row.order_status)) {\n      decision_output = build('eligible', 'auto', 'T1', 'Not dispatched yet; address can be changed now', 0, 0);\n    } else if (row.order_status === 'shipped') {\n      decision_output = build('eligible', 'approval', 'T2', 'Already shipped; needs a carrier intercept request. Fee may apply and it is not guaranteed', 0, 0);\n    } else {\n      decision_output = decline(`Order is ${row.order_status}; address cannot be changed`);\n    }\n  } else {\n    decision_output = decline('Unknown request type');\n  }\n\n  // -------------------------------------------------------------\n  // PART 2: Full Step-3 Validation Engine\n  // -------------------------------------------------------------\n  let validation_output = {};\n  const reasons_str = String(decision_output.reasons || '').toLowerCase();\n\n  if (!confirmed) {\n    validation_output = { \n      allowed: false, \n      already_done: false, \n      message: 'The customer has not confirmed yet.' \n    };\n  } else if (decision_output.decision !== 'eligible') {\n    validation_output = {\n      allowed: false,\n      already_done: reasons_str.includes('already'),\n      message: `Not allowed: ${decision_output.reasons}`\n    };\n  } else if (decision_output.route === 'auto' || (decision_output.route === 'approval' && approved)) {\n    validation_output = { \n      allowed: true, \n      already_done: false, \n      message: 'OK' \n    };\n  } else {\n    validation_output = { \n      allowed: false, \n      already_done: false, \n      message: 'This needs approval or a person. Escalate instead.' \n    };\n  }\n\n  // -------------------------------------------------------------\n  // PART 3: Expose Outputs to n8n\n  // -------------------------------------------------------------\n  item.json.decision_output = decision_output;\n  item.json.validation_output = validation_output;\n\n  // Flattened outputs for simple referencing in n8n nodes\n  item.json.allowed = validation_output.allowed;\n  item.json.already_done = validation_output.already_done;\n  item.json.message = validation_output.message;\n  item.json.refund_amount = decision_output.refund_amount;\n  item.json.currency = decision_output.currency;\n  item.json.decision = decision_output.decision;\n  item.json.route = decision_output.route;\n  item.json.reasons = decision_output.reasons;\n}\n\nreturn $input.all();\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          352,
+          -336
+        ],
+        "id": "078578fd-1111-452d-b0a4-0d5cc3ac1602",
+        "name": "Code in JavaScript",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "5a6adcee-ff50-48e7-a08b-83f2fc485ce7",
+                "leftValue": "={{ $json.validation_output.allowed }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          576,
+          -336
+        ],
+        "id": "dcb54e10-6033-4905-96a3-e865f97a033c",
+        "name": "If",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "SELECT CONCAT('R', LPAD(COALESCE(MAX(CAST(REGEXP_EXTRACT(return_id, '^R([0-9]+)$', 1) AS INT)), 0) + 1, 4, '0')) AS next_id\nFROM workspace.agentic_support.returns\nWHERE return_id RLIKE '^R[0-9]+$'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          800,
+          -432
+        ],
+        "id": "8eb63360-90d6-4a3d-90cc-035703f753c9",
+        "name": "Execute a SQL query1",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.returns\n(\n    return_id,\n    order_id,\n    reason_code,\n    reason_text,\n    resolution,\n    status,\n    label_url,\n    refund_amount,\n    currency,\n    created_at\n)\nSELECT\n    '{{ $json.next_id }}',\n    o.order_id,\n    NULLIF('{{ $('When Executed by Another Workflow').item.json.reason_code }}', ''),\n    NULLIF('{{ $('When Executed by Another Workflow').item.json.reason_text }}', ''),\n    'refund',\n    'awaiting_inspection',\n    CONCAT('https://watchmate.example/return/', '{{ $json.next_id }}'),\n    CAST({{ $('Code in JavaScript').item.json.refund_amount || 0 }} AS DECIMAL(10, 2)),\n    o.currency,\n    CURRENT_DATE()\nFROM workspace.agentic_support.orders o\nWHERE o.order_id = '{{ $('Code in JavaScript').item.json.order_id }}';"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1024,
+          -432
+        ],
+        "id": "25b5d79b-5ebf-4b73-a54f-2cfd4a587e4b",
+        "name": "Execute a SQL query2",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=UPDATE workspace.agentic_support.orders\nSET status = 'return_requested'\nWHERE order_id = \"{{ $('Edit Fields3').item.json.order_id }}\" AND customer_id = \"{{ $('Edit Fields3').item.json.customer_id }}\""
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1472,
+          -432
+        ],
+        "id": "d147e300-843f-4600-9fe5-29de4e019f2a",
+        "name": "Execute a SQL query3",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "39849ea4-6a74-47ce-9496-7b67b151e43b",
+                "leftValue": "={{ $json.num_affected_rows }}",
+                "rightValue": "1",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1248,
+          -432
+        ],
+        "id": "59a682e4-8a59-4b4b-8ff8-3702d1bc96cd",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.order_events\n(\n    order_id,\n    customer_id,\n    event,\n    detail\n)\nVALUES\n(\n    '{{ $('Edit Fields3').item.json.order_id }}',\n    '{{ $('Edit Fields3').item.json.customer_id }}',\n    'Return requested',\n    '{{ $('Edit Fields3').item.json.reason_text }}'\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1696,
+          -432
+        ],
+        "id": "6e26fb9d-f4ea-41e7-94a1-d3c0bb00ed99",
+        "name": "Execute a SQL query4",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "case",
+          "type": "Other",
+          "additionalFields": {
+            "customFieldsUi": {
+              "customFieldsValues": [
+                {
+                  "fieldId": "Customer_Id__c",
+                  "value": "={{ $('Edit Fields3').item.json.customer_id }}"
+                }
+              ]
+            },
+            "subject": "={{ \"Inspect return \" + $('Execute a SQL query1').first().json.next_id + \" - order \" + $('When Executed by Another Workflow').first().json.order_id }}"
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          1920,
+          -432
+        ],
+        "id": "5cdc78b6-c11d-471d-959d-7429472db29a",
+        "name": "Create a case",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "1t4ZmWrUeFc3x60U",
+            "name": "Customer-Service Agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT CaseNumber FROM Case WHERE Id = '{{ $json.id }}'"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          2144,
+          -432
+        ],
+        "id": "6080e1a3-1e10-4be5-b31b-633bd72b0bf1",
+        "name": "Perform a query",
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "1t4ZmWrUeFc3x60U",
+            "name": "Customer-Service Agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.inspections\n(\n    return_id,\n    order_id,\n    customer_id,\n    kind,\n    jira_key,\n    status\n)\nVALUES\n(\n    '{{ $('Execute a SQL query1').item.json.next_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.order_id }}',\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}',\n    'return',\n    '{{ $('Create a case').item.json.id }}',\n    'pending'\n);"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2368,
+          -432
+        ],
+        "id": "9a5178f2-4844-4a26-b0d9-88b35ced3fe0",
+        "name": "Execute a SQL query5",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.request_tracker (\n    kind, \n    external_system, \n    external_id, \n    external_alt, \n    customer_id, \n    order_id, \n    return_id, \n    whatsapp_phone, \n    language, \n    last_status\n)\nVALUES (\n    'inspection', \n    'salesforce', \n    '{{ $('Create a case').item.json.id }}', \n    NULLIF('{{ $('Perform a query').item.json.CaseNumber }}', ''), \n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}', \n    NULLIF('{{ $('When Executed by Another Workflow').item.json.order_id }}', ''), \n    NULLIF('{{ $('Execute a SQL query1').item.json.next_id }}', ''),\n    NULLIF(REPLACE(REPLACE('{{ $('When Executed by Another Workflow').item.json.whatsapp_phone }}', '+', ''), ' ', ''), ''), \n    NULLIF('{{ $('When Executed by Another Workflow').item.json.language }}', ''), \n    'New'\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2592,
+          -432
+        ],
+        "id": "6fbd52ea-befc-4553-a040-aa3a4a79a808",
+        "name": "Execute a SQL query6",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT Id, FirstName, Phone, Refunds_Last_90d__c FROM Contact WHERE Customer_Id__c = '{{ $('When Executed by Another Workflow').item.json.customer_id }}'"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          2816,
+          -432
+        ],
+        "id": "0c18dcf1-5a6c-47b3-b18f-50a1ca3bcd08",
+        "name": "Perform a query1",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "1t4ZmWrUeFc3x60U",
+            "name": "Customer-Service Agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "d2aa597b-b967-49b1-b989-2d22878cc201",
+                "leftValue": "={{ $json.Id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          3040,
+          -432
+        ],
+        "id": "b5257050-3929-425e-a959-4e3905c8e290",
+        "name": "If2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $('Perform a query1').item.json.Id }}",
+          "updateFields": {
+            "customFieldsUi": {
+              "customFieldsValues": [
+                {
+                  "fieldId": "Refunds_Last_90d__c",
+                  "value": "={{ ($('Perform a query1').item.json.Refunds_Last_90d__c || 0) + 1 }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          3264,
+          -448
+        ],
+        "id": "b9caa834-be43-4ced-96e7-78a69fc354b2",
+        "name": "Update a contact",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "1t4ZmWrUeFc3x60U",
+            "name": "Customer-Service Agent"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.audit_log (\n    customer_id, \n    order_id, \n    agent, \n    decision, \n    amount, \n    currency, \n    route, \n    approved_by, \n    policy_version, \n    reason\n)\nVALUES (\n    '{{ $('When Executed by Another Workflow').item.json.customer_id }}', \n    NULLIF('{{ $('When Executed by Another Workflow').item.json.order_id }}', ''), \n    'WatchMate Genie', \n    'Executed', \n    NULLIF({{ $('Code in JavaScript').item.json.amount }}, 0.0), \n    NULLIF('{{ $('Code in JavaScript').item.json.currency }}', ''), \n    NULLIF('{{ $('Code in JavaScript').item.json.decision_output.route }}', ''),\n    NULLIF('{{ $('When Executed by Another Workflow').item.json.approved_by }}', ''), \n    NULLIF('{{ $('Code in JavaScript').item.json.policy_version }}', ''), \n    'Refund {{ $('Execute a SQL query1').item.json.next_id }} : {{ $('When Executed by Another Workflow').item.json.reason_code }}'\n)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          3488,
+          -432
+        ],
+        "id": "727e0477-a356-4705-abe1-2323593c9147",
+        "name": "Execute a SQL query7",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "7891975f-1847-4521-b90c-6a9495bc584e",
+                "leftValue": "={{ $json.num_affected_rows }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          3712,
+          -432
+        ],
+        "id": "1f975e4c-1a9c-422d-90c5-ae32cacf27fb",
+        "name": "If3",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"success\": true,\n  \"already_done\": false,\n  \"return_id\": \"{{ $('Execute a SQL query1').item.json.next_id }}\",\n  \"label_url\": \"https://watchmate.example/return/{{ $('Execute a SQL query1').item.json.next_id }}\",\n  \"refund_amount\": {{ $('Code in JavaScript').item.json.decision_output.refund_amount || 0 }},\n  \"currency\": \"{{ $('Code in JavaScript').item.json.decision_output.currency }}\",\n  \"next_steps\": \"{{ $('Code in JavaScript').item.json.decision_output.currency === 'AED' ? 'Ship the watch within 7 days using the prepaid label. Our team inspects it when it arrives, and the refund starts once it passes inspection: 5-10 business days to reach you.' : 'Ship the watch within 7 days using the prepaid label. Our team inspects it when it arrives, and the refund starts once it passes inspection: 5-7 business days to reach you.' }}\",\n  \"message\": \"Return created. Waiting for inspection.\"\n}\n",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          3952,
+          -448
+        ],
+        "id": "2fd2a6b5-d34b-4b0e-9eea-1d58d469bc6e",
+        "name": "Edit Fields",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "1d2681a9-7a7b-46e8-ac99-278aac3fa0db",
+                "name": "Success",
+                "value": false,
+                "type": "boolean"
+              },
+              {
+                "id": "27895c3f-2fdd-4b13-ac91-c40499e90d15",
+                "name": "Message",
+                "value": "={{ $('Code in JavaScript').item.json.validation_output.message || $('Code in JavaScript').item.json.decision_output.reasons || \"Return could not be processed automatically.\" }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          800,
+          -240
+        ],
+        "id": "f46a6494-4517-4283-8868-61d0f7d17893",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "3e5f539c-d8da-4b6c-aaa1-fffb1b929fab",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          128,
+          -240
+        ],
+        "id": "c386f953-3b98-481a-b4fa-e0536930a471",
+        "name": "If4",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "d49de750-3826-413c-8e8c-41eb86d7e725",
+                "name": "Output ",
+                "value": "There are no Orders with this details",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          352,
+          -144
+        ],
+        "id": "effcff6a-7afc-4015-8ac2-e4b63478c1e4",
+        "name": "Edit Fields2",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n    \"customer_id\": \"{{ $json.customer_id }}\",\n    \"order_id\": \"{{ $json.order_id }}\",\n    \"reason_code\": \"{{ $json.reason_code }}\",\n    \"reason_text\": \"{{ $json.reason_text }}\",\n    \"risk_score\": \"{{ $json.risk_score }}\",\n    \"refunds_last_90d\": \"{{ $json.refunds_last_90d }}\",\n    \"tier\": \"{{ $json.tier }}\",\n    \"confirmed\": \"{{ $json.confirmed }}\",\n    \"approved_by\": \"{{ $json.approved_by }}\",\n    \"conversation_id\": \"{{ $json.conversation_id }}\",\n    \"item_unused\": \"{{ $json.item_unused }}\",\n    \"whatsapp_phone\": \"{{ $json.whatsapp_phone }}\",\n    \"language\": \"{{ $json.language }}\"\n  }",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          -320,
+          -240
+        ],
+        "id": "3c99014b-39b3-4123-a359-752e19a94726",
+        "name": "Edit Fields3",
+        "alwaysOutputData": true
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "If4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Code in JavaScript": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query1": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query2": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query3": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query4": {
+        "main": [
+          [
+            {
+              "node": "Create a case",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Create a case": {
+        "main": [
+          [
+            {
+              "node": "Perform a query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Perform a query": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query5",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query5": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query6",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query6": {
+        "main": [
+          [
+            {
+              "node": "Perform a query1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Perform a query1": {
+        "main": [
+          [
+            {
+              "node": "If2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If2": {
+        "main": [
+          [
+            {
+              "node": "Update a contact",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update a contact": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query7",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query7": {
+        "main": [
+          [
+            {
+              "node": "If3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If3": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If4": {
+        "main": [
+          [
+            {
+              "node": "Code in JavaScript",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields3": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 5b4e197c",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-05T13:23:43.051Z",
+    "updatedAt": "2026-11-05T13:23:47.000Z"
+  }
+}
