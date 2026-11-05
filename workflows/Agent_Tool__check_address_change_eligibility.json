@@ -4,9 +4,9 @@
   "active": false,
   "activeVersionId": null,
   "createdAt": "2026-11-04T11:32:14.488Z",
-  "updatedAt": "2026-11-04T18:39:55.913Z",
+  "updatedAt": "2026-11-05T07:12:46.081Z",
   "isArchived": false,
-  "versionId": "895ea040-554d-4e5e-90f1-c439c89e4c1e",
+  "versionId": "c1477f29-257f-4f56-b65f-a732a8673aa3",
   "triggerCount": 0,
   "nodes": [
     {
@@ -54,7 +54,7 @@
           "cachedResultName": "Serverless Starter Warehouse",
           "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
         },
-        "query": "\nSELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(\n            0,\n            DATEDIFF(c.asof, s.estimated_delivery)\n        )\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
+        "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(\n            0,\n            DATEDIFF(c.asof, s.estimated_delivery)\n        )\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
       },
       "type": "n8n-nodes-base.databricks",
       "typeVersion": 1,
@@ -65,6 +65,7 @@
       "id": "611afc10-c5ef-4ac7-bb76-00416421bcd1",
       "name": "Execute a SQL query",
       "alwaysOutputData": true,
+      "retryOnFail": false,
       "credentials": {
         "databricksApi": {
           "id": "6NJqcClPZ1Ybyq12",
@@ -74,66 +75,8 @@
     },
     {
       "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 4
-          },
-          "conditions": [
-            {
-              "id": "5a0d5746-58e5-4bff-87f8-5a6ae4c87b41",
-              "leftValue": "={{ $json.customer_id }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "exists",
-                "singleValue": true
-              }
-            },
-            {
-              "id": "96ee788a-08b2-4e12-847b-196a791b4e9d",
-              "leftValue": "={{ $json.order_id }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "exists",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.4,
-      "position": [
-        320,
-        144
-      ],
-      "id": "fb1cae07-2feb-4f6c-a366-c737c6f074f5",
-      "name": "If1"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "e3c20205-8363-480b-beda-ae6cf4b8f649",
-              "name": "Success",
-              "value": "False",
-              "type": "string"
-            },
-            {
-              "id": "de0614fe-3ed2-4267-bacb-5b193736b5a8",
-              "name": "Response",
-              "value": "Required input parameters are missing",
-              "type": "string"
-            }
-          ]
-        },
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"in sufficient credentials\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -172,7 +115,7 @@
           "conditions": [
             {
               "id": "d0cec01b-7508-405b-8b7a-13ccc395d3cb",
-              "leftValue": "=\t{{ $json.order_id }}",
+              "leftValue": "={{ $json.order_id }}",
               "rightValue": "",
               "operator": {
                 "type": "string",
@@ -383,6 +326,60 @@
       ],
       "id": "ec494c8d-8819-451b-a960-31b66e3ec68a",
       "name": "Decline Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "441664dd-ff5d-4a37-b534-ba7d9a7cca27",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "={{ $json.order_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "9019cc03-2dec-40df-b016-c4bca7ecf5cd",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "a7a095d7-5507-44e3-b543-6b2b7ec75cf5",
+              "leftValue": "={{ $json.new_country }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        320,
+        144
+      ],
+      "id": "6a7ac24b-cc74-4cb5-a4ea-e81ec2213b35",
+      "name": "Check Valid input parameters"
     }
   ],
   "connections": {
@@ -390,7 +387,7 @@
       "main": [
         [
           {
-            "node": "If1",
+            "node": "Check Valid input parameters",
             "type": "main",
             "index": 0
           }
@@ -402,24 +399,6 @@
         [
           {
             "node": "Check Order Exists",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If1": {
-      "main": [
-        [
-          {
-            "node": "Execute a SQL query",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Edit Fields1",
             "type": "main",
             "index": 0
           }
@@ -493,6 +472,24 @@
           }
         ]
       ]
+    },
+    "Check Valid input parameters": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodeGroups": [],
@@ -505,12 +502,12 @@
     "Address Change Skill Input": [
       {
         "json": {
-          "customer_id": "C017",
-          "order_id": "O1019",
+          "customer_id": "TSTC005",
+          "order_id": "TSTO005",
           "risk_score": null,
           "refunds_last_90d": null,
           "tier": null,
-          "new_country": null
+          "new_country": "US"
         }
       }
     ]
