@@ -1,0 +1,3944 @@
+{
+  "id": "Tl8FHTZkTeFBODbj",
+  "name": "Duplicate SWF - Customer Details Update (V3)",
+  "active": true,
+  "activeVersionId": "c3b1efbc-54ba-4262-b686-8e957c17a176",
+  "createdAt": "2026-11-05T07:02:17.224Z",
+  "updatedAt": "2026-11-05T13:02:20.152Z",
+  "isArchived": false,
+  "versionId": "c3b1efbc-54ba-4262-b686-8e957c17a176",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "CustomerID"
+            },
+            {
+              "name": "action"
+            },
+            {
+              "name": "field"
+            },
+            {
+              "name": "FirstName"
+            },
+            {
+              "name": "LastName"
+            },
+            {
+              "name": "Email"
+            },
+            {
+              "name": "Phone"
+            },
+            {
+              "name": "PreferredLanguage"
+            },
+            {
+              "name": "OTP"
+            },
+            {
+              "name": "ResendCode"
+            },
+            {
+              "name": "SessionId"
+            },
+            {
+              "name": "updates",
+              "type": "object"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -64,
+        576
+      ],
+      "id": "662aa282-2032-4aea-8ea6-74b579ad7159",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.CustomerID }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "id": "2a23a752-2b68-4889-a952-fe90f7e542c9"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        576
+      ],
+      "id": "12e4cb53-6292-40a3-8ac4-c2be62277a93",
+      "name": "Customer ID Provided"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "85c56bab-1ddc-498a-a84c-b25b6febf4a1",
+              "name": "status",
+              "value": "ERROR",
+              "type": "string"
+            },
+            {
+              "id": "fd4b5f5c-0ee9-4e46-bc0d-17c93f7bf33b",
+              "name": "message",
+              "value": "Please provide a valid CustomerID before updating customer details.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        672
+      ],
+      "id": "5bf0e5e8-7d95-4fd2-be2c-7e16744b286d",
+      "name": "Missing Customer ID Response"
+    },
+    {
+      "parameters": {
+        "resource": "search",
+        "query": "=SELECT Id,FirstName,LastName,Name,Email,Phone,Languages__c,Customer_Id__c FROM Contact WHERE Customer_Id__c = '{{ $(\"When Executed by Another Workflow\").first().json.CustomerID }}'"
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        448,
+        480
+      ],
+      "id": "41f49aea-ddb1-4379-ad53-8e20b6fcd276",
+      "name": "Fetch Customer from Salesforce",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "3ujCczfBhhZSLT1x",
+          "name": "Lokesh Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              },
+              "id": "50a1541f-362a-4405-84e5-28d5bdb67033"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        672,
+        480
+      ],
+      "id": "be1e071f-906a-4784-abed-f107fb3d41dc",
+      "name": "Customer Found?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bd2268fb-2281-4f87-a155-f0f797e1c5d7",
+              "name": "status",
+              "value": "CUSTOMER_NOT_FOUND",
+              "type": "string"
+            },
+            {
+              "id": "7d82db47-9c83-4f98-9584-77437376e650",
+              "name": "message",
+              "value": "=Customer not found for CustomerID {{ $('When Executed by Another Workflow').first().json.CustomerID }}. Please check the ID.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        592
+      ],
+      "id": "44d02336-b7e6-4dba-85ef-e054aec5168e",
+      "name": "Customer Not Found Response"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                    "rightValue": "request_email_change",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "a84d47f0-57d9-4126-98ba-ea2aac255a16"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Request Email Change"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                    "rightValue": "resend_email_otp",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "7d5431d7-3062-4f05-88a3-4c715f785243"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Resend OTP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                    "rightValue": "verify_email",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "81779a29-08c1-4090-9932-5bc1f516a0fd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Verify OTP"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                    "rightValue": "update_details",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "2ae1b37b-c614-4525-9793-1245c6284e55"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Update Non-email Detail"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        896,
+        336
+      ],
+      "id": "c2dd39b8-1dc1-43ae-900b-b046427f25eb",
+      "name": "Route Action"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS otp_active FROM workspace.agentic_support.verification_codes WHERE customer_id = '{{ $(\"Fetch Customer from Salesforce\").first().json.Customer_Id__c }}' AND purpose = 'email_change' AND used = 0 AND expires_at > current_timestamp()"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        160
+      ],
+      "id": "6df882f3-dc7d-4670-9f64-78f5d5986e26",
+      "name": "Check Active Email OTP",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.otp_active }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              },
+              "id": "92edde63-7489-4878-8cb9-e4a2e290b009"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1568,
+        160
+      ],
+      "id": "087c1b41-8d89-4bc3-97d6-3263ef7497b3",
+      "name": "Active OTP Exists?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.ResendCode }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "id": "4e8aaf60-cdfd-4974-adb1-2a23e1d8267d"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        80
+      ],
+      "id": "63b8c5c7-d755-4f90-8147-287f03599a4e",
+      "name": "Resend Confirmed?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2160f32d-3f27-4ea0-8169-1cd2524eda03",
+              "name": "status",
+              "value": "OTP_ACTIVE",
+              "type": "string"
+            },
+            {
+              "id": "0033af26-6f03-4db4-acb3-43d386d6053b",
+              "name": "message",
+              "value": "An active email-change verification code already exists. Would you like me to send a new code? Reply yes to resend or no to use the existing code.",
+              "type": "string"
+            },
+            {
+              "id": "9baa2d0b-5a28-4456-93ab-b1fe6af2f0a4",
+              "name": "nextAction",
+              "value": "resend_email_otp",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        240
+      ],
+      "id": "17033e9b-0c02-4290-ba3c-12a1bfbcc701",
+      "name": "Ask User About Existing OTP"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json;\nconst customer = $('Fetch Customer from Salesforce').first().json;\nconst code = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');\nreturn [{json:{...input, code, sfContactId: customer.Id, customerId: customer.Customer_Id__c, firstName: customer.FirstName, verifiedEmail: customer.Email}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        0
+      ],
+      "id": "908d491c-9e78-46bd-96c0-cb4d4601b493",
+      "name": "Generate Verification Code"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=MERGE INTO workspace.agentic_support.verification_codes AS target USING (SELECT '{{ $json.customerId }}' AS customer_id, '{{ $json.code }}' AS code, 'email_change' AS purpose, current_timestamp() + INTERVAL 5 MINUTES AS expires_at) AS source ON target.customer_id = source.customer_id AND target.purpose = source.purpose WHEN MATCHED THEN UPDATE SET target.code = source.code, target.expires_at = source.expires_at, target.used = 0 WHEN NOT MATCHED THEN INSERT (customer_id, code, purpose, expires_at, used) VALUES (source.customer_id, source.code, source.purpose, source.expires_at, 0)"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2240,
+        0
+      ],
+      "id": "351a8640-14b1-464b-a98c-09e8a5bfcd86",
+      "name": "Save OTP in Databricks",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fromEmail": "prashanththalla1@gmail.com",
+        "toEmail": "={{ $('Generate Verification Code').item.json.Email }}",
+        "subject": "Your email-change verification code",
+        "html": "=<div style='font-family:Arial,sans-serif;padding:24px'><h2>Email change verification</h2><p>Hi {{ $('Generate Verification Code').first().json.firstName || 'there' }},</p><p>Your verification code is <strong>{{ $('Generate Verification Code').first().json.code }}</strong>.</p><p>This code expires in 5 minutes. If you did not request an email change, ignore this email.</p></div>",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        2464,
+        0
+      ],
+      "id": "82512c6b-5790-4fe1-ba33-12c252bccfcf",
+      "name": "Send OTP to Existing Verified Email",
+      "webhookId": "60224a1b-e915-489f-9564-7fa582e787d6",
+      "credentials": {
+        "smtp": {
+          "id": "mOvlztSuewUOPk6y",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3504728c-7620-4570-b346-2c207687371c",
+              "name": "status",
+              "value": "OTP_SENT",
+              "type": "string"
+            },
+            {
+              "id": "5abe600f-4166-4671-a160-942f22e2329e",
+              "name": "message",
+              "value": "A verification code has been sent to your current email address. Please enter the 6-digit code to continue.",
+              "type": "string"
+            },
+            {
+              "id": "d47e5e14-f95e-4579-a01b-dc4657b604c5",
+              "name": "nextAction",
+              "value": "verify_email",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2688,
+        0
+      ],
+      "id": "5cec65e2-12b6-4677-9d39-c5f839aa5009",
+      "name": "OTP Sent Response"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS otp_valid FROM workspace.agentic_support.verification_codes WHERE customer_id = '{{ $(\"Fetch Customer from Salesforce\").first().json.Customer_Id__c }}' AND purpose = 'email_change' AND code = '{{ $('When Executed by Another Workflow').item.json.OTP }}' AND used = 0 AND expires_at > current_timestamp()"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1120,
+        560
+      ],
+      "id": "1fcd4154-f32d-4b7d-870d-f69bcbcb34f0",
+      "name": "Validate Submitted OTP",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.otp_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "id": "4a2360c7-dc9b-4434-90b0-acdfc3bb6d1d"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        560
+      ],
+      "id": "4f9b7959-b79e-45cc-b78e-88a4745ace99",
+      "name": "OTP Valid?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "fcb549bc-e710-43cc-89f1-9a6ab6d862e2",
+              "name": "status",
+              "value": "OTP_INVALID_OR_EXPIRED",
+              "type": "string"
+            },
+            {
+              "id": "46dd947a-1564-4c00-aa4e-24831f3b095f",
+              "name": "message",
+              "value": "The code is invalid, expired, or already used. Please request a new code and try again.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1568,
+        656
+      ],
+      "id": "3ddc6a30-c22d-461f-9f98-c132a8dd04fa",
+      "name": "Invalid OTP Response"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=UPDATE workspace.agentic_support.verification_codes SET used = 1 WHERE customer_id = '{{ $(\"Fetch Customer from Salesforce\").first().json.Customer_Id__c }}' AND purpose = 'email_change' AND code = '{{ $(\"When Executed by Another Workflow\").first().json.OTP }}' AND used = 0 AND expires_at > current_timestamp()"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        464
+      ],
+      "id": "7f1e9a27-1794-4784-a294-938e39a8cf38",
+      "name": "Consume OTP",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+        "updateFields": {
+          "email": "={{ $(\"When Executed by Another Workflow\").first().json.Email }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        1792,
+        464
+      ],
+      "id": "3b65321b-4f84-4689-8c84-4524d9868216",
+      "name": "Update Contact Email",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "3ujCczfBhhZSLT1x",
+          "name": "Lokesh Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b5686c52-3bea-4682-a78d-41cab69ae209",
+              "name": "status",
+              "value": "EMAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "ca391a96-006b-47ad-9e1c-a1448c8e63c0",
+              "name": "message",
+              "value": "Your email address has been updated successfully.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2272,
+        400
+      ],
+      "id": "65f36f53-a6a7-4e69-9705-6b23c6ca439e",
+      "name": "Email Updated Response"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.field }}",
+                    "rightValue": "FirstName",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e833d2b4-5744-4da8-abe8-3587a3d4066e"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "FirstName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.field }}",
+                    "rightValue": "LastName",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "b7e49545-b8a6-446e-a586-59e99285fccd"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "LastName"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.field }}",
+                    "rightValue": "Phone",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "21f74dd7-50d8-480f-beb7-e328f5cca084"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Phone"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.field }}",
+                    "rightValue": "PreferredLanguage",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "31b66383-db87-4dd9-8abf-360e88094fea"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "PreferredLanguage"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1344,
+        1536
+      ],
+      "id": "ff9c608e-0cf9-4341-bebd-026e9690338c",
+      "name": "Route Non-email Field"
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+        "updateFields": {
+          "firstName": "={{ $json.value }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        1104
+      ],
+      "id": "17bc8047-85cd-4700-905a-7962c2c4239b",
+      "name": "Update First Name",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "3ujCczfBhhZSLT1x",
+          "name": "Lokesh Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "067834ff-fc79-4ebe-b8c3-1d7f845cd5a3",
+              "name": "status",
+              "value": "DETAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "cc6fcba8-629d-4050-8bae-57e2e495eac3",
+              "name": "message",
+              "value": "=Customer FirstName was updated successfully.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        864
+      ],
+      "id": "94423f42-77b4-45c8-b68d-901a51bd8a50",
+      "name": "Update First Name Response"
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+        "updateFields": {
+          "lastName": "={{ $json.value }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        1424
+      ],
+      "id": "63b1a04e-9047-44b3-b681-604418931d84",
+      "name": "Update Last Name",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "3ujCczfBhhZSLT1x",
+          "name": "Lokesh Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "42b1743b-f7ed-4400-9e11-c81051021ef0",
+              "name": "status",
+              "value": "DETAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "b30cbef4-01ce-40d9-a41f-9d2970ffad82",
+              "name": "message",
+              "value": "=Customer LastName was updated successfully.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        1712
+      ],
+      "id": "5dc6c96f-41c6-446a-94d0-bae5a954b565",
+      "name": "Update Last Name Response"
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+        "updateFields": {
+          "phone": "={{ $json.value }}"
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        1568,
+        1744
+      ],
+      "id": "783f30b4-2165-4823-9ba2-7179c5a96dfd",
+      "name": "Update Phone",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "3ujCczfBhhZSLT1x",
+          "name": "Lokesh Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "d23c8661-fe3c-423e-9d84-de10adb029df",
+              "name": "status",
+              "value": "DETAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "e7e647df-d6cb-4a12-a498-1c839c94bf15",
+              "name": "message",
+              "value": "=Customer Phone was updated successfully.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        2096
+      ],
+      "id": "6b9a477f-9b3d-4dcc-b34d-8b39628a1f9a",
+      "name": "Update Phone Response"
+    },
+    {
+      "parameters": {
+        "resource": "contact",
+        "operation": "update",
+        "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+        "updateFields": {
+          "customFieldsUi": {
+            "customFieldsValues": [
+              {
+                "fieldId": "Languages__c",
+                "value": "={{ $json.value }}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
+      "position": [
+        1584,
+        2080
+      ],
+      "id": "6fae88d1-90bc-46d3-b297-ffd690a2325d",
+      "name": "Update Preferred Language",
+      "alwaysOutputData": true,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "3ujCczfBhhZSLT1x",
+          "name": "Lokesh Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3b837319-1af7-440d-8cb3-bf2f423c65cb",
+              "name": "status",
+              "value": "DETAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "65788fdc-14e9-44e6-b39e-efb1a5808241",
+              "name": "message",
+              "value": "=Customer Languages__c was updated successfully.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        2288
+      ],
+      "id": "fda68575-4a96-4a5d-89b8-0b1269b23c26",
+      "name": "Update Preferred Language Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a582096c-dcee-49ac-84d8-65d5ee5fde56",
+              "name": "status",
+              "value": "INVALID_ACTION",
+              "type": "string"
+            },
+            {
+              "id": "8edcf3d7-29de-439e-9c89-0e8d4f5a0e59",
+              "name": "message",
+              "value": "Unsupported action. Use update_details, request_email_change, resend_email_otp, or verify_email.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1584,
+        2384
+      ],
+      "id": "2a7704cd-3d14-40ad-8485-5285c6c4457d",
+      "name": "Unsupported Action Response"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('When Executed by Another Workflow').first().json.Email }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              },
+              "id": "37ef2955-2cd4-4fcc-885d-b8d80a56a1a9"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1120,
+        256
+      ],
+      "id": "a5d35e3f-e2f7-471b-a915-fac197e181af",
+      "name": "New Email Provided?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "bf1349fc-b0c9-47db-89cc-c7ad09aa345e",
+              "name": "status",
+              "value": "NEW_EMAIL_REQUIRED",
+              "type": "string"
+            },
+            {
+              "id": "f213de25-7fcf-43c7-b2ac-ce7a7a23a641",
+              "name": "message",
+              "value": "Please provide the new email address before requesting email verification.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1344,
+        352
+      ],
+      "id": "0b8e2ee0-f428-448b-bd1b-615519e63bdc",
+      "name": "Ask for New Email"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $('When Executed by Another Workflow').first().json;\nconst updates = input.updates ?? {};\nconst allowedFields = ['FirstName', 'LastName', 'Phone', 'PreferredLanguage'];\nconst output = [];\n\nfor (const field of allowedFields) {\n  const value = updates[field];\n  // Only route fields explicitly provided with a non-empty value.\n  if (value !== undefined && value !== null && String(value).trim() !== '') {\n    output.push({ json: { field, value } });\n  }\n}\n\nif (output.length === 0) {\n  return [{ json: { field: '__NO_VALID_FIELDS__', value: null } }];\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1120,
+        1584
+      ],
+      "id": "5f2a45a8-fde4-4291-957e-54ad21ce2855",
+      "name": "Prepare Requested Field Updates"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1792,
+        1424
+      ],
+      "id": "d1e8c6f6-044a-4221-9b79-69d47271b58c",
+      "name": "Success or not1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1792,
+        1744
+      ],
+      "id": "2a9dd6c9-d189-4505-8239-61adc89c99ee",
+      "name": "Success or not2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1808,
+        2080
+      ],
+      "id": "4723861f-15ce-4676-a76b-e091456fb331",
+      "name": "Success or not3"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.FirstName }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        1056
+      ],
+      "id": "c4c03fa4-8b15-43d6-877e-4deaaf9a9b7d",
+      "name": "save changes in db",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "067834ff-fc79-4ebe-b8c3-1d7f845cd5a3",
+              "name": "status",
+              "value": "DETAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "cc6fcba8-629d-4050-8bae-57e2e495eac3",
+              "name": "message",
+              "value": "=Update failed",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2016,
+        1328
+      ],
+      "id": "3a7a0a89-f0c5-4567-8c5c-27bbb7a86232",
+      "name": "Downtime error"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.LastName }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        1520
+      ],
+      "id": "cecef35e-d2af-486a-a302-cf2b71cb77f2",
+      "name": "save changes in db1",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.Phone }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        1904
+      ],
+      "id": "fe071074-0f6c-4120-8113-9af622e7bed2",
+      "name": "save changes in db2",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.Languages__c }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        2016,
+        2480
+      ],
+      "id": "b920652e-f088-4f56-addc-960611585f79",
+      "name": "save changes in db3",
+      "credentials": {
+        "databricksApi": {
+          "id": "pwpxcPOcmadmyyvU",
+          "name": "BalaRam Databricks account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "067834ff-fc79-4ebe-b8c3-1d7f845cd5a3",
+              "name": "status",
+              "value": "DETAIL_UPDATED",
+              "type": "string"
+            },
+            {
+              "id": "cc6fcba8-629d-4050-8bae-57e2e495eac3",
+              "name": "message",
+              "value": "=Update failed",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2272,
+        544
+      ],
+      "id": "a4dd624a-3af0-4769-8ff3-a4fb4241dbb4",
+      "name": "Downtime error1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1776,
+        1104
+      ],
+      "id": "b55b3a2f-ce2e-46b9-ac7f-afff748430b0",
+      "name": "Success or not"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2000,
+        464
+      ],
+      "id": "ff40c421-6f8e-4e44-b041-1a5668b6bec2",
+      "name": "Success or not4"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Customer ID Provided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer ID Provided": {
+      "main": [
+        [
+          {
+            "node": "Fetch Customer from Salesforce",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Missing Customer ID Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Customer from Salesforce": {
+      "main": [
+        [
+          {
+            "node": "Customer Found?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Customer Found?": {
+      "main": [
+        [
+          {
+            "node": "Route Action",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Customer Not Found Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Action": {
+      "main": [
+        [
+          {
+            "node": "New Email Provided?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Verification Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validate Submitted OTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Requested Field Updates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Active Email OTP": {
+      "main": [
+        [
+          {
+            "node": "Active OTP Exists?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Active OTP Exists?": {
+      "main": [
+        [
+          {
+            "node": "Resend Confirmed?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Generate Verification Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resend Confirmed?": {
+      "main": [
+        [
+          {
+            "node": "Generate Verification Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask User About Existing OTP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Verification Code": {
+      "main": [
+        [
+          {
+            "node": "Save OTP in Databricks",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save OTP in Databricks": {
+      "main": [
+        [
+          {
+            "node": "Send OTP to Existing Verified Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send OTP to Existing Verified Email": {
+      "main": [
+        [
+          {
+            "node": "OTP Sent Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Submitted OTP": {
+      "main": [
+        [
+          {
+            "node": "OTP Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OTP Valid?": {
+      "main": [
+        [
+          {
+            "node": "Consume OTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Invalid OTP Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consume OTP": {
+      "main": [
+        [
+          {
+            "node": "Update Contact Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Contact Email": {
+      "main": [
+        [
+          {
+            "node": "Success or not4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Non-email Field": {
+      "main": [
+        [
+          {
+            "node": "Update First Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Last Name",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Phone",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Update Preferred Language",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Unsupported Action Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update First Name": {
+      "main": [
+        [
+          {
+            "node": "Success or not",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Last Name": {
+      "main": [
+        [
+          {
+            "node": "Success or not1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Phone": {
+      "main": [
+        [
+          {
+            "node": "Success or not2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Preferred Language": {
+      "main": [
+        [
+          {
+            "node": "Success or not3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "New Email Provided?": {
+      "main": [
+        [
+          {
+            "node": "Check Active Email OTP",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ask for New Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Requested Field Updates": {
+      "main": [
+        [
+          {
+            "node": "Route Non-email Field",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success or not1": {
+      "main": [
+        [
+          {
+            "node": "Update Last Name Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "save changes in db1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Downtime error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success or not2": {
+      "main": [
+        [
+          {
+            "node": "Update Phone Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "save changes in db2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Downtime error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success or not3": {
+      "main": [
+        [
+          {
+            "node": "Update Preferred Language Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "save changes in db3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Downtime error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ask User About Existing OTP": {
+      "main": [
+        []
+      ]
+    },
+    "Success or not": {
+      "main": [
+        [
+          {
+            "node": "Update First Name Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "save changes in db",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Downtime error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Success or not4": {
+      "main": [
+        [
+          {
+            "node": "Email Updated Response",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Downtime error1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "SessionId": "test-006",
+          "action": "update_details",
+          "CustomerID": "CUST1001",
+          "updates": {
+            "FirstName": "Prashanth",
+            "LastName": "Thalla",
+            "Phone": "+919876543210"
+          }
+        }
+      }
+    ]
+  },
+  "meta": null,
+  "tags": [
+    {
+      "id": "zPkz8wP2iBmZrkr6",
+      "name": "Customer_Details",
+      "createdAt": "2026-11-04T19:43:00.713Z",
+      "updatedAt": "2026-11-04T19:43:00.713Z"
+    }
+  ],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "Tl8FHTZkTeFBODbj",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-11-05T07:02:17.273Z",
+      "updatedAt": "2026-11-05T07:02:17.273Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "c3b1efbc-54ba-4262-b686-8e957c17a176",
+    "workflowId": "Tl8FHTZkTeFBODbj",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "CustomerID"
+              },
+              {
+                "name": "action"
+              },
+              {
+                "name": "field"
+              },
+              {
+                "name": "FirstName"
+              },
+              {
+                "name": "LastName"
+              },
+              {
+                "name": "Email"
+              },
+              {
+                "name": "Phone"
+              },
+              {
+                "name": "PreferredLanguage"
+              },
+              {
+                "name": "OTP"
+              },
+              {
+                "name": "ResendCode"
+              },
+              {
+                "name": "SessionId"
+              },
+              {
+                "name": "updates",
+                "type": "object"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          -64,
+          576
+        ],
+        "id": "662aa282-2032-4aea-8ea6-74b579ad7159",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.CustomerID }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                },
+                "id": "2a23a752-2b68-4889-a952-fe90f7e542c9"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          224,
+          576
+        ],
+        "id": "12e4cb53-6292-40a3-8ac4-c2be62277a93",
+        "name": "Customer ID Provided"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "85c56bab-1ddc-498a-a84c-b25b6febf4a1",
+                "name": "status",
+                "value": "ERROR",
+                "type": "string"
+              },
+              {
+                "id": "fd4b5f5c-0ee9-4e46-bc0d-17c93f7bf33b",
+                "name": "message",
+                "value": "Please provide a valid CustomerID before updating customer details.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          448,
+          672
+        ],
+        "id": "5bf0e5e8-7d95-4fd2-be2c-7e16744b286d",
+        "name": "Missing Customer ID Response"
+      },
+      {
+        "parameters": {
+          "resource": "search",
+          "query": "=SELECT Id,FirstName,LastName,Name,Email,Phone,Languages__c,Customer_Id__c FROM Contact WHERE Customer_Id__c = '{{ $(\"When Executed by Another Workflow\").first().json.CustomerID }}'"
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          448,
+          480
+        ],
+        "id": "41f49aea-ddb1-4379-ad53-8e20b6fcd276",
+        "name": "Fetch Customer from Salesforce",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "3ujCczfBhhZSLT1x",
+            "name": "Lokesh Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.Id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                },
+                "id": "50a1541f-362a-4405-84e5-28d5bdb67033"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          672,
+          480
+        ],
+        "id": "be1e071f-906a-4784-abed-f107fb3d41dc",
+        "name": "Customer Found?"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "bd2268fb-2281-4f87-a155-f0f797e1c5d7",
+                "name": "status",
+                "value": "CUSTOMER_NOT_FOUND",
+                "type": "string"
+              },
+              {
+                "id": "7d82db47-9c83-4f98-9584-77437376e650",
+                "name": "message",
+                "value": "=Customer not found for CustomerID {{ $('When Executed by Another Workflow').first().json.CustomerID }}. Please check the ID.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          896,
+          592
+        ],
+        "id": "44d02336-b7e6-4dba-85ef-e054aec5168e",
+        "name": "Customer Not Found Response"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                      "rightValue": "request_email_change",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "a84d47f0-57d9-4126-98ba-ea2aac255a16"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Request Email Change"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                      "rightValue": "resend_email_otp",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "7d5431d7-3062-4f05-88a3-4c715f785243"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Resend OTP"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                      "rightValue": "verify_email",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "81779a29-08c1-4090-9932-5bc1f516a0fd"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Verify OTP"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.action }}",
+                      "rightValue": "update_details",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "2ae1b37b-c614-4525-9793-1245c6284e55"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Update Non-email Detail"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          896,
+          336
+        ],
+        "id": "c2dd39b8-1dc1-43ae-900b-b046427f25eb",
+        "name": "Route Action"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS otp_active FROM workspace.agentic_support.verification_codes WHERE customer_id = '{{ $(\"Fetch Customer from Salesforce\").first().json.Customer_Id__c }}' AND purpose = 'email_change' AND used = 0 AND expires_at > current_timestamp()"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1344,
+          160
+        ],
+        "id": "6df882f3-dc7d-4670-9f64-78f5d5986e26",
+        "name": "Check Active Email OTP",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.otp_active }}",
+                "rightValue": "true",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                },
+                "id": "92edde63-7489-4878-8cb9-e4a2e290b009"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1568,
+          160
+        ],
+        "id": "087c1b41-8d89-4bc3-97d6-3263ef7497b3",
+        "name": "Active OTP Exists?"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $(\"When Executed by Another Workflow\").first().json.ResendCode }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "id": "4e8aaf60-cdfd-4974-adb1-2a23e1d8267d"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1792,
+          80
+        ],
+        "id": "63b8c5c7-d755-4f90-8147-287f03599a4e",
+        "name": "Resend Confirmed?"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "2160f32d-3f27-4ea0-8169-1cd2524eda03",
+                "name": "status",
+                "value": "OTP_ACTIVE",
+                "type": "string"
+              },
+              {
+                "id": "0033af26-6f03-4db4-acb3-43d386d6053b",
+                "name": "message",
+                "value": "An active email-change verification code already exists. Would you like me to send a new code? Reply yes to resend or no to use the existing code.",
+                "type": "string"
+              },
+              {
+                "id": "9baa2d0b-5a28-4456-93ab-b1fe6af2f0a4",
+                "name": "nextAction",
+                "value": "resend_email_otp",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          240
+        ],
+        "id": "17033e9b-0c02-4290-ba3c-12a1bfbcc701",
+        "name": "Ask User About Existing OTP"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('When Executed by Another Workflow').first().json;\nconst customer = $('Fetch Customer from Salesforce').first().json;\nconst code = String(Math.floor(Math.random() * 1000000)).padStart(6, '0');\nreturn [{json:{...input, code, sfContactId: customer.Id, customerId: customer.Customer_Id__c, firstName: customer.FirstName, verifiedEmail: customer.Email}}];"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          2016,
+          0
+        ],
+        "id": "908d491c-9e78-46bd-96c0-cb4d4601b493",
+        "name": "Generate Verification Code"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=MERGE INTO workspace.agentic_support.verification_codes AS target USING (SELECT '{{ $json.customerId }}' AS customer_id, '{{ $json.code }}' AS code, 'email_change' AS purpose, current_timestamp() + INTERVAL 5 MINUTES AS expires_at) AS source ON target.customer_id = source.customer_id AND target.purpose = source.purpose WHEN MATCHED THEN UPDATE SET target.code = source.code, target.expires_at = source.expires_at, target.used = 0 WHEN NOT MATCHED THEN INSERT (customer_id, code, purpose, expires_at, used) VALUES (source.customer_id, source.code, source.purpose, source.expires_at, 0)"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2240,
+          0
+        ],
+        "id": "351a8640-14b1-464b-a98c-09e8a5bfcd86",
+        "name": "Save OTP in Databricks",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "fromEmail": "prashanththalla1@gmail.com",
+          "toEmail": "={{ $('Generate Verification Code').item.json.Email }}",
+          "subject": "Your email-change verification code",
+          "html": "=<div style='font-family:Arial,sans-serif;padding:24px'><h2>Email change verification</h2><p>Hi {{ $('Generate Verification Code').first().json.firstName || 'there' }},</p><p>Your verification code is <strong>{{ $('Generate Verification Code').first().json.code }}</strong>.</p><p>This code expires in 5 minutes. If you did not request an email change, ignore this email.</p></div>",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.emailSend",
+        "typeVersion": 2.1,
+        "position": [
+          2464,
+          0
+        ],
+        "id": "82512c6b-5790-4fe1-ba33-12c252bccfcf",
+        "name": "Send OTP to Existing Verified Email",
+        "webhookId": "60224a1b-e915-489f-9564-7fa582e787d6",
+        "credentials": {
+          "smtp": {
+            "id": "mOvlztSuewUOPk6y",
+            "name": "SMTP account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "3504728c-7620-4570-b346-2c207687371c",
+                "name": "status",
+                "value": "OTP_SENT",
+                "type": "string"
+              },
+              {
+                "id": "5abe600f-4166-4671-a160-942f22e2329e",
+                "name": "message",
+                "value": "A verification code has been sent to your current email address. Please enter the 6-digit code to continue.",
+                "type": "string"
+              },
+              {
+                "id": "d47e5e14-f95e-4579-a01b-dc4657b604c5",
+                "name": "nextAction",
+                "value": "verify_email",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2688,
+          0
+        ],
+        "id": "5cec65e2-12b6-4677-9d39-c5f839aa5009",
+        "name": "OTP Sent Response"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=SELECT CASE WHEN COUNT(*) > 0 THEN true ELSE false END AS otp_valid FROM workspace.agentic_support.verification_codes WHERE customer_id = '{{ $(\"Fetch Customer from Salesforce\").first().json.Customer_Id__c }}' AND purpose = 'email_change' AND code = '{{ $('When Executed by Another Workflow').item.json.OTP }}' AND used = 0 AND expires_at > current_timestamp()"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1120,
+          560
+        ],
+        "id": "1fcd4154-f32d-4b7d-870d-f69bcbcb34f0",
+        "name": "Validate Submitted OTP",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $json.otp_valid }}",
+                "rightValue": true,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                },
+                "id": "4a2360c7-dc9b-4434-90b0-acdfc3bb6d1d"
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1344,
+          560
+        ],
+        "id": "4f9b7959-b79e-45cc-b78e-88a4745ace99",
+        "name": "OTP Valid?"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "fcb549bc-e710-43cc-89f1-9a6ab6d862e2",
+                "name": "status",
+                "value": "OTP_INVALID_OR_EXPIRED",
+                "type": "string"
+              },
+              {
+                "id": "46dd947a-1564-4c00-aa4e-24831f3b095f",
+                "name": "message",
+                "value": "The code is invalid, expired, or already used. Please request a new code and try again.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1568,
+          656
+        ],
+        "id": "3ddc6a30-c22d-461f-9f98-c132a8dd04fa",
+        "name": "Invalid OTP Response"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=UPDATE workspace.agentic_support.verification_codes SET used = 1 WHERE customer_id = '{{ $(\"Fetch Customer from Salesforce\").first().json.Customer_Id__c }}' AND purpose = 'email_change' AND code = '{{ $(\"When Executed by Another Workflow\").first().json.OTP }}' AND used = 0 AND expires_at > current_timestamp()"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          1568,
+          464
+        ],
+        "id": "7f1e9a27-1794-4784-a294-938e39a8cf38",
+        "name": "Consume OTP",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+          "updateFields": {
+            "email": "={{ $(\"When Executed by Another Workflow\").first().json.Email }}"
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          1792,
+          464
+        ],
+        "id": "3b65321b-4f84-4689-8c84-4524d9868216",
+        "name": "Update Contact Email",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "3ujCczfBhhZSLT1x",
+            "name": "Lokesh Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b5686c52-3bea-4682-a78d-41cab69ae209",
+                "name": "status",
+                "value": "EMAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "ca391a96-006b-47ad-9e1c-a1448c8e63c0",
+                "name": "message",
+                "value": "Your email address has been updated successfully.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2272,
+          400
+        ],
+        "id": "65f36f53-a6a7-4e69-9705-6b23c6ca439e",
+        "name": "Email Updated Response"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.field }}",
+                      "rightValue": "FirstName",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "e833d2b4-5744-4da8-abe8-3587a3d4066e"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "FirstName"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.field }}",
+                      "rightValue": "LastName",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "b7e49545-b8a6-446e-a586-59e99285fccd"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "LastName"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.field }}",
+                      "rightValue": "Phone",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "21f74dd7-50d8-480f-beb7-e328f5cca084"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "Phone"
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 2
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.field }}",
+                      "rightValue": "PreferredLanguage",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "31b66383-db87-4dd9-8abf-360e88094fea"
+                    }
+                  ],
+                  "combinator": "and"
+                },
+                "renameOutput": true,
+                "outputKey": "PreferredLanguage"
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.2,
+        "position": [
+          1344,
+          1536
+        ],
+        "id": "ff9c608e-0cf9-4341-bebd-026e9690338c",
+        "name": "Route Non-email Field"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+          "updateFields": {
+            "firstName": "={{ $json.value }}"
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          1568,
+          1104
+        ],
+        "id": "17bc8047-85cd-4700-905a-7962c2c4239b",
+        "name": "Update First Name",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "3ujCczfBhhZSLT1x",
+            "name": "Lokesh Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "067834ff-fc79-4ebe-b8c3-1d7f845cd5a3",
+                "name": "status",
+                "value": "DETAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "cc6fcba8-629d-4050-8bae-57e2e495eac3",
+                "name": "message",
+                "value": "=Customer FirstName was updated successfully.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          864
+        ],
+        "id": "94423f42-77b4-45c8-b68d-901a51bd8a50",
+        "name": "Update First Name Response"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+          "updateFields": {
+            "lastName": "={{ $json.value }}"
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          1568,
+          1424
+        ],
+        "id": "63b1a04e-9047-44b3-b681-604418931d84",
+        "name": "Update Last Name",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "3ujCczfBhhZSLT1x",
+            "name": "Lokesh Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "42b1743b-f7ed-4400-9e11-c81051021ef0",
+                "name": "status",
+                "value": "DETAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "b30cbef4-01ce-40d9-a41f-9d2970ffad82",
+                "name": "message",
+                "value": "=Customer LastName was updated successfully.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          1712
+        ],
+        "id": "5dc6c96f-41c6-446a-94d0-bae5a954b565",
+        "name": "Update Last Name Response"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+          "updateFields": {
+            "phone": "={{ $json.value }}"
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          1568,
+          1744
+        ],
+        "id": "783f30b4-2165-4823-9ba2-7179c5a96dfd",
+        "name": "Update Phone",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "3ujCczfBhhZSLT1x",
+            "name": "Lokesh Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "d23c8661-fe3c-423e-9d84-de10adb029df",
+                "name": "status",
+                "value": "DETAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "e7e647df-d6cb-4a12-a498-1c839c94bf15",
+                "name": "message",
+                "value": "=Customer Phone was updated successfully.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          2096
+        ],
+        "id": "6b9a477f-9b3d-4dcc-b34d-8b39628a1f9a",
+        "name": "Update Phone Response"
+      },
+      {
+        "parameters": {
+          "resource": "contact",
+          "operation": "update",
+          "contactId": "={{ $(\"Fetch Customer from Salesforce\").first().json.Id }}",
+          "updateFields": {
+            "customFieldsUi": {
+              "customFieldsValues": [
+                {
+                  "fieldId": "Languages__c",
+                  "value": "={{ $json.value }}"
+                }
+              ]
+            }
+          }
+        },
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
+        "position": [
+          1584,
+          2080
+        ],
+        "id": "6fae88d1-90bc-46d3-b297-ffd690a2325d",
+        "name": "Update Preferred Language",
+        "alwaysOutputData": true,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "3ujCczfBhhZSLT1x",
+            "name": "Lokesh Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "3b837319-1af7-440d-8cb3-bf2f423c65cb",
+                "name": "status",
+                "value": "DETAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "65788fdc-14e9-44e6-b39e-efb1a5808241",
+                "name": "message",
+                "value": "=Customer Languages__c was updated successfully.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          2288
+        ],
+        "id": "fda68575-4a96-4a5d-89b8-0b1269b23c26",
+        "name": "Update Preferred Language Response"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "a582096c-dcee-49ac-84d8-65d5ee5fde56",
+                "name": "status",
+                "value": "INVALID_ACTION",
+                "type": "string"
+              },
+              {
+                "id": "8edcf3d7-29de-439e-9c89-0e8d4f5a0e59",
+                "name": "message",
+                "value": "Unsupported action. Use update_details, request_email_change, resend_email_otp, or verify_email.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1584,
+          2384
+        ],
+        "id": "2a7704cd-3d14-40ad-8485-5285c6c4457d",
+        "name": "Unsupported Action Response"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 2
+            },
+            "conditions": [
+              {
+                "leftValue": "={{ $('When Executed by Another Workflow').first().json.Email }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                },
+                "id": "37ef2955-2cd4-4fcc-885d-b8d80a56a1a9"
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.2,
+        "position": [
+          1120,
+          256
+        ],
+        "id": "a5d35e3f-e2f7-471b-a915-fac197e181af",
+        "name": "New Email Provided?"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "bf1349fc-b0c9-47db-89cc-c7ad09aa345e",
+                "name": "status",
+                "value": "NEW_EMAIL_REQUIRED",
+                "type": "string"
+              },
+              {
+                "id": "f213de25-7fcf-43c7-b2ac-ce7a7a23a641",
+                "name": "message",
+                "value": "Please provide the new email address before requesting email verification.",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1344,
+          352
+        ],
+        "id": "0b8e2ee0-f428-448b-bd1b-615519e63bdc",
+        "name": "Ask for New Email"
+      },
+      {
+        "parameters": {
+          "jsCode": "const input = $('When Executed by Another Workflow').first().json;\nconst updates = input.updates ?? {};\nconst allowedFields = ['FirstName', 'LastName', 'Phone', 'PreferredLanguage'];\nconst output = [];\n\nfor (const field of allowedFields) {\n  const value = updates[field];\n  // Only route fields explicitly provided with a non-empty value.\n  if (value !== undefined && value !== null && String(value).trim() !== '') {\n    output.push({ json: { field, value } });\n  }\n}\n\nif (output.length === 0) {\n  return [{ json: { field: '__NO_VALID_FIELDS__', value: null } }];\n}\n\nreturn output;"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          1120,
+          1584
+        ],
+        "id": "5f2a45a8-fde4-4291-957e-54ad21ce2855",
+        "name": "Prepare Requested Field Updates"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+                "leftValue": "={{ $json.success }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1792,
+          1424
+        ],
+        "id": "d1e8c6f6-044a-4221-9b79-69d47271b58c",
+        "name": "Success or not1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+                "leftValue": "={{ $json.success }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1792,
+          1744
+        ],
+        "id": "2a9dd6c9-d189-4505-8239-61adc89c99ee",
+        "name": "Success or not2"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+                "leftValue": "={{ $json.success }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1808,
+          2080
+        ],
+        "id": "4723861f-15ce-4676-a76b-e091456fb331",
+        "name": "Success or not3"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.FirstName }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2016,
+          1056
+        ],
+        "id": "c4c03fa4-8b15-43d6-877e-4deaaf9a9b7d",
+        "name": "save changes in db",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "067834ff-fc79-4ebe-b8c3-1d7f845cd5a3",
+                "name": "status",
+                "value": "DETAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "cc6fcba8-629d-4050-8bae-57e2e495eac3",
+                "name": "message",
+                "value": "=Update failed",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2016,
+          1328
+        ],
+        "id": "3a7a0a89-f0c5-4567-8c5c-27bbb7a86232",
+        "name": "Downtime error"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.LastName }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2016,
+          1520
+        ],
+        "id": "cecef35e-d2af-486a-a302-cf2b71cb77f2",
+        "name": "save changes in db1",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.Phone }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2016,
+          1904
+        ],
+        "id": "fe071074-0f6c-4120-8113-9af622e7bed2",
+        "name": "save changes in db2",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=INSERT INTO workspace.agentic_support.customer_change_log\n    (customer_id, field_name, old_value, new_value, verified_by)\nVALUES\n    ('{{ $('When Executed by Another Workflow').item.json.CustomerID }}', '{{ $('Route Non-email Field').item.json.field }}', '{{ $('Fetch Customer from Salesforce').item.json.Languages__c }}', '{{ $('Route Non-email Field').item.json.value }}', 'customer_confirmation');"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          2016,
+          2480
+        ],
+        "id": "b920652e-f088-4f56-addc-960611585f79",
+        "name": "save changes in db3",
+        "credentials": {
+          "databricksApi": {
+            "id": "pwpxcPOcmadmyyvU",
+            "name": "BalaRam Databricks account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "067834ff-fc79-4ebe-b8c3-1d7f845cd5a3",
+                "name": "status",
+                "value": "DETAIL_UPDATED",
+                "type": "string"
+              },
+              {
+                "id": "cc6fcba8-629d-4050-8bae-57e2e495eac3",
+                "name": "message",
+                "value": "=Update failed",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          2272,
+          544
+        ],
+        "id": "a4dd624a-3af0-4769-8ff3-a4fb4241dbb4",
+        "name": "Downtime error1"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+                "leftValue": "={{ $json.success }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          1776,
+          1104
+        ],
+        "id": "b55b3a2f-ce2e-46b9-ac7f-afff748430b0",
+        "name": "Success or not"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "loose",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "016d5d59-329d-4d83-8ae0-5ab3b3fa2a33",
+                "leftValue": "={{ $json.success }}",
+                "rightValue": false,
+                "operator": {
+                  "type": "boolean",
+                  "operation": "true",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "looseTypeValidation": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          2000,
+          464
+        ],
+        "id": "ff40c421-6f8e-4e44-b041-1a5668b6bec2",
+        "name": "Success or not4"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Customer ID Provided",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Customer ID Provided": {
+        "main": [
+          [
+            {
+              "node": "Fetch Customer from Salesforce",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Missing Customer ID Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Fetch Customer from Salesforce": {
+        "main": [
+          [
+            {
+              "node": "Customer Found?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Customer Found?": {
+        "main": [
+          [
+            {
+              "node": "Route Action",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Customer Not Found Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Action": {
+        "main": [
+          [
+            {
+              "node": "New Email Provided?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Generate Verification Code",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Validate Submitted OTP",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Prepare Requested Field Updates",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Active Email OTP": {
+        "main": [
+          [
+            {
+              "node": "Active OTP Exists?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Active OTP Exists?": {
+        "main": [
+          [
+            {
+              "node": "Resend Confirmed?",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Generate Verification Code",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Resend Confirmed?": {
+        "main": [
+          [
+            {
+              "node": "Generate Verification Code",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Ask User About Existing OTP",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Generate Verification Code": {
+        "main": [
+          [
+            {
+              "node": "Save OTP in Databricks",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Save OTP in Databricks": {
+        "main": [
+          [
+            {
+              "node": "Send OTP to Existing Verified Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Send OTP to Existing Verified Email": {
+        "main": [
+          [
+            {
+              "node": "OTP Sent Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Validate Submitted OTP": {
+        "main": [
+          [
+            {
+              "node": "OTP Valid?",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "OTP Valid?": {
+        "main": [
+          [
+            {
+              "node": "Consume OTP",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Invalid OTP Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Consume OTP": {
+        "main": [
+          [
+            {
+              "node": "Update Contact Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Contact Email": {
+        "main": [
+          [
+            {
+              "node": "Success or not4",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Route Non-email Field": {
+        "main": [
+          [
+            {
+              "node": "Update First Name",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Last Name",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Phone",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Update Preferred Language",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Unsupported Action Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update First Name": {
+        "main": [
+          [
+            {
+              "node": "Success or not",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Last Name": {
+        "main": [
+          [
+            {
+              "node": "Success or not1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Phone": {
+        "main": [
+          [
+            {
+              "node": "Success or not2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Update Preferred Language": {
+        "main": [
+          [
+            {
+              "node": "Success or not3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "New Email Provided?": {
+        "main": [
+          [
+            {
+              "node": "Check Active Email OTP",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Ask for New Email",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Prepare Requested Field Updates": {
+        "main": [
+          [
+            {
+              "node": "Route Non-email Field",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Success or not1": {
+        "main": [
+          [
+            {
+              "node": "Update Last Name Response",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "save changes in db1",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Downtime error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Success or not2": {
+        "main": [
+          [
+            {
+              "node": "Update Phone Response",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "save changes in db2",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Downtime error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Success or not3": {
+        "main": [
+          [
+            {
+              "node": "Update Preferred Language Response",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "save changes in db3",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Downtime error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ask User About Existing OTP": {
+        "main": [
+          []
+        ]
+      },
+      "Success or not": {
+        "main": [
+          [
+            {
+              "node": "Update First Name Response",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "save changes in db",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Downtime error",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Success or not4": {
+        "main": [
+          [
+            {
+              "node": "Email Updated Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Downtime error1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version c3b1efbc",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-05T13:02:20.153Z",
+    "updatedAt": "2026-11-05T13:03:03.000Z"
+  }
+}
