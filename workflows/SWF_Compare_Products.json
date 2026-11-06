@@ -4,9 +4,9 @@
   "active": false,
   "activeVersionId": null,
   "createdAt": "2026-11-05T12:21:16.296Z",
-  "updatedAt": "2026-11-05T13:40:04.065Z",
+  "updatedAt": "2026-11-06T06:13:35.472Z",
   "isArchived": false,
-  "versionId": "74d7a0bb-2886-47eb-8066-b6072c2fee09",
+  "versionId": "54bdb132-9504-4c4f-98be-6196f3df0b5a",
   "triggerCount": 0,
   "nodes": [
     {
@@ -56,12 +56,66 @@
       ],
       "id": "0244d70d-d95f-4389-ae66-1db11934c385",
       "name": "Search Product A",
+      "alwaysOutputData": true,
       "credentials": {
         "databricksApi": {
           "id": "cDTFBDRW4LWhbFCa",
           "name": "Preconfig_Databricks V2"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $('When Executed by Another Workflow').first().json;\n\nconst rows_a = $input.all()\n  .map(item => item.json)\n  .filter(row => row.sku != null);\n\nreturn [{\n  json: {\n    product_a: input.product_a,\n    product_b: input.product_b,\n    country: input.country,\n    rows_a: rows_a\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "4367ee52-444b-450a-b8b8-05c54980ed28",
+      "name": "Collect Product A"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=\nSELECT\n    p.sku,\n    p.name,\n    p.category,\n    p.color,\n    p.movement,\n    p.material,\n    p.water_resistance_m,\n    p.warranty_months,\n    p.active_discount_percent,\n    p.price_inr,\n    p.price_aed,\n    COALESCE(i.stock, 0) AS stock\nFROM workspace.agentic_support.products p\nLEFT JOIN (\n    SELECT sku, SUM(stock_quantity) AS stock\n    FROM workspace.agentic_support.inventory\n    GROUP BY sku\n) i ON i.sku = p.sku\nWHERE LOWER(p.sku) = LOWER('{{ $(\"When Executed by Another Workflow\").first().json.product_b }}')\n   OR LOWER(p.name) LIKE CONCAT('%', LOWER('{{ $(\"When Executed by Another Workflow\").first().json.product_b }}'), '%')\nORDER BY\n    CASE\n        WHEN LOWER(p.sku) = LOWER('{{ $(\"When Executed by Another Workflow\").first().json.product_b }}')\n          OR LOWER(p.name) = LOWER('{{ $(\"When Executed by Another Workflow\").first().json.product_b }}')\n        THEN 0 ELSE 1\n    END,\n    p.name\nLIMIT 5\n"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "3fd0e056-9165-46fc-8822-76f79f70bb08",
+      "name": "Search Product B",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "cDTFBDRW4LWhbFCa",
+          "name": "Preconfig_Databricks V2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $('When Executed by Another Workflow').first().json;\n\n// Results from both Databricks queries\nconst rows_a = $('Collect Product A').first().json.rows_a;\n\nconst rows_b = $input.all()\n  .map(item => item.json)\n  .filter(row => row.sku != null);\n\n// Country and currency\nconst country = String(input.country || 'IN').trim().toUpperCase();\nconst currency = country === 'AE' ? 'AED' : 'INR';\n\n// Find exact match, otherwise choose if only one result\nfunction pick(rows, term) {\n  const t = String(term).trim().toLowerCase();\n\n  const exact = rows.filter(r =>\n    String(r.sku).toLowerCase() === t ||\n    String(r.name).toLowerCase() === t\n  );\n\n  if (exact.length === 1) return exact[0];\n  if (rows.length === 1) return rows[0];\n  return null;\n}\n\nlet result = {\n  found: false,\n  ambiguous: false,\n  message: '',\n  currency,\n  product_a: '',\n  product_b: '',\n  price_a: 0,\n  price_b: 0,\n  price_difference: 0,\n  cheaper: '',\n  comparison_text: ''\n};\n\nif (!['IN', 'AE'].includes(country)) {\n  result.message = 'Please provide country IN or AE';\n}\nelse if (!rows_a.length || !rows_b.length) {\n  result.message = 'Could not find: ' +\n    [\n      !rows_a.length ? input.product_a : null,\n      !rows_b.length ? input.product_b : null\n    ].filter(Boolean).join(', ');\n}\nelse {\n  const a = pick(rows_a, input.product_a);\n  const b = pick(rows_b, input.product_b);\n\n  if (!a || !b) {\n    result.found = true;\n    result.ambiguous = true;\n    result.message = 'Please clarify: ' +\n      [\n        !a ? rows_a.map(r => r.name).join(', ') : null,\n        !b ? rows_b.map(r => r.name).join(', ') : null\n      ].filter(Boolean).join(' / ');\n  }\n  else {\n    function price(row) {\n      const rawPrice = country === 'AE'\n        ? row.price_aed : row.price_inr;\n\n      const base = Number(rawPrice);\n      const discount = Number(row.active_discount_percent);\n\n      if (rawPrice == null || row.active_discount_percent == null ||\n          !Number.isFinite(base) || !Number.isFinite(discount) ||\n          base < 0 || discount < 0 || discount > 100) {\n        throw new Error('Invalid pricing data for ' + row.name);\n      }\n\n      return Math.round(base * (100 - discount) / 100);\n    }\n\n    const pa = price(a);\n    const pb = price(b);\n\n    result = {\n      found: true,\n      ambiguous: false,\n      message: 'OK',\n      currency,\n      product_a: a.name,\n      product_b: b.name,\n      price_a: pa,\n      price_b: pb,\n      price_difference: Math.abs(pa - pb),\n      cheaper: pa === pb ? 'same price'\n        : pa < pb ? a.name : b.name,\n      comparison_text: [\n        `${a.name} | ${b.name}`,\n        `Price: ${currency} ${pa} | ${currency} ${pb}`,\n        `Movement: ${a.movement} | ${b.movement}`,\n        `Material: ${a.material} | ${b.material}`,\n        `Water resistance: ${a.water_resistance_m} m | ${b.water_resistance_m} m`,\n        `Warranty: ${a.warranty_months} months | ${b.warranty_months} months`,\n        `Stock: ${a.stock} | ${b.stock}`\n      ].join('\\n')\n    };\n  }\n}\n\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "c97c65d7-999e-4e73-83c4-c54f86950e72",
+      "name": "Compare Products"
     }
   ],
   "connections": {
@@ -70,6 +124,39 @@
         [
           {
             "node": "Search Product A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Product A": {
+      "main": [
+        [
+          {
+            "node": "Collect Product A",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Product A": {
+      "main": [
+        [
+          {
+            "node": "Search Product B",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search Product B": {
+      "main": [
+        [
+          {
+            "node": "Compare Products",
             "type": "main",
             "index": 0
           }
@@ -89,7 +176,7 @@
         "json": {
           "product_a": "Chrono Black",
           "product_b": "Aviator Black",
-          "country": "India"
+          "country": "IN"
         }
       }
     ]
