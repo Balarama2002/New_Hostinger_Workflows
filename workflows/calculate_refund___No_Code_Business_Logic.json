@@ -1,0 +1,192 @@
+{
+  "id": "JabPRdbqOmBljI3c",
+  "name": "calculate_refund - No Code Business Logic",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-11-06T08:12:31.333Z",
+  "updatedAt": "2026-11-06T10:16:53.896Z",
+  "isArchived": false,
+  "versionId": "971d5f11-6f5d-4e38-b962-9c831508cf0f",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"customer_id\": \"C051\",\n  \"order_id\": \"ORD1001\",\n  \"request_type\": \"refund\",\n  \"risk_score\": 25,\n  \"refunds_last_90d\": 1,\n  \"tier\": \"gold\",\n  \"item_unused\": true,\n  \"evidence_ok\": true,\n  \"wants_exception\": false\n}"
+      },
+      "id": "4e3f2e77-7195-46dd-b870-a54bf84610a3",
+      "name": "Execute Workflow Trigger",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        0,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(0, DATEDIFF(c.asof, s.estimated_delivery))\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $('Execute Workflow Trigger').item.json.order_id}}'\n  AND o.customer_id = '{{ $('Execute Workflow Trigger').item.json.customer_id }}';"
+      },
+      "id": "e71cfff9-68b2-46b7-a3dd-7a1a7e8558a7",
+      "name": "Databricks - Get Order and Policy",
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        960
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "BJGRGLZOYqVHEXgx",
+          "name": "n8n-databricks-surya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4a4ec67b-fca0-4926-9964-2a1bf375fc19",
+              "leftValue": "={{ String($json.order_id ?? '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            },
+            {
+              "id": "ee2ea187-5b4a-48fe-810d-372c1a353d13",
+              "leftValue": "={{ String($json.customer_id ?? '') }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "dc411a81-91de-4557-8a41-4ecde386b80e",
+      "name": "IF - Mandatory Inputs Present",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        1056
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Please send customer_id and order_id, both are mandatory",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "29db34ad-c2ef-4b8a-835f-31ad978e1b77",
+      "name": "Output - Missing Mandatory Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        1152
+      ]
+    }
+  ],
+  "connections": {
+    "Execute Workflow Trigger": {
+      "main": [
+        [
+          {
+            "node": "IF - Mandatory Inputs Present",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Databricks - Get Order and Policy": {
+      "main": [
+        []
+      ]
+    },
+    "IF - Mandatory Inputs Present": {
+      "main": [
+        [
+          {
+            "node": "Databricks - Get Order and Policy",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Output - Missing Mandatory Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "Execute Workflow Trigger": [
+      {
+        "json": {
+          "customer_id": "C001",
+          "order_id": "O001",
+          "request_type": null,
+          "risk_score": null,
+          "refunds_last_90d": null,
+          "tier": null,
+          "item_unused": null,
+          "evidence_ok": null,
+          "wants_exception": null
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "JabPRdbqOmBljI3c",
+      "projectId": "rbwfCfx34F7iplHU",
+      "createdAt": "2026-11-06T08:12:31.336Z",
+      "updatedAt": "2026-11-06T08:12:31.336Z"
+    }
+  ],
+  "activeVersion": null
+}
