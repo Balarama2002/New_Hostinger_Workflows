@@ -1,0 +1,421 @@
+{
+  "id": "C19t6GiYQFc30vn9",
+  "name": "Calculate Refund copy",
+  "active": false,
+  "activeVersionId": null,
+  "createdAt": "2026-11-06T07:53:40.237Z",
+  "updatedAt": "2026-11-06T08:05:35.306Z",
+  "isArchived": false,
+  "versionId": "29b9d6db-d500-4bf7-9c90-f983bdac8762",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "inputSource": "jsonExample",
+        "jsonExample": "{\n  \"customer_id\": \"C051\",\n  \"order_id\": \"ORD1001\",\n  \"request_type\": \"refund\",\n  \"risk_score\": 25,\n  \"refunds_last_90d\": 1,\n  \"tier\": \"gold\",\n  \"item_unused\": true,\n  \"evidence_ok\": true,\n  \"wants_exception\": false\n}"
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        -64
+      ],
+      "id": "84e14810-69ce-48cf-8c3b-c36c9de9ef22",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "a71d9e21-1826-4519-8ef2-c6d66d9a8355",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "97f9b2a2-6ac0-4de2-a065-b84f54c91e5e",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        -64
+      ],
+      "id": "28f05f9d-62f1-4fd6-8ec4-99e76d034ed4",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(0, DATEDIFF(c.asof, s.estimated_delivery))\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}';",
+        "queryParameters": {
+          "parameters": []
+        }
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        448,
+        -160
+      ],
+      "id": "604019d0-e7a1-423f-9037-b71623af5ca2",
+      "name": "Execute a SQL query",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "BJGRGLZOYqVHEXgx",
+          "name": "n8n-databricks-surya"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a55b493d-326c-44ed-ac5c-36d4a7247950",
+              "name": "output",
+              "value": "Please send customer_id and order_id, both are mandatory",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        32
+      ],
+      "id": "5f5b373e-648c-4b6f-991a-fd3b43f9d356",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1344,
+        -144
+      ],
+      "id": "2f40e308-0c3e-4015-a6d7-193e79e7ba6d",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Loop over input items and add a new field called 'myNewField' to the JSON of each one\nfor (const item of $input.all()) {\n  item.json.myNewField = 1;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -160
+      ],
+      "id": "45a1fbca-ab78-4899-865a-b1191d666733",
+      "name": "Code in JavaScript",
+      "alwaysOutputData": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.order_id }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "exists",
+                      "singleValue": true
+                    },
+                    "id": "90b9bfc4-0cef-44af-b825-71ef0ecea875"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "8070ffef-b15f-4c06-9e4f-e9cd074127c1",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "2c018bfd-fcc1-4eaf-a2ef-66d48c0ea7b2",
+                    "leftValue": "",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        896,
+        -320
+      ],
+      "id": "d5bf1943-ba9c-46af-986f-fcd8152dfa98",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "977eb313-1bc4-4267-bdae-d656ff8cfcbd",
+              "leftValue": "={{ $json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "f97237e5-0c75-49d0-9442-4e486274ce49",
+              "leftValue": "={{ $json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        -160
+      ],
+      "id": "929dcb09-9901-4283-b290-81c4553215a6",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a55b493d-326c-44ed-ac5c-36d4a7247950",
+              "name": "output",
+              "value": "Order not found for this customer",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        912,
+        -32
+      ],
+      "id": "961bcee0-3225-42b6-9ae9-3d970918f76a",
+      "name": "Edit Fields2"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [],
+        []
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "When Executed by Another Workflow": [
+      {
+        "json": {
+          "customer_id": "C004",
+          "order_id": "O1004",
+          "request_type": "damaged",
+          "risk_score": 20,
+          "refunds_last_90d": 0,
+          "tier": "standard",
+          "item_unused": false,
+          "evidence_ok": true,
+          "wants_exception": false
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "C19t6GiYQFc30vn9",
+      "projectId": "rbwfCfx34F7iplHU",
+      "createdAt": "2026-11-06T07:53:40.241Z",
+      "updatedAt": "2026-11-06T07:53:40.241Z"
+    }
+  ],
+  "activeVersion": null
+}
