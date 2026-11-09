@@ -4,9 +4,9 @@
   "active": false,
   "activeVersionId": null,
   "createdAt": "2026-11-08T17:23:52.817Z",
-  "updatedAt": "2026-11-08T18:09:23.610Z",
+  "updatedAt": "2026-11-09T13:38:55.611Z",
   "isArchived": false,
-  "versionId": "bc55165b-1aaa-4dc2-9c58-286228c77017",
+  "versionId": "878f27de-286e-4d9c-8658-3a53b2e369be",
   "triggerCount": 0,
   "nodes": [
     {
@@ -35,18 +35,19 @@
         0
       ],
       "id": "32cd32a3-c6a0-4e88-99f8-5d0afaeff99e",
-      "name": "When Executed by Another Workflow"
+      "name": "When Executed by Another Workflow",
+      "alwaysOutputData": true
     },
     {
       "parameters": {
         "warehouseId": {
           "__rl": true,
-          "value": "e81ec69db859d79b",
+          "value": "322f5fdc0a818d07",
           "mode": "list",
           "cachedResultName": "Serverless Starter Warehouse",
-          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
         },
-        "query": "=SELECT o.order_id, o.customer_id, o.country, o.currency, o.item, o.sku, o.size, o.amount,\n       o.status AS order_status, o.refunded, s.status AS ship_status,\n       DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n       p.return_window_days, p.version AS policy_version,\n       (SELECT COUNT(*) FROM returns r WHERE r.order_id = o.order_id) AS return_count,\n       (SELECT COUNT(*) FROM refunds f WHERE f.order_id = o.order_id) AS refund_count,\n       (SELECT COUNT(*) FROM exchanges e WHERE e.order_id = o.order_id AND e.status NOT IN ('rejected', 'cancelled')) AS exchange_count,\n       (SELECT pr.category FROM products pr WHERE pr.sku = o.sku) AS category,\n       (SELECT CAST(config_value AS BIGINT) FROM config WHERE config_key = 'risk_score_escalate') AS risk_score_escalate,\n       (SELECT CAST(config_value AS BIGINT) FROM config WHERE config_key = 'serial_refund_threshold') AS serial_refund_threshold\nFROM orders o\nLEFT JOIN shipments s ON s.order_id = o.order_id\nJOIN policies p ON p.country = o.country\nCROSS JOIN (SELECT CAST(config_value AS DATE) AS asof FROM config WHERE config_key = 'as_of_date') c\nWHERE o.order_id = {{ $json.order_id }}\nAND o.customer_id = {{ $json.customer_id }}",
+        "query": "=\nWITH return_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS return_count\n    FROM agentic_support.returns\n    GROUP BY order_id\n),\n\nrefund_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS refund_count\n    FROM agentic_support.refunds\n    GROUP BY order_id\n),\n\nexchange_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS exchange_count\n    FROM agentic_support.exchanges\n    WHERE status NOT IN ('rejected', 'cancelled')\n    GROUP BY order_id\n),\n\nconfig_values AS (\n    SELECT\n        MAX(\n            CASE\n                WHEN config_key = 'risk_score_escalate'\n                THEN CAST(config_value AS BIGINT)\n            END\n        ) AS risk_score_escalate,\n\n        MAX(\n            CASE\n                WHEN config_key = 'serial_refund_threshold'\n                THEN CAST(config_value AS BIGINT)\n            END\n        ) AS serial_refund_threshold\n\n    FROM agentic_support.config\n),\n\nconfig_asof AS (\n    SELECT\n        CAST(config_value AS DATE) AS asof\n    FROM agentic_support.config\n    WHERE config_key = 'as_of_date'\n)\n\nSELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.item,\n    o.sku,\n    o.size,\n    o.amount,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n\n    DATEDIFF(\n        c.asof,\n        s.delivered_date\n    ) AS days_since_delivery,\n\n    p.return_window_days,\n    p.version AS policy_version,\n\n    COALESCE(rc.return_count, 0) AS return_count,\n\n    COALESCE(fc.refund_count, 0) AS refund_count,\n\n    COALESCE(ec.exchange_count, 0) AS exchange_count,\n\n    pr.category,\n\n    cv.risk_score_escalate,\n\n    cv.serial_refund_threshold\n\nFROM agentic_support.orders o\n\nLEFT JOIN agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN agentic_support.policies p\n    ON p.country = o.country\n\nLEFT JOIN return_counts rc\n    ON rc.order_id = o.order_id\n\nLEFT JOIN refund_counts fc\n    ON fc.order_id = o.order_id\n\nLEFT JOIN exchange_counts ec\n    ON ec.order_id = o.order_id\n\nLEFT JOIN agentic_support.products pr\n    ON pr.sku = o.sku\n\nCROSS JOIN config_values cv\n\nJOIN config_asof c\n    ON 1 = 1\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}';\n",
         "queryParameters": {
           "parameters": []
         }
@@ -54,7 +55,7 @@
       "type": "n8n-nodes-base.databricks",
       "typeVersion": 1,
       "position": [
-        224,
+        832,
         0
       ],
       "id": "693e2fab-c135-4b00-9da9-7420a664f1ab",
@@ -65,7 +66,8 @@
           "id": "FujRmj4evdGyv98U",
           "name": "supraja databricks conn"
         }
-      }
+      },
+      "disabled": true
     },
     {
       "parameters": {
@@ -95,26 +97,28 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        448,
+        1056,
         0
       ],
       "id": "d850b954-28dc-4f08-83fd-f5ea783a038b",
-      "name": "If"
+      "name": "If",
+      "disabled": true
     },
     {
       "parameters": {
         "warehouseId": {
           "__rl": true,
-          "value": "e81ec69db859d79b",
+          "value": "322f5fdc0a818d07",
           "mode": "list",
           "cachedResultName": "Serverless Starter Warehouse",
-          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
-        }
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=SELECT\n    pr.sku,\n    pr.name,\n    pr.color,\n    i.size,\n    i.stock_quantity,\n\n    CASE\n        WHEN '{{ $('Execute a SQL query').item.json.country }}' = 'IN'\n        THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\n\nFROM agentic_support.products pr\n\nJOIN agentic_support.inventory i\n    ON i.sku = pr.sku\n\nWHERE\n    i.stock_quantity > 0\n\n    AND pr.category =\n        '{{ $('Execute a SQL query').item.json.category }}'\n\n    AND (\n        CASE\n            WHEN '{{ $('Execute a SQL query').item.json.country }}' = 'IN'\n            THEN pr.price_inr\n            ELSE pr.price_aed\n        END\n    ) <= {{ $('Execute a SQL query').item.json.amount }}\n\nORDER BY\n    (pr.sku = '{{ $('Execute a SQL query').item.json.sku }}') DESC,\n    price DESC\n\nLIMIT 12;"
       },
       "type": "n8n-nodes-base.databricks",
       "typeVersion": 1,
       "position": [
-        672,
+        1280,
         -96
       ],
       "id": "1df149d2-460d-4b1c-8297-58e28ab2c6fa",
@@ -124,7 +128,64 @@
           "id": "FujRmj4evdGyv98U",
           "name": "supraja databricks conn"
         }
+      },
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// ---- EDIT THESE THREE NAMES TO MATCH YOUR NODE TITLES ----\nconst TRIGGER_NODE = 'When Executed by Another Workflow';\nconst ORDER_NODE   = 'Execute a SQL query';\nconst ALT_NODE     = 'Get Alternatives';\n// -----------------------------------------------------------\n\nconst input = $(TRIGGER_NODE).first().json;\nconst o = $(ORDER_NODE).first().json;\nconst opts = $(ALT_NODE).all()\n  .map(i => i.json)\n  .filter(x => x && x.sku);\n\nconst wantSize  = String(input.desired_size  ?? '').trim().toLowerCase();\nconst wantColor = String(input.desired_color ?? '').trim().toLowerCase();\nconst cur = String(o.currency ?? '');\nconst money = n => (cur === 'INR' ? 'Rs ' : 'AED ') + Math.round(Number(n));\n\nconst out = (ok, reason, list = [], left = 0) => [{\n  json: {\n    eligible: ok ? 'true' : 'false',\n    reason,\n    item: String(o.item ?? ''),\n    size: String(o.size ?? ''),\n    sku: String(o.sku ?? ''),\n    paid: String(o.amount ?? ''),\n    currency: cur,\n    days_left: String(left),\n    option_count: String(list.length),\n    options: list.join('\\n'),\n  },\n}];\n\nif (o.refunded === 'yes' || Number(o.refund_count) > 0) {\n  return out(false, 'This order was already refunded');\n}\nif (Number(o.return_count) > 0) {\n  return out(false, 'A return is already in progress for this order');\n}\nif (Number(o.exchange_count) > 0) {\n  return out(false, 'An exchange is already in progress for this order');\n}\nif (o.order_status !== 'delivered') {\n  return out(false, 'The order has not been delivered yet, so it cannot be exchanged. Offer tracking, or a cancellation if it has not shipped');\n}\n\nconst days = Number(o.days_since_delivery) || 0;\nconst left = (Number(o.return_window_days) || 0) - days;\nif (left < 0) {\n  return out(false, `Delivered ${days} days ago; the exchange window is ${o.return_window_days} days`, [], left);\n}\n\nconst paid = Number(o.amount);\nlet list = opts.filter(x => !(x.sku === o.sku && x.size === o.size));\nlet note = '';\n\nif (wantSize || wantColor) {\n  const pick = list.filter(x =>\n    (!wantSize  || String(x.size  ?? '').toLowerCase().includes(wantSize)) &&\n    (!wantColor || String(x.color ?? '').toLowerCase().includes(wantColor))\n  );\n  if (pick.length === 0) {\n    if (list.length > 0) note = 'Nothing in stock matches that exactly; these are the other choices. ';\n  } else {\n    list = pick;\n  }\n}\n\nconst lines = list.slice(0, 5).map((x, i) => {\n  const credit = paid - Number(x.price);\n  const tail = credit > 0.5 ? `${money(credit)} would be credited back` : 'same price';\n  return `${i + 1}) ${x.name} (sku ${x.sku}), size ${x.size}, ${money(x.price)}, ${x.stock_quantity} in stock, ${tail}`;\n});\n\nif (lines.length === 0) {\n  return out(false, 'Nothing else is in stock at the same price or lower', [], left);\n}\nreturn out(true, note + 'Eligible', lines, left);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1504,
+        -96
+      ],
+      "id": "cd0b79f7-c7d0-486b-b665-a03ec46316f1",
+      "name": "Code in JavaScript",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=WITH params AS (\n    SELECT\n        '{{ $json.order_id }}' AS order_id,\n        '{{ $json.customer_id }}' AS customer_id,\n        COALESCE('{{ $json.desired_size || \"\" }}', '') AS desired_size,\n        COALESCE('{{ $json.desired_color || \"\" }}', '') AS desired_color\n),\n\nreturn_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS return_count\n    FROM agentic_support.returns\n    GROUP BY order_id\n),\n\nrefund_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS refund_count\n    FROM agentic_support.refunds\n    GROUP BY order_id\n),\n\nexchange_counts AS (\n    SELECT\n        order_id,\n        COUNT(*) AS exchange_count\n    FROM agentic_support.exchanges\n    WHERE status NOT IN ('rejected', 'cancelled')\n    GROUP BY order_id\n),\n\nconfig_values AS (\n    SELECT\n        MAX(\n            CASE\n                WHEN config_key = 'risk_score_escalate'\n                THEN CAST(config_value AS BIGINT)\n            END\n        ) AS risk_score_escalate,\n\n        MAX(\n            CASE\n                WHEN config_key = 'serial_refund_threshold'\n                THEN CAST(config_value AS BIGINT)\n            END\n        ) AS serial_refund_threshold\n\n    FROM agentic_support.config\n),\n\nconfig_asof AS (\n    SELECT\n        CAST(config_value AS DATE) AS asof\n    FROM agentic_support.config\n    WHERE config_key = 'as_of_date'\n),\n\norder_details AS (\n    SELECT\n        pa.order_id AS order_id,\n        pa.customer_id AS requested_customer_id,\n\n        o.order_id AS matched_order_id,\n        o.customer_id,\n\n        o.country,\n        o.currency,\n        o.item,\n        o.sku,\n        o.size,\n        o.amount,\n        o.status AS order_status,\n        o.refunded,\n\n        s.status AS ship_status,\n\n        DATEDIFF(\n            c.asof,\n            s.delivered_date\n        ) AS days_since_delivery,\n\n        p.return_window_days,\n        p.version AS policy_version,\n\n        COALESCE(rc.return_count, 0) AS return_count,\n        COALESCE(fc.refund_count, 0) AS refund_count,\n        COALESCE(ec.exchange_count, 0) AS exchange_count,\n\n        pr.category,\n\n        cv.risk_score_escalate,\n        cv.serial_refund_threshold,\n\n        pa.desired_size,\n        pa.desired_color\n\n    FROM params pa\n\n    LEFT JOIN agentic_support.orders o\n        ON o.order_id = pa.order_id\n       AND o.customer_id = pa.customer_id\n\n    LEFT JOIN agentic_support.shipments s\n        ON s.order_id = o.order_id\n\n    LEFT JOIN agentic_support.policies p\n        ON p.country = o.country\n\n    LEFT JOIN return_counts rc\n        ON rc.order_id = o.order_id\n\n    LEFT JOIN refund_counts fc\n        ON fc.order_id = o.order_id\n\n    LEFT JOIN exchange_counts ec\n        ON ec.order_id = o.order_id\n\n    LEFT JOIN agentic_support.products pr\n        ON pr.sku = o.sku\n\n    CROSS JOIN config_values cv\n\n    CROSS JOIN config_asof c\n),\n\neligibility AS (\n    SELECT\n        od.*,\n\n        CAST(od.return_window_days AS INT)\n        -\n        COALESCE(CAST(od.days_since_delivery AS INT), 0)\n        AS calculated_days_left,\n\n        CASE\n            WHEN od.order_id IS NULL\n                THEN 'Order not found for this customer'\n\n            WHEN LOWER(COALESCE(od.refunded, '')) = 'yes'\n                 OR od.refund_count > 0\n                THEN 'This order was already refunded'\n\n            WHEN od.return_count > 0\n                THEN 'A return is already in progress for this order'\n\n            WHEN od.exchange_count > 0\n                THEN 'An exchange is already in progress for this order'\n\n            WHEN LOWER(COALESCE(od.order_status, '')) <> 'delivered'\n                THEN 'The order has not been delivered yet, so it cannot be exchanged. Offer tracking, or a cancellation if it has not shipped'\n\n            WHEN (\n                CAST(od.return_window_days AS INT)\n                -\n                COALESCE(CAST(od.days_since_delivery AS INT), 0)\n            ) < 0\n                THEN CONCAT(\n                    'Delivered ',\n                    CAST(od.days_since_delivery AS STRING),\n                    ' days ago; the exchange window is ',\n                    CAST(od.return_window_days AS STRING),\n                    ' days'\n                )\n\n            ELSE NULL\n        END AS rejection_reason\n\n    FROM order_details od\n),\n\ncandidates_base AS (\n    SELECT\n        e.order_id,\n\n        e.item AS original_item,\n        e.sku AS original_sku,\n        e.size AS original_size,\n        e.amount AS original_amount,\n        e.currency,\n        e.country,\n        e.category,\n\n        e.desired_size,\n        e.desired_color,\n\n        p.sku AS candidate_sku,\n        p.name AS candidate_item,\n        i.size AS candidate_size,\n        p.color AS candidate_color,\n        p.category AS candidate_category,\n\n        CASE\n            WHEN e.country = 'IN'\n                THEN p.price_inr\n            ELSE p.price_aed\n        END AS candidate_price,\n\n        i.stock_quantity,\n\n        CASE\n            WHEN p.sku = e.sku THEN 1\n            ELSE 0\n        END AS same_sku,\n\n        CASE\n            WHEN\n                (\n                    COALESCE(e.desired_size, '') = ''\n                    OR LOWER(i.size) = LOWER(e.desired_size)\n                )\n                AND\n                (\n                    COALESCE(e.desired_color, '') = ''\n                    OR LOWER(p.color) = LOWER(e.desired_color)\n                )\n            THEN 1\n            ELSE 0\n        END AS preference_match\n\n    FROM eligibility e\n\n    JOIN agentic_support.products p\n        ON p.category = e.category\n\n    JOIN agentic_support.inventory i\n        ON i.sku = p.sku\n\n    WHERE e.rejection_reason IS NULL\n\n      AND COALESCE(i.stock_quantity, 0) > 0\n\n      AND (\n            CASE\n                WHEN e.country = 'IN'\n                    THEN p.price_inr\n                ELSE p.price_aed\n            END\n          ) <= e.amount\n),\n\npreference_counts AS (\n    SELECT\n        order_id,\n        SUM(preference_match) AS matching_preference_count\n    FROM candidates_base\n    GROUP BY order_id\n),\n\nselected_candidates AS (\n    SELECT\n        cb.*\n\n    FROM candidates_base cb\n\n    LEFT JOIN preference_counts pc\n        ON pc.order_id = cb.order_id\n\n    WHERE\n        COALESCE(pc.matching_preference_count, 0) = 0\n        OR cb.preference_match = 1\n),\n\nranked_candidates AS (\n    SELECT\n        sc.*,\n\n        ROW_NUMBER() OVER (\n            PARTITION BY sc.order_id\n            ORDER BY\n                sc.same_sku DESC,\n                sc.candidate_price DESC,\n                sc.candidate_size,\n                sc.candidate_color\n        ) AS option_rank\n\n    FROM selected_candidates sc\n),\n\noptions_aggregate AS (\n    SELECT\n        order_id,\n\n        COUNT(*) AS option_count,\n\n        CONCAT_WS(\n            '\\n',\n            TRANSFORM(\n                ARRAY_SORT(\n                    COLLECT_LIST(\n                        NAMED_STRUCT(\n                            'rank', option_rank,\n\n                            'line',\n                            CONCAT(\n                                CAST(option_rank AS STRING),\n                                '. ',\n                                candidate_item,\n                                ' | Size: ',\n                                candidate_size,\n                                ' | Color: ',\n                                COALESCE(candidate_color, 'N/A'),\n                                ' | SKU: ',\n                                candidate_sku,\n                                ' | Price: ',\n                                CAST(candidate_price AS STRING),\n                                ' ',\n                                currency,\n                                ' | Credit: ',\n                                CAST(\n                                    original_amount - candidate_price\n                                    AS STRING\n                                ),\n                                ' ',\n                                currency\n                            )\n                        )\n                    )\n                ),\n                x -> x.line\n            )\n        ) AS options\n\n    FROM ranked_candidates\n\n    WHERE option_rank <= 5\n\n    GROUP BY order_id\n)\n\nSELECT\n    e.order_id,\n\n    e.requested_customer_id AS customer_id,\n\n    CASE\n        WHEN e.rejection_reason IS NOT NULL\n            THEN FALSE\n\n        WHEN COALESCE(oa.option_count, 0) = 0\n            THEN FALSE\n\n        ELSE TRUE\n    END AS eligible,\n\n    CASE\n        WHEN e.rejection_reason IS NOT NULL\n            THEN e.rejection_reason\n\n        WHEN COALESCE(oa.option_count, 0) = 0\n            THEN 'No matching exchange options are currently available'\n\n        ELSE 'Eligible for exchange'\n    END AS reason,\n\n    e.item,\n    e.size,\n    e.sku,\n\n    e.amount AS paid,\n    e.currency,\n\n    CASE\n        WHEN e.rejection_reason LIKE 'Delivered %'\n            THEN e.calculated_days_left\n\n        WHEN e.rejection_reason IS NOT NULL\n            THEN 0\n\n        ELSE GREATEST(\n            COALESCE(e.calculated_days_left, 0),\n            0\n        )\n    END AS days_left,\n\n    COALESCE(oa.option_count, 0) AS option_count,\n\n    COALESCE(oa.options, '') AS options\n\nFROM eligibility e\n\nLEFT JOIN options_aggregate oa\n    ON oa.order_id = e.order_id;"
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "08249798-2bac-4951-8065-bed24b358aa0",
+      "name": "Execute a SQL query2",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "FujRmj4evdGyv98U",
+          "name": "supraja databricks conn"
+        }
       }
+    },
+    {
+      "parameters": {
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        0
+      ],
+      "id": "c4f37eec-ac19-46a2-add3-c2d2d38dcd59",
+      "name": "Edit Fields",
+      "alwaysOutputData": true
     }
   ],
   "connections": {
@@ -132,7 +193,7 @@
       "main": [
         [
           {
-            "node": "Execute a SQL query",
+            "node": "Execute a SQL query2",
             "type": "main",
             "index": 0
           }
@@ -155,6 +216,39 @@
         [
           {
             "node": "Execute a SQL query1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query1": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
             "type": "main",
             "index": 0
           }
