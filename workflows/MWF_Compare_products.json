@@ -4,7 +4,7 @@
   "active": true,
   "activeVersionId": "645f40f8-05b3-49e8-8d85-cacbdedbf690",
   "createdAt": "2026-11-03T07:36:20.319Z",
-  "updatedAt": "2026-11-03T15:50:19.821Z",
+  "updatedAt": "2026-11-09T09:05:40.543Z",
   "isArchived": false,
   "versionId": "c26ac303-fc0c-4a44-95bd-48d6e35bb34b",
   "triggerCount": 0,
@@ -242,8 +242,8 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "product_a": "chrono black",
-          "product_b": "aviator black",
+          "product_a": "Chrono Black",
+          "product_b": "Aviator Black",
           "country": null
         }
       }
