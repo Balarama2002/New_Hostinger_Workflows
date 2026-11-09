@@ -1,18 +1,317 @@
 {
-  "id": "H5WwtIumwDe90ooD",
+  "id": "DrNp5MxAopSlJJYc",
   "name": "Subscription request",
-  "active": false,
-  "activeVersionId": null,
-  "createdAt": "2026-08-13T17:31:13.181Z",
-  "updatedAt": "2026-08-14T05:50:39.000Z",
-  "isArchived": true,
-  "versionId": "f71d5f8e-0f0c-4ab8-bd89-b7b6e5640d46",
-  "triggerCount": 0,
+  "active": true,
+  "activeVersionId": "67edc2b0-40ba-4be3-9209-3ded6dcf489c",
+  "createdAt": "2026-08-14T05:53:50.890Z",
+  "updatedAt": "2026-11-04T12:53:28.705Z",
+  "isArchived": false,
+  "versionId": "67edc2b0-40ba-4be3-9209-3ded6dcf489c",
+  "triggerCount": 1,
   "nodes": [
     {
       "parameters": {
+        "method": "POST",
+        "url": "https://graph.microsoft.com/v1.0/subscriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"changeType\": \"created\",\n  \"notificationUrl\": \"https://n8n.srv1901759.hstgr.cloud/webhook/teams-meeting-webhook\",\n  \"resource\": \"/communications/callRecords\",\n  \"expirationDateTime\": \"2026-08-25T08:00:00Z\",\n  \"clientState\": \"test123\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        608
+      ],
+      "id": "0adb8c1a-4761-4f7a-8ebc-e4f50992c89e",
+      "name": "HTTP Request",
+      "retryOnFail": false,
+      "credentials": {
+        "oAuth2Api": {
+          "id": "wPXLYmoqlQIZ5Z3r",
+          "name": "TGH_AI-Teams Cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "timeUnit": "hours",
+        "duration": 66,
+        "outputFieldName": "Date",
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        672,
+        0
+      ],
+      "id": "9f0dea6e-b8bf-4f4b-9dd3-80c685373073",
+      "name": "Date & Time"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        512
+      ],
+      "id": "66e66a55-9621-4399-b8f7-fd1d9ebe2377",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 6
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        96
+      ],
+      "id": "eb2b800e-24d5-4ddf-8901-09e74f4e9c06",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.Date }}",
+        "format": "custom",
+        "customFormat": "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "options": {
+          "timezone": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "c9ebbf5d-f015-463a-94bc-a416073a0418",
+      "name": "Date & Time1"
+    },
+    {
+      "parameters": {
+        "url": "https://graph.microsoft.com/v1.0/subscriptions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        416
+      ],
+      "id": "a0460a24-993e-45f6-8305-7e96165ea395",
+      "name": "HTTP Request2",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "wPXLYmoqlQIZ5Z3r",
+          "name": "TGH_AI-Teams Cred"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3625f263-cc9a-4bd0-93af-0fb242bfc5a0",
+              "leftValue": "={{ $json.expirationDateTime }}",
+              "rightValue": "={{$now.plus({hours: 12}).toISO()}}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        0
+      ],
+      "id": "00d3a84a-c90b-4425-8761-236f52edd0f6",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "addToDate",
+        "magnitude": "={{ $now }}",
+        "timeUnit": "hours",
+        "duration": 66,
+        "outputFieldName": "Date",
+        "options": {
+          "includeInputFields": false
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        672,
+        192
+      ],
+      "id": "d706b013-ef16-47d8-9474-44cb98e32e77",
+      "name": "Date & Time2"
+    },
+    {
+      "parameters": {
+        "operation": "formatDate",
+        "date": "={{ $json.Date }}",
+        "format": "custom",
+        "customFormat": "yyyy-MM-dd'T'HH:mm:ss'Z'",
+        "options": {
+          "timezone": true
+        }
+      },
+      "type": "n8n-nodes-base.dateTime",
+      "typeVersion": 2,
+      "position": [
+        896,
+        192
+      ],
+      "id": "939af8b5-7aed-4654-98fd-4f8c86cdebda",
+      "name": "Date & Time3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "3625f263-cc9a-4bd0-93af-0fb242bfc5a0",
+              "leftValue": "={{ $json.expirationDateTime }}",
+              "rightValue": "={{$now.plus({hours: 12}).toISO()}}",
+              "operator": {
+                "type": "dateTime",
+                "operation": "before"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        448,
+        192
+      ],
+      "id": "76c8ac6b-6e8a-40a6-93d0-9a6149d20f71",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "url": "https://graph.microsoft.com/v1.0/subscriptions/60da9b69-ff49-4122-912b-0e7a13f9e5a7",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        224,
+        192
+      ],
+      "id": "0e09be70-ce83-46ef-8308-19c088e8220b",
+      "name": "Microsoft Teams Node Graph API",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
         "method": "PATCH",
-        "url": "https://graph.microsoft.com/v1.0/subscriptions/3fd7bb90-5606-4df5-8f33-03098a05a6b2",
+        "url": "https://graph.microsoft.com/v1.0/subscriptions/152dcaa6-649a-4310-ba1c-8c3a91531ae4",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "microsoftTeamsOAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"expirationDateTime\": \"{{ $json.formattedDate }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        192
+      ],
+      "id": "9a9f40d4-8b0f-41fe-82f3-324da854de9f",
+      "name": "Teams Node Subscription Renewal",
+      "credentials": {
+        "microsoftTeamsOAuth2Api": {
+          "id": "KjjefLZD1tSPusdO",
+          "name": "Microsoft Teams account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://graph.microsoft.com/v1.0/subscriptions/a1b966f1-ce3f-491c-95b3-7dde3208d704",
         "authentication": "genericCredentialType",
         "genericAuthType": "oAuth2Api",
         "sendHeaders": true,
@@ -32,11 +331,11 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
       "position": [
-        -16,
-        -32
+        1120,
+        0
       ],
-      "id": "5d33bc39-2fc7-467f-8099-be592ab36b93",
-      "name": "HTTP Request1",
+      "id": "2f04d20f-e053-46b5-ab45-1c4366726334",
+      "name": "Action items Agent Renewal",
       "credentials": {
         "oAuth2Api": {
           "id": "wPXLYmoqlQIZ5Z3r",
@@ -46,136 +345,19 @@
     },
     {
       "parameters": {
-        "operation": "addToDate",
-        "magnitude": "={{ $json.timestamp }}",
-        "timeUnit": "hours",
-        "duration": 66,
-        "outputFieldName": "Date",
-        "options": {
-          "includeInputFields": false
-        }
-      },
-      "type": "n8n-nodes-base.dateTime",
-      "typeVersion": 2,
-      "position": [
-        -448,
-        -32
-      ],
-      "id": "d84caf8e-5b72-4909-b9b0-b449b4e34c77",
-      "name": "Date & Time"
-    },
-    {
-      "parameters": {},
-      "type": "n8n-nodes-base.manualTrigger",
-      "typeVersion": 1,
-      "position": [
-        -336,
-        128
-      ],
-      "id": "29ae7afb-0a63-4aef-bc39-cc9991db14be",
-      "name": "When clicking ‘Execute workflow’"
-    },
-    {
-      "parameters": {
-        "rule": {
-          "interval": [
-            {
-              "daysInterval": 4,
-              "triggerAtHour": 10
-            }
-          ]
-        }
-      },
-      "type": "n8n-nodes-base.scheduleTrigger",
-      "typeVersion": 1.3,
-      "position": [
-        -656,
-        -32
-      ],
-      "id": "4217189e-fed1-4ac4-843c-8383e1f1014b",
-      "name": "Schedule Trigger"
-    },
-    {
-      "parameters": {
-        "operation": "formatDate",
-        "date": "={{ $json.Date }}",
-        "format": "custom",
-        "customFormat": "yyyy-MM-dd'T'HH:mm:ss'Z'",
-        "options": {
-          "timezone": true
-        }
-      },
-      "type": "n8n-nodes-base.dateTime",
-      "typeVersion": 2,
-      "position": [
-        -272,
-        -32
-      ],
-      "id": "5e99da1d-a510-4e35-8c27-9cf9e81e828f",
-      "name": "Date & Time1"
-    },
-    {
-      "parameters": {
-        "method": "PATCH",
-        "url": "https://graph.microsoft.com/v1.0/subscriptions/aa3b6367-15f2-4bfb-82e5-b758327f94a7",
+        "url": "https://graph.microsoft.com/v1.0/subscriptions/a1b966f1-ce3f-491c-95b3-7dde3208d704",
         "authentication": "genericCredentialType",
         "genericAuthType": "oAuth2Api",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "={\n  \"expirationDateTime\": \"2026-08-13T18:00:00Z\"\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        80,
-        128
-      ],
-      "id": "6cd7c614-0be5-485c-ab64-f3dd77deda6c",
-      "name": "HTTP Request2",
-      "credentials": {
-        "oAuth2Api": {
-          "id": "wPXLYmoqlQIZ5Z3r",
-          "name": "TGH_AI-Teams Cred"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "url": "https://graph.microsoft.com/v1.0/subscriptions",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "oAuth2Api",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": [
-            {
-              "name": "Content-Type",
-              "value": "application/json"
-            }
-          ]
-        },
-        "sendBody": true,
-        "specifyBody": "json",
-        "jsonBody": "{\n  \"changeType\": \"created\",\n  \"notificationUrl\": \"https://n8n.srv1901759.hstgr.cloud/webhook/teams-meeting-webhook\",\n  \"resource\": \"/communications/callRecords\",\n  \"expirationDateTime\": \"2026-08-17T08:00:00Z\",\n  \"clientState\": \"test123\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -48,
-        272
+        224,
+        0
       ],
-      "id": "d22f5f87-a0f2-4fed-a617-b9076e8da1d8",
-      "name": "HTTP Request3",
+      "id": "30755999-5ffe-45b4-8370-3d1658ac0712",
+      "name": "Action items Agent Subscription",
       "credentials": {
         "oAuth2Api": {
           "id": "wPXLYmoqlQIZ5Z3r",
@@ -200,7 +382,12 @@
       "main": [
         [
           {
-            "node": "Date & Time",
+            "node": "Action items Agent Subscription",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Microsoft Teams Node Graph API",
             "type": "main",
             "index": 0
           }
@@ -211,12 +398,12 @@
       "main": [
         [
           {
-            "node": "HTTP Request2",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           },
           {
-            "node": "HTTP Request3",
+            "node": "HTTP Request2",
             "type": "main",
             "index": 0
           }
@@ -227,7 +414,73 @@
       "main": [
         [
           {
-            "node": "HTTP Request1",
+            "node": "Action items Agent Renewal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Date & Time",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time2": {
+      "main": [
+        [
+          {
+            "node": "Date & Time3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Date & Time2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Date & Time3": {
+      "main": [
+        [
+          {
+            "node": "Teams Node Subscription Renewal",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Microsoft Teams Node Graph API": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Action items Agent Subscription": {
+      "main": [
+        [
+          {
+            "node": "If",
             "type": "main",
             "index": 0
           }
@@ -238,25 +491,545 @@
   "nodeGroups": [],
   "settings": {
     "executionOrder": "v1",
+    "binaryMode": "separate",
     "availableInMCP": false,
     "timeSavedMode": "fixed",
-    "errorWorkflow": "KQ2yGarubqSe5Mvl",
+    "errorWorkflow": "vtN1JQvH45zQjAiD",
     "timezone": "Asia/Kolkata",
-    "callerPolicy": "workflowsFromSameOwner",
-    "binaryMode": "separate"
+    "callerPolicy": "workflowsFromSameOwner"
   },
-  "staticData": null,
-  "pinData": {},
+  "staticData": {
+    "node:Schedule Trigger": {
+      "recurrenceRules": [
+        6
+      ],
+      "recurrenceRuleSignatures": [
+        "hours:6"
+      ]
+    }
+  },
+  "pinData": {
+    "Schedule Trigger": [
+      {
+        "json": {
+          "timestamp": "2026-08-25T06:00:04.012+05:30",
+          "Readable date": "August 25th 2026, 6:00:04 am",
+          "Readable time": "6:00:04 am",
+          "Day of week": "Tuesday",
+          "Year": "2026",
+          "Month": "August",
+          "Day of month": "25",
+          "Hour": "06",
+          "Minute": "00",
+          "Second": "04",
+          "Timezone": "Asia/Kolkata (UTC+05:30)"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
   "meta": null,
   "tags": [],
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "H5WwtIumwDe90ooD",
+      "workflowId": "DrNp5MxAopSlJJYc",
       "projectId": "2qHCdIvoXHur7xyh",
-      "createdAt": "2026-08-13T17:31:13.187Z",
-      "updatedAt": "2026-08-13T17:31:13.187Z"
+      "createdAt": "2026-08-14T05:53:50.892Z",
+      "updatedAt": "2026-08-14T05:53:50.892Z"
     }
   ],
-  "activeVersion": null
+  "activeVersion": {
+    "versionId": "67edc2b0-40ba-4be3-9209-3ded6dcf489c",
+    "workflowId": "DrNp5MxAopSlJJYc",
+    "nodes": [
+      {
+        "parameters": {
+          "method": "POST",
+          "url": "https://graph.microsoft.com/v1.0/subscriptions",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "{\n  \"changeType\": \"created\",\n  \"notificationUrl\": \"https://n8n.srv1901759.hstgr.cloud/webhook/teams-meeting-webhook\",\n  \"resource\": \"/communications/callRecords\",\n  \"expirationDateTime\": \"2026-08-25T08:00:00Z\",\n  \"clientState\": \"test123\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          608
+        ],
+        "id": "0adb8c1a-4761-4f7a-8ebc-e4f50992c89e",
+        "name": "HTTP Request",
+        "retryOnFail": false,
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "operation": "addToDate",
+          "magnitude": "={{ $now }}",
+          "timeUnit": "hours",
+          "duration": 66,
+          "outputFieldName": "Date",
+          "options": {
+            "includeInputFields": false
+          }
+        },
+        "type": "n8n-nodes-base.dateTime",
+        "typeVersion": 2,
+        "position": [
+          672,
+          0
+        ],
+        "id": "9f0dea6e-b8bf-4f4b-9dd3-80c685373073",
+        "name": "Date & Time"
+      },
+      {
+        "parameters": {},
+        "type": "n8n-nodes-base.manualTrigger",
+        "typeVersion": 1,
+        "position": [
+          0,
+          512
+        ],
+        "id": "66e66a55-9621-4399-b8f7-fd1d9ebe2377",
+        "name": "When clicking ‘Execute workflow’"
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 6
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          96
+        ],
+        "id": "eb2b800e-24d5-4ddf-8901-09e74f4e9c06",
+        "name": "Schedule Trigger"
+      },
+      {
+        "parameters": {
+          "operation": "formatDate",
+          "date": "={{ $json.Date }}",
+          "format": "custom",
+          "customFormat": "yyyy-MM-dd'T'HH:mm:ss'Z'",
+          "options": {
+            "timezone": true
+          }
+        },
+        "type": "n8n-nodes-base.dateTime",
+        "typeVersion": 2,
+        "position": [
+          896,
+          0
+        ],
+        "id": "c9ebbf5d-f015-463a-94bc-a416073a0418",
+        "name": "Date & Time1"
+      },
+      {
+        "parameters": {
+          "url": "https://graph.microsoft.com/v1.0/subscriptions",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          224,
+          416
+        ],
+        "id": "a0460a24-993e-45f6-8305-7e96165ea395",
+        "name": "HTTP Request2",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3625f263-cc9a-4bd0-93af-0fb242bfc5a0",
+                "leftValue": "={{ $json.expirationDateTime }}",
+                "rightValue": "={{$now.plus({hours: 12}).toISO()}}",
+                "operator": {
+                  "type": "dateTime",
+                  "operation": "before"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          448,
+          0
+        ],
+        "id": "00d3a84a-c90b-4425-8761-236f52edd0f6",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "operation": "addToDate",
+          "magnitude": "={{ $now }}",
+          "timeUnit": "hours",
+          "duration": 66,
+          "outputFieldName": "Date",
+          "options": {
+            "includeInputFields": false
+          }
+        },
+        "type": "n8n-nodes-base.dateTime",
+        "typeVersion": 2,
+        "position": [
+          672,
+          192
+        ],
+        "id": "d706b013-ef16-47d8-9474-44cb98e32e77",
+        "name": "Date & Time2"
+      },
+      {
+        "parameters": {
+          "operation": "formatDate",
+          "date": "={{ $json.Date }}",
+          "format": "custom",
+          "customFormat": "yyyy-MM-dd'T'HH:mm:ss'Z'",
+          "options": {
+            "timezone": true
+          }
+        },
+        "type": "n8n-nodes-base.dateTime",
+        "typeVersion": 2,
+        "position": [
+          896,
+          192
+        ],
+        "id": "939af8b5-7aed-4654-98fd-4f8c86cdebda",
+        "name": "Date & Time3"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 3
+            },
+            "conditions": [
+              {
+                "id": "3625f263-cc9a-4bd0-93af-0fb242bfc5a0",
+                "leftValue": "={{ $json.expirationDateTime }}",
+                "rightValue": "={{$now.plus({hours: 12}).toISO()}}",
+                "operator": {
+                  "type": "dateTime",
+                  "operation": "before"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.3,
+        "position": [
+          448,
+          192
+        ],
+        "id": "76c8ac6b-6e8a-40a6-93d0-9a6149d20f71",
+        "name": "If1"
+      },
+      {
+        "parameters": {
+          "url": "https://graph.microsoft.com/v1.0/subscriptions/60da9b69-ff49-4122-912b-0e7a13f9e5a7",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          224,
+          192
+        ],
+        "id": "0e09be70-ce83-46ef-8308-19c088e8220b",
+        "name": "Microsoft Teams Node Graph API",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "https://graph.microsoft.com/v1.0/subscriptions/152dcaa6-649a-4310-ba1c-8c3a91531ae4",
+          "authentication": "predefinedCredentialType",
+          "nodeCredentialType": "microsoftTeamsOAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"expirationDateTime\": \"{{ $json.formattedDate }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1120,
+          192
+        ],
+        "id": "9a9f40d4-8b0f-41fe-82f3-324da854de9f",
+        "name": "Teams Node Subscription Renewal",
+        "credentials": {
+          "microsoftTeamsOAuth2Api": {
+            "id": "KjjefLZD1tSPusdO",
+            "name": "Microsoft Teams account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "method": "PATCH",
+          "url": "https://graph.microsoft.com/v1.0/subscriptions/a1b966f1-ce3f-491c-95b3-7dde3208d704",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "sendHeaders": true,
+          "headerParameters": {
+            "parameters": [
+              {
+                "name": "Content-Type",
+                "value": "application/json"
+              }
+            ]
+          },
+          "sendBody": true,
+          "specifyBody": "json",
+          "jsonBody": "={\n  \"expirationDateTime\": \"{{ $json.formattedDate }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.4,
+        "position": [
+          1120,
+          0
+        ],
+        "id": "2f04d20f-e053-46b5-ab45-1c4366726334",
+        "name": "Action items Agent Renewal",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "url": "https://graph.microsoft.com/v1.0/subscriptions/a1b966f1-ce3f-491c-95b3-7dde3208d704",
+          "authentication": "genericCredentialType",
+          "genericAuthType": "oAuth2Api",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.httpRequest",
+        "typeVersion": 4.5,
+        "position": [
+          224,
+          0
+        ],
+        "id": "30755999-5ffe-45b4-8370-3d1658ac0712",
+        "name": "Action items Agent Subscription",
+        "credentials": {
+          "oAuth2Api": {
+            "id": "wPXLYmoqlQIZ5Z3r",
+            "name": "TGH_AI-Teams Cred"
+          }
+        }
+      }
+    ],
+    "connections": {
+      "Date & Time": {
+        "main": [
+          [
+            {
+              "node": "Date & Time1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Schedule Trigger": {
+        "main": [
+          [
+            {
+              "node": "Action items Agent Subscription",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Microsoft Teams Node Graph API",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "When clicking ‘Execute workflow’": {
+        "main": [
+          [
+            {
+              "node": "HTTP Request",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "HTTP Request2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Date & Time1": {
+        "main": [
+          [
+            {
+              "node": "Action items Agent Renewal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Date & Time",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Date & Time2": {
+        "main": [
+          [
+            {
+              "node": "Date & Time3",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If1": {
+        "main": [
+          [
+            {
+              "node": "Date & Time2",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Date & Time3": {
+        "main": [
+          [
+            {
+              "node": "Teams Node Subscription Renewal",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Microsoft Teams Node Graph API": {
+        "main": [
+          [
+            {
+              "node": "If1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Action items Agent Subscription": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 67edc2b0",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-04T12:53:28.706Z",
+    "updatedAt": "2026-11-04T12:53:37.000Z"
+  }
 }
