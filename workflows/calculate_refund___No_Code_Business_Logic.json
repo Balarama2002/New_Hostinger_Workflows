@@ -4,9 +4,9 @@
   "active": false,
   "activeVersionId": null,
   "createdAt": "2026-11-06T08:12:31.333Z",
-  "updatedAt": "2026-11-06T10:16:53.896Z",
+  "updatedAt": "2026-11-09T09:40:36.854Z",
   "isArchived": false,
-  "versionId": "971d5f11-6f5d-4e38-b962-9c831508cf0f",
+  "versionId": "33d58c2b-1055-43ec-86fd-a4be55ad4289",
   "triggerCount": 0,
   "nodes": [
     {
@@ -32,7 +32,7 @@
           "cachedResultName": "Serverless Starter Warehouse",
           "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
         },
-        "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(0, DATEDIFF(c.asof, s.estimated_delivery))\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $('Execute Workflow Trigger').item.json.order_id}}'\n  AND o.customer_id = '{{ $('Execute Workflow Trigger').item.json.customer_id }}';"
+        "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(0, DATEDIFF(c.asof, s.estimated_delivery))\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS INT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}';"
       },
       "id": "e71cfff9-68b2-46b7-a3dd-7a1a7e8558a7",
       "name": "Databricks - Get Order and Policy",
@@ -114,6 +114,227 @@
         448,
         1152
       ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "85ca4f7d-674c-4438-a2e1-7e47e265d860",
+              "leftValue": "={{ $('IF - Mandatory Inputs Present').item.json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "be082689-e18d-431c-964e-efa3a065075e",
+              "leftValue": "={{ $('IF - Mandatory Inputs Present').item.json.customer_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        672,
+        960
+      ],
+      "id": "9233b1ba-a08d-4e7a-ac4f-8cdcd30e237e",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Order not found for this customer",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "ade7e065-25ac-4ec9-97e7-a08493c709bb",
+      "name": "Output - Missing Mandatory Input1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        1104
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "63574d2c-ec6a-40d5-bad3-aa2e1f07a3c7",
+              "leftValue": "={{ ($json.refunded ?? '').toString().toLowerCase() }}",
+              "rightValue": "yes",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "67a07b9f-24c8-4a0f-b541-4c99d1c0402f",
+              "leftValue": "={{ Number($json.prior_actions) }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        896,
+        928.5
+      ],
+      "id": "ff00e76d-32e5-4ad3-bbf5-e9ada6f59943",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Already refunded or returned",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "31d8ea2e-ec6d-43bf-88b0-ef8f20332390",
+      "name": "Output - Missing Mandatory Input2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        848
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "59ebef65-4771-480a-85aa-0cb7a08cff02",
+              "leftValue": "={{ ($json.order_status ?? '').toString().toLowerCase() }}",
+              "rightValue": "cancelled",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1120,
+        1056
+      ],
+      "id": "04c0567d-6120-4e2b-9d70-2a4b3ec95127",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Order is already cancelled",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "371b02fb-8b7f-49ca-9dd6-b3063e78652b",
+      "name": "Output - Missing Mandatory Input3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        928
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "a341861c-6040-4b8d-ae56-4cfae4e213a7",
+              "leftValue": "=",
+              "rightValue": "",
+              "operator": {
+                "type": "dateTime",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1344,
+        1152
+      ],
+      "id": "364e51aa-859c-4ebc-8978-0d261bb6ee26",
+      "name": "If3"
     }
   ],
   "connections": {
@@ -130,7 +351,13 @@
     },
     "Databricks - Get Order and Policy": {
       "main": [
-        []
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "IF - Mandatory Inputs Present": {
@@ -150,6 +377,60 @@
           }
         ]
       ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Output - Missing Mandatory Input1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Output - Missing Mandatory Input2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Output - Missing Mandatory Input3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "nodeGroups": [],
@@ -162,15 +443,15 @@
     "Execute Workflow Trigger": [
       {
         "json": {
-          "customer_id": "C001",
-          "order_id": "O001",
-          "request_type": null,
-          "risk_score": null,
-          "refunds_last_90d": null,
-          "tier": null,
-          "item_unused": null,
-          "evidence_ok": null,
-          "wants_exception": null
+          "customer_id": "C004",
+          "order_id": "O1004",
+          "request_type": "damaged",
+          "risk_score": 20,
+          "refunds_last_90d": 0,
+          "tier": "standard",
+          "item_unused": false,
+          "evidence_ok": true,
+          "wants_exception": false
         }
       }
     ]
