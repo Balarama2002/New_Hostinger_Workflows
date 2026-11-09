@@ -1,12 +1,12 @@
 {
   "id": "4M2UUENf4ZuRqBBR",
   "name": "Agent Tool  check address change eligibility",
-  "active": false,
-  "activeVersionId": null,
+  "active": true,
+  "activeVersionId": "ca2b245c-478e-4730-958a-ca09cc737403",
   "createdAt": "2026-11-04T11:32:14.488Z",
-  "updatedAt": "2026-11-05T07:12:46.081Z",
+  "updatedAt": "2026-11-09T09:55:58.516Z",
   "isArchived": false,
-  "versionId": "c1477f29-257f-4f56-b65f-a732a8673aa3",
+  "versionId": "ca2b245c-478e-4730-958a-ca09cc737403",
   "triggerCount": 0,
   "nodes": [
     {
@@ -49,10 +49,10 @@
       "parameters": {
         "warehouseId": {
           "__rl": true,
-          "value": "e81ec69db859d79b",
+          "value": "322f5fdc0a818d07",
           "mode": "list",
           "cachedResultName": "Serverless Starter Warehouse",
-          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
         },
         "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(\n            0,\n            DATEDIFF(c.asof, s.estimated_delivery)\n        )\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
       },
@@ -525,5 +525,499 @@
       "updatedAt": "2026-11-04T11:32:14.492Z"
     }
   ],
-  "activeVersion": null
+  "activeVersion": {
+    "versionId": "ca2b245c-478e-4730-958a-ca09cc737403",
+    "workflowId": "4M2UUENf4ZuRqBBR",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "customer_id"
+              },
+              {
+                "name": "order_id"
+              },
+              {
+                "name": "risk_score",
+                "type": "number"
+              },
+              {
+                "name": "refunds_last_90d",
+                "type": "number"
+              },
+              {
+                "name": "tier"
+              },
+              {
+                "name": "new_country"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          96,
+          144
+        ],
+        "id": "2b5350fb-d51f-44b8-ad12-56b48a3ec801",
+        "name": "Address Change Skill Input"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=SELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.amount,\n    o.shipping_fee,\n    o.payment_method,\n    o.status AS order_status,\n    o.refunded,\n\n    s.status AS ship_status,\n    s.estimated_delivery,\n    s.delivered_date,\n    s.claim_status,\n\n    DATEDIFF(c.asof, s.delivered_date) AS days_since_delivery,\n\n    CASE\n        WHEN s.status = 'delivered' THEN 0\n        ELSE GREATEST(\n            0,\n            DATEDIFF(c.asof, s.estimated_delivery)\n        )\n    END AS days_late,\n\n    p.return_window_days,\n    p.delay_threshold_days,\n    p.auto_limit,\n    p.approval_limit,\n    p.max_auto_actions_30d,\n    p.refund_method,\n    p.version AS policy_version,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.returns r\n        WHERE r.order_id = o.order_id\n    ) +\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.refunds f\n        WHERE f.order_id = o.order_id\n    ) AS prior_actions,\n\n    (\n        SELECT COUNT(*)\n        FROM workspace.agentic_support.audit_log a\n        WHERE a.customer_id = o.customer_id\n          AND a.route = 'auto'\n          AND a.decision = 'Executed'\n          AND a.event_time >= DATE_SUB(c.asof, 30)\n    ) AS auto_actions_30d,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'risk_score_escalate'\n    ) AS risk_score_escalate,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'serial_refund_threshold'\n    ) AS serial_refund_threshold,\n\n    (\n        SELECT CAST(config_value AS BIGINT)\n        FROM workspace.agentic_support.config\n        WHERE config_key = 'damage_report_days'\n    ) AS damage_report_days\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nJOIN (\n    SELECT CAST(config_value AS DATE) AS asof\n    FROM workspace.agentic_support.config\n    WHERE config_key = 'as_of_date'\n) c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'"
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          544,
+          48
+        ],
+        "id": "611afc10-c5ef-4ac7-bb76-00416421bcd1",
+        "name": "Execute a SQL query",
+        "alwaysOutputData": true,
+        "retryOnFail": false,
+        "credentials": {
+          "databricksApi": {
+            "id": "6NJqcClPZ1Ybyq12",
+            "name": "Rakesh Data Bricks"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"in sufficient credentials\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          544,
+          240
+        ],
+        "id": "37d229d3-4b52-48de-b48b-163ea50958ec",
+        "name": "Edit Fields1"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"decision\": \"decline\",\n  \"route\": \"decline\",\n  \"tier\": \"T0\",\n  \"refund_amount\": 0,\n  \"currency\": \"\",\n  \"days_remaining\": 0,\n  \"reasons\": \"Order not found for this customer\",\n  \"policy_version\": \"\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          992,
+          144
+        ],
+        "id": "bfde4bec-a273-49fa-97bf-ae906f1db56e",
+        "name": "Order Not Found Response"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "d0cec01b-7508-405b-8b7a-13ccc395d3cb",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "exists",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          768,
+          48
+        ],
+        "id": "b190fc01-7ac8-4be8-9dda-3b5a5224d5c9",
+        "name": "Check Order Exists"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"decision\": \"human\",\n  \"route\": \"human\",\n  \"tier\": \"T3\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"Address in a different country needs human review\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1216,
+          -160
+        ],
+        "id": "4f1e9907-b244-4c47-b20f-e4f9e2da4f57",
+        "name": "Human Review Response"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "3976fb66-80fb-454e-b207-38ca40e5417a",
+                "leftValue": "={{ $('Address Change Skill Input').item.json.new_country }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "3b1a5753-d91f-48c4-9614-0bd57e4ecf50",
+                "leftValue": "={{ $('Address Change Skill Input').item.json.new_country }}",
+                "rightValue": "={{ ($json.country || '').trim().toUpperCase() }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEquals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          992,
+          -48
+        ],
+        "id": "65528aa6-611e-48db-be7b-5b5a71630846",
+        "name": "Check Country Change"
+      },
+      {
+        "parameters": {
+          "rules": {
+            "values": [
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 4
+                  },
+                  "conditions": [
+                    {
+                      "leftValue": "={{ $json.order_status }}",
+                      "rightValue": "payment_pending",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals"
+                      },
+                      "id": "c72d0637-0389-49f9-b981-de7b48644573"
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 4
+                  },
+                  "conditions": [
+                    {
+                      "id": "2117be3a-547a-4895-af49-ed01ae77b485",
+                      "leftValue": "={{ $json.order_status }}",
+                      "rightValue": "packed",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              },
+              {
+                "conditions": {
+                  "options": {
+                    "caseSensitive": true,
+                    "leftValue": "",
+                    "typeValidation": "strict",
+                    "version": 4
+                  },
+                  "conditions": [
+                    {
+                      "id": "e746b260-fc21-4d2d-a6d5-b6cacb1f28c8",
+                      "leftValue": "={{ $json.order_status }}",
+                      "rightValue": "shipped",
+                      "operator": {
+                        "type": "string",
+                        "operation": "equals",
+                        "name": "filter.operator.equals"
+                      }
+                    }
+                  ],
+                  "combinator": "and"
+                }
+              }
+            ]
+          },
+          "options": {
+            "fallbackOutput": "extra"
+          }
+        },
+        "type": "n8n-nodes-base.switch",
+        "typeVersion": 3.5,
+        "position": [
+          1216,
+          32
+        ],
+        "id": "089d9b36-53dd-4774-804b-d8752e1903ff",
+        "name": "Evaluate order status"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"decision\": \"eligible\",\n  \"route\": \"auto\",\n  \"tier\": \"T1\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"Not dispatched yet; address can be changed now\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1440,
+          -128
+        ],
+        "id": "85dcac65-fba4-499c-9477-4f7af11e9207",
+        "name": "Automatic Approval Response"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"decision\": \"eligible\",\n  \"route\": \"approval\",\n  \"tier\": \"T2\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"Already shipped; needs a carrier intercept request. Fee may apply and it is not guaranteed\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1440,
+          64
+        ],
+        "id": "f3e8dc9b-d432-4192-8a68-9caedac5c683",
+        "name": "Carrier Intercept Approval Response"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "={\n  \"decision\": \"decline\",\n  \"route\": \"decline\",\n  \"tier\": \"T0\",\n  \"refund_amount\": 0,\n  \"currency\": \"{{ $json.currency }}\",\n  \"days_remaining\": 0,\n  \"reasons\": \"{{ 'Order is ' + $json.order_status + '; address cannot be changed' }}\",\n  \"policy_version\": \"{{ $json.policy_version }}\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1440,
+          256
+        ],
+        "id": "ec494c8d-8819-451b-a960-31b66e3ec68a",
+        "name": "Decline Response"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "441664dd-ff5d-4a37-b534-ba7d9a7cca27",
+                "leftValue": "={{ $json.customer_id }}",
+                "rightValue": "={{ $json.order_id }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "9019cc03-2dec-40df-b016-c4bca7ecf5cd",
+                "leftValue": "={{ $json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "a7a095d7-5507-44e3-b543-6b2b7ec75cf5",
+                "leftValue": "={{ $json.new_country }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          320,
+          144
+        ],
+        "id": "6a7ac24b-cc74-4cb5-a4ea-e81ec2213b35",
+        "name": "Check Valid input parameters"
+      }
+    ],
+    "connections": {
+      "Address Change Skill Input": {
+        "main": [
+          [
+            {
+              "node": "Check Valid input parameters",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Execute a SQL query": {
+        "main": [
+          [
+            {
+              "node": "Check Order Exists",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Order Exists": {
+        "main": [
+          [
+            {
+              "node": "Check Country Change",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Order Not Found Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Country Change": {
+        "main": [
+          [
+            {
+              "node": "Human Review Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Evaluate order status",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Evaluate order status": {
+        "main": [
+          [
+            {
+              "node": "Automatic Approval Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Automatic Approval Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Carrier Intercept Approval Response",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Decline Response",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Check Valid input parameters": {
+        "main": [
+          [
+            {
+              "node": "Execute a SQL query",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Rakesh Mengani",
+    "name": "V2",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-09T09:55:58.518Z",
+    "updatedAt": "2026-11-09T09:59:23.000Z"
+  }
 }
