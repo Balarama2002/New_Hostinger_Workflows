@@ -4,9 +4,9 @@
   "active": false,
   "activeVersionId": null,
   "createdAt": "2026-11-06T08:12:31.333Z",
-  "updatedAt": "2026-11-09T09:40:36.854Z",
+  "updatedAt": "2026-11-10T12:50:35.370Z",
   "isArchived": false,
-  "versionId": "33d58c2b-1055-43ec-86fd-a4be55ad4289",
+  "versionId": "020f8a99-c0c2-4954-bf4b-0d8750a0b54e",
   "triggerCount": 0,
   "nodes": [
     {
@@ -20,7 +20,7 @@
       "typeVersion": 1.1,
       "position": [
         0,
-        1056
+        2480
       ]
     },
     {
@@ -40,7 +40,7 @@
       "typeVersion": 1,
       "position": [
         448,
-        960
+        2336
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -89,7 +89,7 @@
       "typeVersion": 2.2,
       "position": [
         224,
-        1056
+        2480
       ]
     },
     {
@@ -112,7 +112,7 @@
       "typeVersion": 3.4,
       "position": [
         448,
-        1152
+        2624
       ]
     },
     {
@@ -153,8 +153,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        672,
-        960
+        896,
+        2416
       ],
       "id": "9233b1ba-a08d-4e7a-ac4f-8cdcd30e237e",
       "name": "If"
@@ -178,8 +178,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        880,
-        1104
+        1120,
+        2512
       ]
     },
     {
@@ -207,7 +207,7 @@
               "rightValue": 0,
               "operator": {
                 "type": "number",
-                "operation": "lt"
+                "operation": "gt"
               }
             }
           ],
@@ -218,8 +218,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        896,
-        928.5
+        1120,
+        2096
       ],
       "id": "ff00e76d-32e5-4ad3-bbf5-e9ada6f59943",
       "name": "If1"
@@ -243,8 +243,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1120,
-        848
+        1344,
+        2000
       ]
     },
     {
@@ -274,8 +274,8 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        1120,
-        1056
+        1344,
+        2240
       ],
       "id": "04c0567d-6120-4e2b-9d70-2a4b3ec95127",
       "name": "If2"
@@ -299,8 +299,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        1344,
-        928
+        1568,
+        2144
       ]
     },
     {
@@ -315,10 +315,292 @@
           "conditions": [
             {
               "id": "a341861c-6040-4b8d-ae56-4cfae4e213a7",
-              "leftValue": "=",
-              "rightValue": "",
+              "leftValue": "={{Number($json.risk_score)}}",
+              "rightValue": "={{ Number($json.risk_score_escalate) }}",
               "operator": {
-                "type": "dateTime",
+                "type": "number",
+                "operation": "gte"
+              }
+            },
+            {
+              "id": "fb7882da-82de-4815-afa0-6b85fadeda38",
+              "leftValue": "={{ Number($json.refunds_last_90d) }}",
+              "rightValue": "={{ Number($json.serial_refund_threshold) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gte"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        1568,
+        2336
+      ],
+      "id": "364e51aa-859c-4ebc-8978-0d261bb6ee26",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Risk gate: customer needs human review",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f1d826af-cae1-4963-a2a0-9db842f99425",
+      "name": "Output - Missing Mandatory Input4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        2176
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        672,
+        2416
+      ],
+      "id": "09bd3146-8b71-43e9-ab38-28461ac21113",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "return",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "e7042a66-27a7-4a76-9ca4-2c545feedc62"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "70ec4239-ce17-4757-ad1d-c28e3160d58e",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "damaged",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "b786c2d1-e06a-45a7-827c-238774384713",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "wrong_item",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "a6368702-e243-4efa-8985-922c5cffd526",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "delayed",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "233e0d49-d195-47dc-95da-294f4e278b7d",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "lost",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "17d6ae2f-d923-4bac-9d3f-d86fc2c6eda1",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "not_received",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "349fa075-7955-4bd1-8bff-053de1073a58",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "cancel",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 4
+                },
+                "conditions": [
+                  {
+                    "id": "2c8b0627-abb9-4a36-9b88-0f998c6c1213",
+                    "leftValue": "={{ $json.request_type }}",
+                    "rightValue": "address_change",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.5,
+      "position": [
+        1792,
+        2368
+      ],
+      "id": "b2c33cf0-1721-4ae7-beb2-21eee45be5f4",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "217757a0-5226-4541-8536-9905b9f22fa4",
+              "leftValue": "={{ $json.order_status }}",
+              "rightValue": "delivered",
+              "operator": {
+                "type": "string",
                 "operation": "equals"
               }
             }
@@ -330,11 +612,810 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.4,
       "position": [
-        1344,
-        1152
+        2016,
+        1520
       ],
-      "id": "364e51aa-859c-4ebc-8978-0d261bb6ee26",
-      "name": "If3"
+      "id": "47daf383-3116-4b54-a3b8-c79addbe1d09",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Order not delivered yet",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "44316657-4bb0-4880-bfa3-b447b9282ba2",
+      "name": "Reject",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        1616
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "c7562dc9-9989-4ab2-aa25-801424401640",
+              "leftValue": "={{ Number($json.days_since_delivery) }}",
+              "rightValue": "={{ Number($json.return_window_days) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2240,
+        1424
+      ],
+      "id": "1f2ca4e2-1dff-4dfd-9a93-ff286a4b0251",
+      "name": "If5"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Check item unused",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e857f4af-b2b3-40ed-82bb-14ae7114a7ff",
+      "name": "Reject1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "96e5eb0c-2096-47e3-b880-0db5bcdde312",
+              "leftValue": "={{ $json.wants_exception }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "0045f756-e678-4730-b56b-9f8a348e0686",
+              "leftValue": "={{ $json.tier }}",
+              "rightValue": "vip",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2464,
+        1328
+      ],
+      "id": "316b2ce1-4469-479b-baad-c69cf3a5619c",
+      "name": "If6"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Decline / T0, amount 0, reason: Delivered [days] days ago; return window is [window] days",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "046c7307-7fc0-4ef0-8bfa-e2c31eb5ea7e",
+      "name": "Reject2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        1520
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "c18f50bb-2d74-4fb7-a267-d595f230e08a",
+              "leftValue": "={{ $('If5').item.json.item_unused }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2688,
+        1232
+      ],
+      "id": "9bfa6967-a987-4c85-b10f-1d57a6dbf248",
+      "name": "If7"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Item must be unused",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "458ffc20-1196-45de-ad26-049eb45eb899",
+      "name": "Reject3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        1328
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "={{ $('If5').item.json.amount }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fc8657a3-79ba-4026-8dfe-21cf1fe565e3",
+      "name": "Reject4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        1136
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "5a1679b7-d997-4d78-bb53-9ae5e4727db9",
+              "leftValue": "={{ $json.order_status }}",
+              "rightValue": "delivered",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2016,
+        1904
+      ],
+      "id": "baa1c89b-745d-4f44-abfe-05c72f92ca2a",
+      "name": "If9"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Order not delivered yet",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7ed00572-c2ec-445f-b850-fca4276774be",
+      "name": "Reject5",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "613fc4b3-91d0-4a8a-9a24-978127f1fed2",
+              "leftValue": "={{ Number($json.days_since_delivery) }}",
+              "rightValue": "={{Number($json.damage_report_days ) }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2240,
+        1808
+      ],
+      "id": "0a655f3d-c973-4953-be36-fe7cc88a7626",
+      "name": "If10"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "",
+              "value": "Human / T3, amount 0, reason: Reported after damage-report limit",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f425363f-0212-4053-bc99-746c486c9596",
+      "name": "Reject6",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "04b4f718-20a0-452f-b26a-d8bba23c3b90",
+              "leftValue": "={{ $('If9').item.json.evidence_ok }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2464,
+        1904
+      ],
+      "id": "05b6df9f-c1f8-4f1d-aad3-0c3ae5951166",
+      "name": "If11"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "",
+              "value": "need_evidence / need_evidence / T0 / amount 0 / reason: Need a specific description or photo of the problem.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c9c0b76c-7fdb-4193-b51c-9ec7624a698d",
+      "name": "Reject7",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        2000
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "a5eb8e38-947d-487e-b70e-e0e2f7571a76",
+              "leftValue": "={{ Number($('If3').item.json.days_late) }}",
+              "rightValue": "={{ Number($('If3').item.json.delay_threshold_days) }}",
+              "operator": {
+                "type": "number",
+                "operation": "lte"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2016,
+        2672
+      ],
+      "id": "a678ad16-482d-4a4b-b4d5-ac7fe37d6be5",
+      "name": "If12"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "Calculate refund",
+              "value": "={{ Number($('If9').item.json.amount) +  $('If9').item.json.shipping_fee}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "39ad32dc-8187-437e-bd08-277116cc7362",
+      "name": "Accepted",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        1712
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "Calculate refund",
+              "value": "={{ Number($('If9').item.json.amount) +  $('If9').item.json.shipping_fee}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6c57f9f9-b127-45cc-92b9-faa43dc667b5",
+      "name": "Accepted1",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        2576
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "",
+              "value": "X days late; threshold is Y. Share the ETA",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "eb65943c-6e42-4837-bb20-05d56ff4165f",
+      "name": "Reject8",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        2768
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "71f222e1-a85c-47e8-a3ff-b0bd74535d14",
+              "leftValue": "={{ $('If3').item.json.ship_status }}",
+              "rightValue": "lost",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2016,
+        3440
+      ],
+      "id": "3e76e8c1-f6fd-4729-a5b7-1c9dcabd64ec",
+      "name": "If13"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "Calculate refund",
+              "value": "={{ Number($('If9').item.json.amount) +  $('If9').item.json.shipping_fee}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c0e0e3e1-56a5-4096-b268-4c3578cf7179",
+      "name": "Accepted2",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        3344
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "",
+              "value": "Carrier has not marked it lost.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f691e596-179f-43ba-a06f-05e60d1a1db1",
+      "name": "Reject9",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        3536
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "4a97c951-8c45-4cd8-ba74-06e7e8620d0b",
+              "leftValue": "={{ $('If3').item.json.ship_status }}",
+              "rightValue": "delivered",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2016,
+        2288
+      ],
+      "id": "4bf49f16-029c-4ccd-b29a-5e0449370f57",
+      "name": "If8"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Carrier does not show it delivered; use tracking",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c094bc8e-8778-4092-8ec8-4e933c386c39",
+      "name": "Reject10",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        2384
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "6d6b90ab-9f79-41f4-8176-20ab9c6af8e9",
+              "leftValue": "={{ $('If3').item.json.claim_status }}",
+              "rightValue": "raised",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2240,
+        2192
+      ],
+      "id": "a0e420a5-b433-4bf3-b4c9-cab135dd4443",
+      "name": "If14"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "A carrier claim is already open",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c976fba9-a419-4c28-8713-05384603ef6e",
+      "name": "Reject11",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        2096
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "Calculate refund",
+              "value": "=Output\tValue\ndecision\teligible\nroute\tauto\ntier\tT1\nrefund_amount\t0\nreasons\tRaise a carrier claim; follow up within 48 hours; no instant refund",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1ffd2b75-19ec-41c2-b32d-36cb0cb2db62",
+      "name": "Accepted3",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        2288
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "a2bf69c5-3826-48f2-b343-e580b340e9bf",
+              "leftValue": "={{ $('If3').item.json.order_status }}",
+              "rightValue": "payment_pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "a15fa13b-4bf6-404b-a921-c5e6b76e3a1b",
+              "leftValue": "={{ $('If3').item.json.order_status }}",
+              "rightValue": "packed",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        2016,
+        3056
+      ],
+      "id": "90f759cc-85d3-4b90-a894-c718c3381492",
+      "name": "If15"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "1b497e59-6543-4b1a-91c1-de7e6cbcb8a1",
+              "name": "output",
+              "value": "Already shipped or delivered; cannot cancel",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cd50bc62-e56c-4777-a241-37ac2b110108",
+      "name": "Reject12",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        3152
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "37a1bdb4-a1e5-4fb4-ad69-933523dedd22",
+              "name": "Calculate refund",
+              "value": "=COD = 0; otherwise amount + shipping_fee",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b8a0373b-955b-4509-9477-c39c8d58fd4a",
+      "name": "Accepted4",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        2960
+      ]
     }
   ],
   "connections": {
@@ -353,7 +1434,7 @@
       "main": [
         [
           {
-            "node": "If",
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -367,6 +1448,11 @@
             "node": "Databricks - Get Order and Policy",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
           }
         ],
         [
@@ -426,6 +1512,304 @@
         [
           {
             "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Output - Missing Mandatory Input4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If9",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If12",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If13",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If8",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If15",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "If6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If6": {
+      "main": [
+        [
+          {
+            "node": "If7",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If7": {
+      "main": [
+        [
+          {
+            "node": "Reject4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If9": {
+      "main": [
+        [
+          {
+            "node": "If10",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If10": {
+      "main": [
+        [
+          {
+            "node": "Reject6",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If11": {
+      "main": [
+        [
+          {
+            "node": "Accepted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If12": {
+      "main": [
+        [
+          {
+            "node": "Accepted1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If13": {
+      "main": [
+        [
+          {
+            "node": "Accepted2",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If8": {
+      "main": [
+        [
+          {
+            "node": "If14",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If14": {
+      "main": [
+        [
+          {
+            "node": "Reject11",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Accepted3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If15": {
+      "main": [
+        [
+          {
+            "node": "Accepted4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Reject12",
             "type": "main",
             "index": 0
           }
