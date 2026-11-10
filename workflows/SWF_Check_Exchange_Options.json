@@ -1,0 +1,400 @@
+{
+  "id": "3SoJDZQqfjyXeaeH",
+  "name": "SWF_Check_Exchange_Options",
+  "active": true,
+  "activeVersionId": "0931a5d4-b51f-4222-be1f-fce1915a7e4b",
+  "createdAt": "2026-11-10T07:38:10.080Z",
+  "updatedAt": "2026-11-10T09:47:30.319Z",
+  "isArchived": false,
+  "versionId": "0931a5d4-b51f-4222-be1f-fce1915a7e4b",
+  "triggerCount": 0,
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "customer_id"
+            },
+            {
+              "name": "order_id"
+            },
+            {
+              "name": "desired_size"
+            },
+            {
+              "name": "desired_color"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "89716689-fa02-4496-a50a-2c1627a747eb",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "=\nWITH return_counts AS (\n    SELECT order_id, COUNT(*) AS return_count\n    FROM workspace.agentic_support.`returns`\n    GROUP BY order_id\n),\nrefund_counts AS (\n    SELECT order_id, COUNT(*) AS refund_count\n    FROM workspace.agentic_support.refunds\n    GROUP BY order_id\n),\nexchange_counts AS (\n    SELECT order_id, COUNT(*) AS exchange_count\n    FROM workspace.agentic_support.exchanges\n    WHERE status NOT IN ('rejected', 'cancelled')\n    GROUP BY order_id\n),\nconfig_values AS (\n    SELECT\n        MAX(CASE WHEN config_key = 'as_of_date'\n            THEN TRY_CAST(config_value AS DATE) END) AS asof,\n        MAX(CASE WHEN config_key = 'risk_score_escalate'\n            THEN TRY_CAST(config_value AS BIGINT) END) AS risk_score_escalate,\n        MAX(CASE WHEN config_key = 'serial_refund_threshold'\n            THEN TRY_CAST(config_value AS BIGINT) END) AS serial_refund_threshold\n    FROM workspace.agentic_support.config\n)\n\nSELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.item,\n    o.sku,\n    o.size,\n    o.amount,\n    o.status AS order_status,\n    o.refunded,\n    s.status AS ship_status,\n\n    DATEDIFF(c.asof, CAST(s.delivered_date AS DATE))\n        AS days_since_delivery,\n\n    p.return_window_days,\n    p.version AS policy_version,\n\n    COALESCE(r.return_count, 0) AS return_count,\n    COALESCE(f.refund_count, 0) AS refund_count,\n    COALESCE(e.exchange_count, 0) AS exchange_count,\n\n    pr.category,\n    c.risk_score_escalate,\n    c.serial_refund_threshold\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nLEFT JOIN workspace.agentic_support.products pr\n    ON pr.sku = o.sku\n\nLEFT JOIN return_counts r\n    ON r.order_id = o.order_id\n\nLEFT JOIN refund_counts f\n    ON f.order_id = o.order_id\n\nLEFT JOIN exchange_counts e\n    ON e.order_id = o.order_id\n\nCROSS JOIN config_values c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'\n",
+        "queryParameters": {
+          "parameters": []
+        }
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "89faf2d1-80eb-4821-9957-391fa76247dd",
+      "name": "Get order",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "cDTFBDRW4LWhbFCa",
+          "name": "Preconfig_Databricks V2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "warehouseId": {
+          "__rl": true,
+          "value": "322f5fdc0a818d07",
+          "mode": "list",
+          "cachedResultName": "Serverless Starter Warehouse",
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+        },
+        "query": "\nSELECT\n    pr.sku,\n    pr.name,\n    pr.color,\n    i.size,\n    i.stock_quantity,\n\n    CASE\n        WHEN :country = 'IN' THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\n\nFROM workspace.agentic_support.products pr\n\nJOIN workspace.agentic_support.inventory i\n    ON i.sku = pr.sku\n\nWHERE i.stock_quantity > 0\n\n  AND pr.category = :category\n\n  AND (\n      CASE\n          WHEN :country = 'IN' THEN pr.price_inr\n          ELSE pr.price_aed\n      END\n  ) <= CAST(:amount AS DECIMAL(18,2))\n\nORDER BY\n    CASE WHEN pr.sku = :sku THEN 0 ELSE 1 END,\n    price DESC\n\nLIMIT 12\n",
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "country",
+              "value": "={{ $json.country }}"
+            },
+            {
+              "name": "category",
+              "value": "={{ $json.category }}"
+            },
+            {
+              "name": "amount",
+              "value": "={{ $json.amount }}"
+            },
+            {
+              "name": "sku",
+              "value": "={{ $json.sku }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.databricks",
+      "typeVersion": 1,
+      "position": [
+        672,
+        0
+      ],
+      "id": "17f407a4-573c-41b4-bb83-033119b7f069",
+      "name": "Get alternatives",
+      "alwaysOutputData": true,
+      "credentials": {
+        "databricksApi": {
+          "id": "cDTFBDRW4LWhbFCa",
+          "name": "Preconfig_Databricks V2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $('When Executed by Another Workflow').first().json;\n\nconst order = $('Collect Order').first().json.order;\nconst o = order[0] || null;\n\nconst opts = $input.all()\n  .map(item => item.json)\n  .filter(row => row.sku != null);\n\nconst wantSize = String(input.desired_size || '').trim().toLowerCase();\nconst wantColor = String(input.desired_color || '').trim().toLowerCase();\n\nconst currency = o ? String(o.currency) : '';\n\nfunction money(value) {\n  return (currency === 'INR' ? 'Rs ' : 'AED ') +\n    Math.round(Number(value));\n}\n\nfunction output(ok, reason, list = [], left = 0) {\n  return {\n    eligible: String(ok),\n    reason,\n    item: o ? String(o.item ?? '') : '',\n    size: o ? String(o.size ?? '') : '',\n    sku: o ? String(o.sku ?? '') : '',\n    paid: o ? String(o.amount ?? '') : '',\n    currency,\n    days_left: String(left),\n    option_count: String(list.length),\n    options: list.join('\\n')\n  };\n}\n\nlet result;\n\n// 1. Order not found\nif (!o) {\n  result = output(false, 'Order not found for this customer');\n}\n\n// 2. Already refunded\nelse if (\n  String(o.refunded).toLowerCase() === 'yes' ||\n  o.refunded === true ||\n  Number(o.refund_count) > 0\n) {\n  result = output(false, 'This order was already refunded');\n}\n\n// 3. Return already exists\nelse if (Number(o.return_count) > 0) {\n  result = output(false, 'A return is already in progress for this order');\n}\n\n// 4. Exchange already exists\nelse if (Number(o.exchange_count) > 0) {\n  result = output(false, 'An exchange is already in progress for this order');\n}\n\n// 5. Order not delivered\nelse if (String(o.order_status).toLowerCase() !== 'delivered') {\n  result = output(false, 'The order has not been delivered yet');\n}\n\n// 6. Missing delivery or policy information\nelse if (o.days_since_delivery == null ||\n         o.return_window_days == null) {\n  result = output(false, 'Cannot verify delivery date or exchange window');\n}\n\nelse {\n  const days = Number(o.days_since_delivery);\n  const windowDays = Number(o.return_window_days);\n  const left = windowDays - days;\n\n  // 7. Exchange window expired\n  if (left < 0) {\n    result = output(\n      false,\n      `Delivered ${days} days ago; exchange window is ${windowDays} days`,\n      [],\n      left\n    );\n  }\n  else {\n    const paid = Number(o.amount);\n\n    // 8. Exclude the original SKU and size combination\n    let list = opts.filter(x =>\n      !(x.sku === o.sku && String(x.size) === String(o.size))\n    );\n\n    let note = '';\n\n    // 9. Filter by preferred size or color\n    if (wantSize || wantColor) {\n      const matches = list.filter(x =>\n        (!wantSize || String(x.size).toLowerCase().includes(wantSize)) &&\n        (!wantColor || String(x.color).toLowerCase().includes(wantColor))\n      );\n\n      if (matches.length > 0) {\n        list = matches;\n      } else if (list.length > 0) {\n        note = 'No exact preference match; showing other choices. ';\n      }\n    }\n\n    // 10. Format the top 5 replacement options\n    const lines = list.slice(0, 5).map((x, i) => {\n      const credit = paid - Number(x.price);\n\n      const difference = credit > 0.5\n        ? `${money(credit)} would be credited back`\n        : 'same price';\n\n      return `${i + 1}) ${x.name} (sku ${x.sku}), ` +\n        `size ${x.size}, ${money(x.price)}, ` +\n        `${x.stock_quantity} in stock, ${difference}`;\n    });\n\n    if (lines.length === 0) {\n      result = output(\n        false,\n        'Nothing else is in stock at the same price or lower',\n        [],\n        left\n      );\n    } else {\n      result = output(true, note + 'Eligible', lines, left);\n    }\n  }\n}\n\nreturn [{ json: result }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "16dd9284-e844-4f1b-83ca-923d6991c79c",
+      "name": "Check Exchange Options"
+    },
+    {
+      "parameters": {
+        "jsCode": "\nconst input = $('When Executed by Another Workflow').first().json;\n\nconst order = $input.all()\n  .map(item => item.json)\n  .filter(row => row.order_id != null);\n\nconst o = order[0] || {};\n\nreturn [{\n  json: {\n    ...input,\n    order,\n    country: o.country || 'IN',\n    category: o.category || '',\n    amount: o.amount ?? 0,\n    sku: o.sku || ''\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "fa7e152e-24b9-4930-9b95-e70034ebc5e6",
+      "name": "Collect Order"
+    }
+  ],
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get order": {
+      "main": [
+        [
+          {
+            "node": "Collect Order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get alternatives": {
+      "main": [
+        [
+          {
+            "node": "Check Exchange Options",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Collect Order": {
+      "main": [
+        [
+          {
+            "node": "Get alternatives",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "3SoJDZQqfjyXeaeH",
+      "projectId": "VZ8J0XCfSU5w3QzG",
+      "createdAt": "2026-11-10T07:38:10.085Z",
+      "updatedAt": "2026-11-10T07:38:10.085Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "0931a5d4-b51f-4222-be1f-fce1915a7e4b",
+    "workflowId": "3SoJDZQqfjyXeaeH",
+    "nodes": [
+      {
+        "parameters": {
+          "workflowInputs": {
+            "values": [
+              {
+                "name": "customer_id"
+              },
+              {
+                "name": "order_id"
+              },
+              {
+                "name": "desired_size"
+              },
+              {
+                "name": "desired_color"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.executeWorkflowTrigger",
+        "typeVersion": 1.3,
+        "position": [
+          0,
+          0
+        ],
+        "id": "89716689-fa02-4496-a50a-2c1627a747eb",
+        "name": "When Executed by Another Workflow"
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "=\nWITH return_counts AS (\n    SELECT order_id, COUNT(*) AS return_count\n    FROM workspace.agentic_support.`returns`\n    GROUP BY order_id\n),\nrefund_counts AS (\n    SELECT order_id, COUNT(*) AS refund_count\n    FROM workspace.agentic_support.refunds\n    GROUP BY order_id\n),\nexchange_counts AS (\n    SELECT order_id, COUNT(*) AS exchange_count\n    FROM workspace.agentic_support.exchanges\n    WHERE status NOT IN ('rejected', 'cancelled')\n    GROUP BY order_id\n),\nconfig_values AS (\n    SELECT\n        MAX(CASE WHEN config_key = 'as_of_date'\n            THEN TRY_CAST(config_value AS DATE) END) AS asof,\n        MAX(CASE WHEN config_key = 'risk_score_escalate'\n            THEN TRY_CAST(config_value AS BIGINT) END) AS risk_score_escalate,\n        MAX(CASE WHEN config_key = 'serial_refund_threshold'\n            THEN TRY_CAST(config_value AS BIGINT) END) AS serial_refund_threshold\n    FROM workspace.agentic_support.config\n)\n\nSELECT\n    o.order_id,\n    o.customer_id,\n    o.country,\n    o.currency,\n    o.item,\n    o.sku,\n    o.size,\n    o.amount,\n    o.status AS order_status,\n    o.refunded,\n    s.status AS ship_status,\n\n    DATEDIFF(c.asof, CAST(s.delivered_date AS DATE))\n        AS days_since_delivery,\n\n    p.return_window_days,\n    p.version AS policy_version,\n\n    COALESCE(r.return_count, 0) AS return_count,\n    COALESCE(f.refund_count, 0) AS refund_count,\n    COALESCE(e.exchange_count, 0) AS exchange_count,\n\n    pr.category,\n    c.risk_score_escalate,\n    c.serial_refund_threshold\n\nFROM workspace.agentic_support.orders o\n\nLEFT JOIN workspace.agentic_support.shipments s\n    ON s.order_id = o.order_id\n\nJOIN workspace.agentic_support.policies p\n    ON p.country = o.country\n\nLEFT JOIN workspace.agentic_support.products pr\n    ON pr.sku = o.sku\n\nLEFT JOIN return_counts r\n    ON r.order_id = o.order_id\n\nLEFT JOIN refund_counts f\n    ON f.order_id = o.order_id\n\nLEFT JOIN exchange_counts e\n    ON e.order_id = o.order_id\n\nCROSS JOIN config_values c\n\nWHERE o.order_id = '{{ $json.order_id }}'\n  AND o.customer_id = '{{ $json.customer_id }}'\n",
+          "queryParameters": {
+            "parameters": []
+          }
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          224,
+          0
+        ],
+        "id": "89faf2d1-80eb-4821-9957-391fa76247dd",
+        "name": "Get order",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "cDTFBDRW4LWhbFCa",
+            "name": "Preconfig_Databricks V2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "warehouseId": {
+            "__rl": true,
+            "value": "322f5fdc0a818d07",
+            "mode": "list",
+            "cachedResultName": "Serverless Starter Warehouse",
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
+          },
+          "query": "\nSELECT\n    pr.sku,\n    pr.name,\n    pr.color,\n    i.size,\n    i.stock_quantity,\n\n    CASE\n        WHEN :country = 'IN' THEN pr.price_inr\n        ELSE pr.price_aed\n    END AS price\n\nFROM workspace.agentic_support.products pr\n\nJOIN workspace.agentic_support.inventory i\n    ON i.sku = pr.sku\n\nWHERE i.stock_quantity > 0\n\n  AND pr.category = :category\n\n  AND (\n      CASE\n          WHEN :country = 'IN' THEN pr.price_inr\n          ELSE pr.price_aed\n      END\n  ) <= CAST(:amount AS DECIMAL(18,2))\n\nORDER BY\n    CASE WHEN pr.sku = :sku THEN 0 ELSE 1 END,\n    price DESC\n\nLIMIT 12\n",
+          "queryParameters": {
+            "parameters": [
+              {
+                "name": "country",
+                "value": "={{ $json.country }}"
+              },
+              {
+                "name": "category",
+                "value": "={{ $json.category }}"
+              },
+              {
+                "name": "amount",
+                "value": "={{ $json.amount }}"
+              },
+              {
+                "name": "sku",
+                "value": "={{ $json.sku }}"
+              }
+            ]
+          }
+        },
+        "type": "n8n-nodes-base.databricks",
+        "typeVersion": 1,
+        "position": [
+          672,
+          0
+        ],
+        "id": "17f407a4-573c-41b4-bb83-033119b7f069",
+        "name": "Get alternatives",
+        "alwaysOutputData": true,
+        "credentials": {
+          "databricksApi": {
+            "id": "cDTFBDRW4LWhbFCa",
+            "name": "Preconfig_Databricks V2"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst input = $('When Executed by Another Workflow').first().json;\n\nconst order = $('Collect Order').first().json.order;\nconst o = order[0] || null;\n\nconst opts = $input.all()\n  .map(item => item.json)\n  .filter(row => row.sku != null);\n\nconst wantSize = String(input.desired_size || '').trim().toLowerCase();\nconst wantColor = String(input.desired_color || '').trim().toLowerCase();\n\nconst currency = o ? String(o.currency) : '';\n\nfunction money(value) {\n  return (currency === 'INR' ? 'Rs ' : 'AED ') +\n    Math.round(Number(value));\n}\n\nfunction output(ok, reason, list = [], left = 0) {\n  return {\n    eligible: String(ok),\n    reason,\n    item: o ? String(o.item ?? '') : '',\n    size: o ? String(o.size ?? '') : '',\n    sku: o ? String(o.sku ?? '') : '',\n    paid: o ? String(o.amount ?? '') : '',\n    currency,\n    days_left: String(left),\n    option_count: String(list.length),\n    options: list.join('\\n')\n  };\n}\n\nlet result;\n\n// 1. Order not found\nif (!o) {\n  result = output(false, 'Order not found for this customer');\n}\n\n// 2. Already refunded\nelse if (\n  String(o.refunded).toLowerCase() === 'yes' ||\n  o.refunded === true ||\n  Number(o.refund_count) > 0\n) {\n  result = output(false, 'This order was already refunded');\n}\n\n// 3. Return already exists\nelse if (Number(o.return_count) > 0) {\n  result = output(false, 'A return is already in progress for this order');\n}\n\n// 4. Exchange already exists\nelse if (Number(o.exchange_count) > 0) {\n  result = output(false, 'An exchange is already in progress for this order');\n}\n\n// 5. Order not delivered\nelse if (String(o.order_status).toLowerCase() !== 'delivered') {\n  result = output(false, 'The order has not been delivered yet');\n}\n\n// 6. Missing delivery or policy information\nelse if (o.days_since_delivery == null ||\n         o.return_window_days == null) {\n  result = output(false, 'Cannot verify delivery date or exchange window');\n}\n\nelse {\n  const days = Number(o.days_since_delivery);\n  const windowDays = Number(o.return_window_days);\n  const left = windowDays - days;\n\n  // 7. Exchange window expired\n  if (left < 0) {\n    result = output(\n      false,\n      `Delivered ${days} days ago; exchange window is ${windowDays} days`,\n      [],\n      left\n    );\n  }\n  else {\n    const paid = Number(o.amount);\n\n    // 8. Exclude the original SKU and size combination\n    let list = opts.filter(x =>\n      !(x.sku === o.sku && String(x.size) === String(o.size))\n    );\n\n    let note = '';\n\n    // 9. Filter by preferred size or color\n    if (wantSize || wantColor) {\n      const matches = list.filter(x =>\n        (!wantSize || String(x.size).toLowerCase().includes(wantSize)) &&\n        (!wantColor || String(x.color).toLowerCase().includes(wantColor))\n      );\n\n      if (matches.length > 0) {\n        list = matches;\n      } else if (list.length > 0) {\n        note = 'No exact preference match; showing other choices. ';\n      }\n    }\n\n    // 10. Format the top 5 replacement options\n    const lines = list.slice(0, 5).map((x, i) => {\n      const credit = paid - Number(x.price);\n\n      const difference = credit > 0.5\n        ? `${money(credit)} would be credited back`\n        : 'same price';\n\n      return `${i + 1}) ${x.name} (sku ${x.sku}), ` +\n        `size ${x.size}, ${money(x.price)}, ` +\n        `${x.stock_quantity} in stock, ${difference}`;\n    });\n\n    if (lines.length === 0) {\n      result = output(\n        false,\n        'Nothing else is in stock at the same price or lower',\n        [],\n        left\n      );\n    } else {\n      result = output(true, note + 'Eligible', lines, left);\n    }\n  }\n}\n\nreturn [{ json: result }];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          896,
+          0
+        ],
+        "id": "16dd9284-e844-4f1b-83ca-923d6991c79c",
+        "name": "Check Exchange Options"
+      },
+      {
+        "parameters": {
+          "jsCode": "\nconst input = $('When Executed by Another Workflow').first().json;\n\nconst order = $input.all()\n  .map(item => item.json)\n  .filter(row => row.order_id != null);\n\nconst o = order[0] || {};\n\nreturn [{\n  json: {\n    ...input,\n    order,\n    country: o.country || 'IN',\n    category: o.category || '',\n    amount: o.amount ?? 0,\n    sku: o.sku || ''\n  }\n}];\n"
+        },
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": [
+          448,
+          0
+        ],
+        "id": "fa7e152e-24b9-4930-9b95-e70034ebc5e6",
+        "name": "Collect Order"
+      }
+    ],
+    "connections": {
+      "When Executed by Another Workflow": {
+        "main": [
+          [
+            {
+              "node": "Get order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get order": {
+        "main": [
+          [
+            {
+              "node": "Collect Order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get alternatives": {
+        "main": [
+          [
+            {
+              "node": "Check Exchange Options",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Collect Order": {
+        "main": [
+          [
+            {
+              "node": "Get alternatives",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Hanish Thatikonda",
+    "name": "Version 0931a5d4",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-10T09:38:19.077Z",
+    "updatedAt": "2026-11-10T09:47:33.000Z"
+  }
+}
