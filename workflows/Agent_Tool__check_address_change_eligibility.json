@@ -4,9 +4,9 @@
   "active": true,
   "activeVersionId": "ca2b245c-478e-4730-958a-ca09cc737403",
   "createdAt": "2026-11-04T11:32:14.488Z",
-  "updatedAt": "2026-11-09T09:55:58.516Z",
+  "updatedAt": "2026-11-10T06:16:30.664Z",
   "isArchived": false,
-  "versionId": "ca2b245c-478e-4730-958a-ca09cc737403",
+  "versionId": "9f3ba46c-4dd0-4d7d-b464-2d79374d7f33",
   "triggerCount": 0,
   "nodes": [
     {
@@ -76,7 +76,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"in sufficient credentials\"\n}",
+        "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"Mandatory fields are not available\"\n}",
         "options": {}
       },
       "type": "n8n-nodes-base.set",
@@ -291,7 +291,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1440,
+        1536,
         -128
       ],
       "id": "85dcac65-fba4-499c-9477-4f7af11e9207",
@@ -306,8 +306,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1440,
-        64
+        1552,
+        80
       ],
       "id": "f3e8dc9b-d432-4192-8a68-9caedac5c683",
       "name": "Carrier Intercept Approval Response"
@@ -321,8 +321,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1440,
-        256
+        1552,
+        304
       ],
       "id": "ec494c8d-8819-451b-a960-31b66e3ec68a",
       "name": "Decline Response"
