@@ -2,11 +2,11 @@
   "id": "DrNp5MxAopSlJJYc",
   "name": "Subscription request",
   "active": true,
-  "activeVersionId": "67edc2b0-40ba-4be3-9209-3ded6dcf489c",
+  "activeVersionId": "55d9d74b-8001-41d8-b345-99d21efb5ddb",
   "createdAt": "2026-08-14T05:53:50.890Z",
-  "updatedAt": "2026-11-04T12:53:28.705Z",
+  "updatedAt": "2026-11-10T09:43:57.831Z",
   "isArchived": false,
-  "versionId": "67edc2b0-40ba-4be3-9209-3ded6dcf489c",
+  "versionId": "55d9d74b-8001-41d8-b345-99d21efb5ddb",
   "triggerCount": 1,
   "nodes": [
     {
@@ -276,7 +276,7 @@
     {
       "parameters": {
         "method": "PATCH",
-        "url": "https://graph.microsoft.com/v1.0/subscriptions/152dcaa6-649a-4310-ba1c-8c3a91531ae4",
+        "url": "https://graph.microsoft.com/v1.0/subscriptions/60da9b69-ff49-4122-912b-0e7a13f9e5a7",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "microsoftTeamsOAuth2Api",
         "sendHeaders": true,
@@ -542,7 +542,7 @@
     }
   ],
   "activeVersion": {
-    "versionId": "67edc2b0-40ba-4be3-9209-3ded6dcf489c",
+    "versionId": "55d9d74b-8001-41d8-b345-99d21efb5ddb",
     "workflowId": "DrNp5MxAopSlJJYc",
     "nodes": [
       {
@@ -812,7 +812,7 @@
       {
         "parameters": {
           "method": "PATCH",
-          "url": "https://graph.microsoft.com/v1.0/subscriptions/152dcaa6-649a-4310-ba1c-8c3a91531ae4",
+          "url": "https://graph.microsoft.com/v1.0/subscriptions/60da9b69-ff49-4122-912b-0e7a13f9e5a7",
           "authentication": "predefinedCredentialType",
           "nodeCredentialType": "microsoftTeamsOAuth2Api",
           "sendHeaders": true,
@@ -1026,10 +1026,10 @@
     },
     "nodeGroups": [],
     "authors": "Bala Rama Krishna Cherukuri",
-    "name": "Version 67edc2b0",
+    "name": "Version 55d9d74b",
     "description": "",
     "autosaved": true,
-    "createdAt": "2026-11-04T12:53:28.706Z",
-    "updatedAt": "2026-11-04T12:53:37.000Z"
+    "createdAt": "2026-11-10T09:43:57.833Z",
+    "updatedAt": "2026-11-10T09:44:01.000Z"
   }
 }
