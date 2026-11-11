@@ -2,11 +2,11 @@
   "id": "4M2UUENf4ZuRqBBR",
   "name": "Agent Tool  check address change eligibility",
   "active": true,
-  "activeVersionId": "ca2b245c-478e-4730-958a-ca09cc737403",
+  "activeVersionId": "7840a424-48aa-45c7-a9ef-80931fb0e8c8",
   "createdAt": "2026-11-04T11:32:14.488Z",
-  "updatedAt": "2026-11-10T06:16:30.664Z",
+  "updatedAt": "2026-11-11T09:02:27.178Z",
   "isArchived": false,
-  "versionId": "9f3ba46c-4dd0-4d7d-b464-2d79374d7f33",
+  "versionId": "7840a424-48aa-45c7-a9ef-80931fb0e8c8",
   "triggerCount": 0,
   "nodes": [
     {
@@ -72,21 +72,6 @@
           "name": "Rakesh Data Bricks"
         }
       }
-    },
-    {
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"Mandatory fields are not available\"\n}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        544,
-        240
-      ],
-      "id": "37d229d3-4b52-48de-b48b-163ea50958ec",
-      "name": "Edit Fields1"
     },
     {
       "parameters": {
@@ -380,6 +365,21 @@
       ],
       "id": "6a7ac24b-cc74-4cb5-a4ea-e81ec2213b35",
       "name": "Check Valid input parameters"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"Mandatory fields are not available\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        544,
+        240
+      ],
+      "id": "37d229d3-4b52-48de-b48b-163ea50958ec",
+      "name": "Missing Mandatory Fileds"
     }
   ],
   "connections": {
@@ -484,7 +484,7 @@
         ],
         [
           {
-            "node": "Edit Fields1",
+            "node": "Missing Mandatory Fileds",
             "type": "main",
             "index": 0
           }
@@ -526,7 +526,7 @@
     }
   ],
   "activeVersion": {
-    "versionId": "ca2b245c-478e-4730-958a-ca09cc737403",
+    "versionId": "7840a424-48aa-45c7-a9ef-80931fb0e8c8",
     "workflowId": "4M2UUENf4ZuRqBBR",
     "nodes": [
       {
@@ -592,21 +592,6 @@
             "name": "Rakesh Data Bricks"
           }
         }
-      },
-      {
-        "parameters": {
-          "mode": "raw",
-          "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"in sufficient credentials\"\n}",
-          "options": {}
-        },
-        "type": "n8n-nodes-base.set",
-        "typeVersion": 3.5,
-        "position": [
-          544,
-          240
-        ],
-        "id": "37d229d3-4b52-48de-b48b-163ea50958ec",
-        "name": "Edit Fields1"
       },
       {
         "parameters": {
@@ -811,7 +796,7 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.5,
         "position": [
-          1440,
+          1536,
           -128
         ],
         "id": "85dcac65-fba4-499c-9477-4f7af11e9207",
@@ -826,8 +811,8 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.5,
         "position": [
-          1440,
-          64
+          1552,
+          80
         ],
         "id": "f3e8dc9b-d432-4192-8a68-9caedac5c683",
         "name": "Carrier Intercept Approval Response"
@@ -841,8 +826,8 @@
         "type": "n8n-nodes-base.set",
         "typeVersion": 3.5,
         "position": [
-          1440,
-          256
+          1552,
+          304
         ],
         "id": "ec494c8d-8819-451b-a960-31b66e3ec68a",
         "name": "Decline Response"
@@ -900,6 +885,21 @@
         ],
         "id": "6a7ac24b-cc74-4cb5-a4ea-e81ec2213b35",
         "name": "Check Valid input parameters"
+      },
+      {
+        "parameters": {
+          "mode": "raw",
+          "jsonOutput": "{\n  \"Request Status\": \"Failed\",\n  \"Reason\": \"Mandatory fields are not available\"\n}",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          544,
+          240
+        ],
+        "id": "37d229d3-4b52-48de-b48b-163ea50958ec",
+        "name": "Missing Mandatory Fileds"
       }
     ],
     "connections": {
@@ -1004,7 +1004,7 @@
           ],
           [
             {
-              "node": "Edit Fields1",
+              "node": "Missing Mandatory Fileds",
               "type": "main",
               "index": 0
             }
@@ -1014,10 +1014,10 @@
     },
     "nodeGroups": [],
     "authors": "Rakesh Mengani",
-    "name": "V2",
+    "name": "V3",
     "description": "",
     "autosaved": true,
-    "createdAt": "2026-11-09T09:55:58.518Z",
-    "updatedAt": "2026-11-09T09:59:23.000Z"
+    "createdAt": "2026-11-11T09:02:27.179Z",
+    "updatedAt": "2026-11-11T09:03:19.000Z"
   }
 }
