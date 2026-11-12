@@ -1,90 +1,113 @@
 {
-  "id": "3RhospT4wCDJ8LV4",
+  "id": "7EUGadqixJltGsmq",
   "name": "MWF_LLM",
   "active": true,
-  "activeVersionId": "df8c5990-2356-48fa-a0ba-0466ab019444",
-  "createdAt": "2026-10-24T05:51:44.614Z",
-  "updatedAt": "2026-10-24T09:12:16.579Z",
+  "activeVersionId": "ca1c1454-97dd-4d80-9ae9-052cbe199643",
+  "createdAt": "2026-10-31T05:35:40.266Z",
+  "updatedAt": "2026-10-31T07:58:33.158Z",
   "isArchived": false,
-  "versionId": "e40d49d3-837e-430e-b26f-a6981654a884",
+  "versionId": "cdac9db1-65a8-4a66-8f84-6335f832b2b5",
   "triggerCount": 1,
   "nodes": [
     {
       "parameters": {
         "public": true,
-        "initialMessages": "Hi there! 👋\nHow can I assist you today?",
-        "options": {}
+        "options": {
+          "allowFileUploads": true
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.chatTrigger",
       "typeVersion": 1.5,
       "position": [
-        -464,
-        -208
+        0,
+        0
       ],
-      "id": "a6042fa2-9c24-4a5b-9384-04a510f8cd14",
+      "id": "2a8fc119-b3a2-450e-ac99-2046e1db2256",
       "name": "When chat message received",
-      "webhookId": "8634cd7b-6645-498f-9450-64d22f57f9bc"
+      "webhookId": "e2cb93be-ab92-46e6-90d8-52557d80ec45"
     },
     {
       "parameters": {
         "needsFallback": true,
         "options": {
-          "systemMessage": "You are a helpful assistant"
+          "systemMessage": "You are a helpful assistant. Whenever user ask any questions related to the policies call teh Tool and gives the response "
         }
       },
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
       "position": [
-        -256,
-        16
+        288,
+        0
       ],
-      "id": "269d1a02-0c97-43c8-b3c6-11b77e7ac12b",
+      "id": "ef9244b9-5531-4149-bbe0-aff003fa2f23",
       "name": "AI Agent"
     },
     {
       "parameters": {
-        "modelName": "models/gemini-3.1-flash-lite",
+        "modelName": "models/gemini-3.1-flash-lite-preview",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
       "typeVersion": 1.2,
       "position": [
-        -256,
-        320
+        240,
+        240
       ],
-      "id": "f32e169a-1c76-4b22-98d9-fdf9b9f43e62",
+      "id": "1e5a32c2-4b3a-4be9-8e8d-942fe527fe82",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3.5-flash-lite",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        368,
+        240
+      ],
+      "id": "d6d154ea-c758-4051-b113-0297e9bd0158",
       "name": "Google Gemini Chat Model1",
       "credentials": {
         "googlePalmApi": {
-          "id": "zEHPwQOBKUEgtklI",
-          "name": "GEMINI -Arun"
+          "id": "ygZRzGxwUIIWSMsn",
+          "name": "Google Gemini(PaLM) Api account 6"
         }
       }
     },
     {
       "parameters": {
         "mode": "retrieve-as-tool",
-        "toolDescription": "Northwind Solar Inc. Employee Benefits and Policy Handbook, 2026 Edition. A fictional 5-page employee handbook for a solar software company. It covers working hours and remote work, leave entitlements, health and insurance benefits, expense limits, information security, performance reviews, learning budgets, the product release process, offboarding, and a glossary of terms. Contains tables for leave, expenses, and glossary definitions. Effective 1 January 2026, version 3.2.",
+        "toolDescription": "Retrive the data from thhe Pinecone Database",
         "pineconeIndex": {
           "__rl": true,
           "value": "n8n-hr-rag-v2",
           "mode": "list",
           "cachedResultName": "n8n-hr-rag-v2"
         },
-        "options": {}
+        "options": {
+          "pineconeNamespace": "Initial"
+        }
       },
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        112,
-        32
+        496,
+        240
       ],
-      "id": "74f03e44-be37-4a92-8d67-aaf639953f7c",
+      "id": "03ffc844-da95-4310-abea-0713fff27ec3",
       "name": "Pinecone Vector Store",
       "credentials": {
         "pineconeApi": {
-          "id": "W1jJei7KuGF79AFg",
-          "name": "Arun_Pine"
+          "id": "ubFhaw4xfNfUylOC",
+          "name": "Pinecone account"
         }
       }
     },
@@ -93,36 +116,17 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        208,
-        240
+        576,
+        448
       ],
-      "id": "47239751-4632-4bf0-a23f-c87723ec023c",
+      "id": "697804d8-78e2-4e51-85ee-e19991eb8747",
       "name": "Embeddings Google Gemini",
       "credentials": {
         "googlePalmApi": {
-          "id": "zEHPwQOBKUEgtklI",
-          "name": "GEMINI -Arun"
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
-    },
-    {
-      "parameters": {
-        "model": {
-          "__rl": true,
-          "mode": "list",
-          "value": "claude-sonnet-5",
-          "cachedResultName": "Claude Sonnet 5"
-        },
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
-      "typeVersion": 1.6,
-      "position": [
-        -400,
-        224
-      ],
-      "id": "ee162378-8858-448a-9697-aed76d9d499c",
-      "name": "Anthropic Chat Model"
     }
   ],
   "connections": {
@@ -132,6 +136,17 @@
           {
             "node": "AI Agent",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]
@@ -169,26 +184,12 @@
           }
         ]
       ]
-    },
-    "Anthropic Chat Model": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
-      ]
     }
   },
   "nodeGroups": [],
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate",
-    "timeSavedMode": "fixed",
-    "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "binaryMode": "separate"
   },
   "staticData": null,
   "pinData": {},
@@ -199,31 +200,32 @@
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "3RhospT4wCDJ8LV4",
-      "projectId": "GKkFLYiDg5UixVS4",
-      "createdAt": "2026-10-24T05:51:44.616Z",
-      "updatedAt": "2026-10-24T05:51:44.616Z"
+      "workflowId": "7EUGadqixJltGsmq",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-31T05:35:40.269Z",
+      "updatedAt": "2026-10-31T05:35:40.269Z"
     }
   ],
   "activeVersion": {
-    "versionId": "df8c5990-2356-48fa-a0ba-0466ab019444",
-    "workflowId": "3RhospT4wCDJ8LV4",
+    "versionId": "ca1c1454-97dd-4d80-9ae9-052cbe199643",
+    "workflowId": "7EUGadqixJltGsmq",
     "nodes": [
       {
         "parameters": {
           "public": true,
-          "initialMessages": "Hi there! 👋\nHow can I assist you today?",
-          "options": {}
+          "options": {
+            "allowFileUploads": true
+          }
         },
         "type": "@n8n/n8n-nodes-langchain.chatTrigger",
         "typeVersion": 1.5,
         "position": [
-          -464,
-          -208
+          0,
+          0
         ],
-        "id": "a6042fa2-9c24-4a5b-9384-04a510f8cd14",
+        "id": "2a8fc119-b3a2-450e-ac99-2046e1db2256",
         "name": "When chat message received",
-        "webhookId": "8634cd7b-6645-498f-9450-64d22f57f9bc"
+        "webhookId": "e2cb93be-ab92-46e6-90d8-52557d80ec45"
       },
       {
         "parameters": {
@@ -235,49 +237,49 @@
         "type": "@n8n/n8n-nodes-langchain.agent",
         "typeVersion": 3.1,
         "position": [
-          -256,
-          16
+          224,
+          0
         ],
-        "id": "269d1a02-0c97-43c8-b3c6-11b77e7ac12b",
+        "id": "ef9244b9-5531-4149-bbe0-aff003fa2f23",
         "name": "AI Agent"
       },
       {
         "parameters": {
-          "modelName": "models/gemini-3.1-flash-lite",
+          "modelName": "models/gemini-2.5-computer-use-preview-10-2025",
           "options": {}
         },
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
         "typeVersion": 1.2,
         "position": [
-          -400,
-          224
+          80,
+          208
         ],
-        "id": "01b37594-702b-4936-95a1-a8cbb3f0de6e",
+        "id": "1e5a32c2-4b3a-4be9-8e8d-942fe527fe82",
         "name": "Google Gemini Chat Model",
         "credentials": {
           "googlePalmApi": {
-            "id": "zEHPwQOBKUEgtklI",
-            "name": "GEMINI -Arun"
+            "id": "ygZRzGxwUIIWSMsn",
+            "name": "Google Gemini(PaLM) Api account 6"
           }
         }
       },
       {
         "parameters": {
-          "modelName": "models/gemini-2.5-flash-lite",
+          "modelName": "models/gemini-3.5-flash-lite",
           "options": {}
         },
         "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
         "typeVersion": 1.2,
         "position": [
-          -256,
-          320
+          256,
+          208
         ],
-        "id": "f32e169a-1c76-4b22-98d9-fdf9b9f43e62",
+        "id": "d6d154ea-c758-4051-b113-0297e9bd0158",
         "name": "Google Gemini Chat Model1",
         "credentials": {
           "googlePalmApi": {
-            "id": "zEHPwQOBKUEgtklI",
-            "name": "GEMINI -Arun"
+            "id": "ygZRzGxwUIIWSMsn",
+            "name": "Google Gemini(PaLM) Api account 6"
           }
         }
       }
@@ -318,11 +320,11 @@
       }
     },
     "nodeGroups": [],
-    "authors": "Arun Kannegundla",
-    "name": "1.0",
-    "description": "",
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "V1",
+    "description": "INitial LLM",
     "autosaved": true,
-    "createdAt": "2026-10-24T06:11:21.481Z",
-    "updatedAt": "2026-10-24T06:16:41.000Z"
+    "createdAt": "2026-10-31T06:20:26.938Z",
+    "updatedAt": "2026-10-31T06:26:23.000Z"
   }
 }
