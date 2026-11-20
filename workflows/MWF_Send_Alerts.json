@@ -4,7 +4,7 @@
   "active": true,
   "activeVersionId": "77eb92ff-6076-4b8e-9167-1c9e6e357920",
   "createdAt": "2026-11-03T18:46:59.530Z",
-  "updatedAt": "2026-11-03T19:16:11.768Z",
+  "updatedAt": "2026-11-20T15:23:07.618Z",
   "isArchived": false,
   "versionId": "77eb92ff-6076-4b8e-9167-1c9e6e357920",
   "triggerCount": 1,
@@ -73,7 +73,8 @@
   "nodeGroups": [],
   "settings": {
     "executionOrder": "v1",
-    "binaryMode": "separate"
+    "binaryMode": "separate",
+    "availableInMCP": true
   },
   "staticData": null,
   "pinData": {
