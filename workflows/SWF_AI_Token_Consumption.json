@@ -4,7 +4,7 @@
   "active": true,
   "activeVersionId": "7d2730be-860f-4b67-8373-0987ce01e65f",
   "createdAt": "2026-10-17T06:04:24.687Z",
-  "updatedAt": "2026-10-17T06:25:12.751Z",
+  "updatedAt": "2026-11-20T15:23:23.507Z",
   "isArchived": false,
   "versionId": "7d2730be-860f-4b67-8373-0987ce01e65f",
   "triggerCount": 0,
@@ -337,7 +337,7 @@
     "errorWorkflow": "vtN1JQvH45zQjAiD",
     "timezone": "Asia/Kolkata",
     "callerPolicy": "workflowsFromSameOwner",
-    "availableInMCP": false
+    "availableInMCP": true
   },
   "staticData": null,
   "pinData": {
