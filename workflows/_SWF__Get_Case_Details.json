@@ -2,34 +2,13 @@
   "id": "IfTHqCotpsGPa6em",
   "name": "[SWF] Get_Case_Details",
   "active": true,
-  "activeVersionId": "85ba906c-c567-4df1-b6aa-c9df95c20b72",
+  "activeVersionId": "16d3cb08-7847-442c-9ff0-1ef03b9a9f18",
   "createdAt": "2026-11-03T17:59:02.584Z",
-  "updatedAt": "2026-11-05T05:47:07.353Z",
+  "updatedAt": "2026-11-20T13:18:19.684Z",
   "isArchived": false,
-  "versionId": "85ba906c-c567-4df1-b6aa-c9df95c20b72",
+  "versionId": "978a662f-4a8e-4495-806f-849ef8e5fd8c",
   "triggerCount": 0,
   "nodes": [
-    {
-      "parameters": {
-        "resource": "search",
-        "query": "=SELECT Id, CaseNumber, Subject, Description, Status, Priority, CreatedDate, LastModifiedDate FROM Case WHERE Customer_Id__c = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"\\\\'\") }}'"
-      },
-      "type": "n8n-nodes-base.salesforce",
-      "typeVersion": 1.1,
-      "position": [
-        224,
-        0
-      ],
-      "id": "85876f08-3243-4343-b7a6-3bd8d1175d42",
-      "name": "Get Cases",
-      "alwaysOutputData": true,
-      "credentials": {
-        "salesforceOAuth2Api": {
-          "id": "VlHF4T5DMFTy6KSY",
-          "name": "Mounika_Salesforce account"
-        }
-      }
-    },
     {
       "parameters": {
         "workflowInputs": {
@@ -49,8 +28,8 @@
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.3,
       "position": [
-        0,
-        0
+        -512,
+        336
       ],
       "id": "1a89e677-fe2f-4a9e-bdf0-dd085efa7bf2",
       "name": "When Executed by Another Workflow"
@@ -59,12 +38,12 @@
       "parameters": {
         "warehouseId": {
           "__rl": true,
-          "value": "e81ec69db859d79b",
+          "value": "322f5fdc0a818d07",
           "mode": "list",
           "cachedResultName": "Serverless Starter Warehouse",
-          "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+          "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
         },
-        "query": "=SELECT t.external_id, t.order_id, t.last_status, date_format(t.updated_at, 'dd MMM') AS updated\nFROM workspace.agentic_support.request_tracker t\nWHERE t.customer_id = :customer_id AND t.kind = 'ticket'\nORDER BY t.created_at DESC LIMIT 5",
+        "query": "=SELECT t.external_id, t.order_id, t.last_status, date_format(t.updated_at, 'dd MMM') AS updated\nFROM workspace.agentic_support.request_tracker t\nWHERE t.customer_id = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"''\") }}'\n  AND t.kind = 'ticket'\n  AND ('{{ String($('When Executed by Another Workflow').first().json.order_id ?? '').replace(/'/g, \"''\") }}' = ''\n       OR lower(t.order_id) = lower('{{ String($('When Executed by Another Workflow').first().json.order_id ?? '').replace(/'/g, \"''\") }}'))\nORDER BY t.created_at DESC LIMIT 5",
         "queryParameters": {
           "parameters": [
             {
@@ -77,12 +56,12 @@
       "type": "n8n-nodes-base.databricks",
       "typeVersion": 1,
       "position": [
-        448,
-        0
+        -64,
+        480
       ],
       "id": "8e30c76a-32ac-4f8f-a3d6-82ba6ad54ce1",
       "name": "Get Tickets",
-      "alwaysOutputData": true,
+      "alwaysOutputData": false,
       "credentials": {
         "databricksApi": {
           "id": "ZFuywACgqSLruVqu",
@@ -92,35 +71,561 @@
     },
     {
       "parameters": {
-        "jsCode": "const trig = $('When Executed by Another Workflow').first().json;\nconst str = (v) => (v === undefined || v === null) ? '' : String(v);\n\nlet cases = $('Get Cases').all().map(i => i.json).filter(x => x && x.Id);\nlet tickets = $input.all().map(i => i.json).filter(x =>\n  x && (x.external_id !== undefined || x.order_id !== undefined || x.last_status !== undefined));\n\nconst ref = str(trig.order_id).trim().toLowerCase();\nconst want = str(trig.case_number).trim().toLowerCase();\n\nif (want !== '') {\n  cases = cases.filter(x => str(x.CaseNumber).toLowerCase() === want || str(x.Id).toLowerCase() === want);\n}\nif (ref !== '') {\n  cases = cases.filter(x => (str(x.Subject) + ' ' + str(x.Description)).toLowerCase().includes(ref));\n  tickets = tickets.filter(x => str(x.order_id).toLowerCase() === ref);\n}\ncases = cases\n  .sort((a, b) => {\n    const p = str(a.LastModifiedDate), q = str(b.LastModifiedDate);\n    return p < q ? -1 : p > q ? 1 : 0;\n  })\n  .reverse()\n  .slice(0, 5);\n\nconst day = (t) => str(t).slice(0, 10);\nconst words = (st) => {\n  switch (str(st).toLowerCase()) {\n    case 'new': return 'received and waiting to be picked up by our team';\n    case 'working':\n    case 'in progress':\n    case 'escalated': return 'being worked on by our team';\n    case 'on hold':\n    case 'waiting':\n    case 'pending': return 'on hold while we wait for more information';\n    case 'closed':\n    case 'resolved':\n    case 'done': return 'resolved by our team';\n    default: return \"currently marked '\" + str(st) + \"'\";\n  }\n};\n\nconst lines = cases.map(x =>\n  'Request \"' + str(x.Subject) + '\": ' + words(x.Status) +\n  ' (opened ' + day(x.CreatedDate) + ', last update ' + day(x.LastModifiedDate) +\n  '; reference ' + str(x.CaseNumber) + ')'\n);\ntickets.forEach(x => {\n  lines.push('Urgent request for order ' + str(x.order_id) + ': ' + words(x.last_status) +\n    ' (last update ' + str(x.updated) + ')');\n});\n\nif (lines.length === 0) {\n  return [{ json: { found: 'false', count: '0', summary: 'No open requests are on record for this customer.' } }];\n}\nreturn [{ json: { found: 'true', count: String(lines.length), summary: lines.join('\\n') } }];"
+        "resource": "search",
+        "query": "=SELECT Id, CaseNumber, Subject, Description, Status, Priority, CreatedDate, LastModifiedDate\nFROM Case\nWHERE Customer_Id__c = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"\\\\'\") }}'\nORDER BY LastModifiedDate DESC"
       },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
+      "type": "n8n-nodes-base.salesforce",
+      "typeVersion": 1.1,
       "position": [
-        672,
-        0
+        -288,
+        192
       ],
-      "id": "70b3a5d8-b277-428d-a609-2c71f2935e2f",
-      "name": "Process and format data"
+      "id": "59b78dc7-d273-4470-b76d-437c1c500cb1",
+      "name": "Get Cases",
+      "alwaysOutputData": false,
+      "credentials": {
+        "salesforceOAuth2Api": {
+          "id": "VlHF4T5DMFTy6KSY",
+          "name": "Mounika_Salesforce account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "4b4720e4-5c88-45ac-b0a6-d6a0158e947a",
+              "leftValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+              "rightValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "7d6371ed-8031-4bad-9f70-1ffbb3a34917",
+              "leftValue": "={{ $json.CaseNumber }}",
+              "rightValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "6443da65-6d7f-43ef-b3e4-a489804e9440",
+              "leftValue": "={{ $json.Id }}",
+              "rightValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        -64,
+        192
+      ],
+      "id": "4c907001-67ce-49a8-9f63-08e319422060",
+      "name": "Match case number"
+    },
+    {
+      "parameters": {
+        "maxItems": 5
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        384,
+        192
+      ],
+      "id": "3fbe6926-6ea7-42a8-870d-20237db7e0ce",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2c780ad3-0d47-4f21-acd3-f4167d48a02a",
+              "name": "head",
+              "value": "=Request \"{{ $json.Subject }}\"",
+              "type": "string"
+            },
+            {
+              "id": "594315b5-5605-4de1-8fca-6bffda5a46e4",
+              "name": "status",
+              "value": "={{ $json.Status }}",
+              "type": "string"
+            },
+            {
+              "id": "381451fa-8b7e-4a35-9df9-f23d8c2f5a1e",
+              "name": "tail",
+              "value": "=(opened {{ String($json.CreatedDate).slice(0,10) }}, last update {{ String($json.LastModifiedDate).slice(0,10) }}; reference {{ $json.CaseNumber }})",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        608,
+        192
+      ],
+      "id": "99b0c6c7-7a5e-471c-b910-0c7b2d9e74de",
+      "name": "Case parts"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "0cbae374-85fd-4b37-9e63-816c3a327bd7",
+              "leftValue": "={{ $json.external_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        160,
+        480
+      ],
+      "id": "5eff76f6-6a56-473f-853f-f505cc09263b",
+      "name": "Has ticket"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9efe6f97-c285-439b-acfd-0f455647956f",
+              "name": "head",
+              "value": "=Urgent request for order {{ $json.order_id }}",
+              "type": "string"
+            },
+            {
+              "id": "956a3370-941e-4c35-9fb9-7072ab9b9e1c",
+              "name": "status",
+              "value": "={{ $json.last_status }}",
+              "type": "string"
+            },
+            {
+              "id": "b194977a-afdf-429c-877b-84d931a10b4d",
+              "name": "tail",
+              "value": "=(last update {{ $json.updated }})",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        384,
+        480
+      ],
+      "id": "5d889369-87f4-4070-9744-d13d3c2b6729",
+      "name": "Ticket parts"
+    },
+    {
+      "parameters": {
+        "numberInputs": 3
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        832,
+        320
+      ],
+      "id": "527651e1-bb36-45df-95af-bcc1e0d1da04",
+      "name": "Merge",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ba390708-b86e-4795-8c05-9e8fd9ec1783",
+              "name": "line",
+              "value": "={{ $json.head ? $json.head + ': ' + (({ 'new': 'received and waiting to be picked up by our team', 'working': 'being worked on by our team', 'in progress': 'being worked on by our team', 'escalated': 'being worked on by our team', 'on hold': 'on hold while we wait for more information', 'waiting': 'on hold while we wait for more information', 'pending': 'on hold while we wait for more information', 'closed': 'resolved by our team', 'resolved': 'resolved by our team', 'done': 'resolved by our team' })[String($json.status ?? '').toLowerCase()] ?? (\"currently marked '\" + ($json.status ?? '') + \"'\")) + ' ' + $json.tail : '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1056,
+        336
+      ],
+      "id": "ce4061e5-d243-4214-8a95-a5e881277cb4",
+      "name": "Build line"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "8e712967-824f-4f7e-95e3-4f17c72a103a",
+              "name": "found",
+              "value": "={{ $json.line.filter(Boolean).length > 0 ? 'true' : 'false' }}",
+              "type": "string"
+            },
+            {
+              "id": "6c12f0ca-67e0-4a99-a957-3c85d2019208",
+              "name": "count",
+              "value": "={{ String($json.line.filter(Boolean).length) }}",
+              "type": "string"
+            },
+            {
+              "id": "aa7b4abc-f079-4b33-acde-ac0cceef8c83",
+              "name": "summary",
+              "value": "={{ $json.line.filter(Boolean).join('\\n') || 'No open requests are on record for this customer.' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        1504,
+        336
+      ],
+      "id": "6d8278c8-dc6c-4f90-b0a3-6558f2b4b34d",
+      "name": "Result"
+    },
+    {
+      "parameters": {
+        "fieldsToAggregate": {
+          "fieldToAggregate": [
+            {
+              "fieldToAggregate": "line"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1280,
+        336
+      ],
+      "id": "727b1b8f-6d9a-4ec7-b671-12a41ecf8bce",
+      "name": "line",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "a2c16cfb-fde5-4e25-aa9d-d265f91a61d7",
+              "leftValue": "={{ $('When Executed by Another Workflow').first().json.order_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "468d74ce-db5b-44ea-9cb7-ba0776eb14b4",
+              "leftValue": "={{ ($json.Subject ?? '') + ' ' + ($json.Description ?? '') }}",
+              "rightValue": "={{ $('When Executed by Another Workflow').first().json.order_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "contains"
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "options": {
+          "ignoreCase": true
+        }
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.4,
+      "position": [
+        160,
+        192
+      ],
+      "id": "80f58d25-a6cd-4834-9505-2f81fd62b42d",
+      "name": "Match order"
+    },
+    {
+      "parameters": {
+        "content": "Salesforce query for the customer’s cases, newest first",
+        "height": 80,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "87bcba0b-d4bc-48a9-a55f-59216b006b13",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "Keeps only the case the customer named (skipped when no case number is given)",
+        "height": 96,
+        "width": 182,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -112,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "d1373baa-66f5-41d0-80d8-85640adc357d",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "Keeps only cases whose subject or description mentions the order (skipped when no order given)",
+        "height": 96,
+        "width": 214,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "0deae663-46bc-4990-bf4d-fa434165ea41",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "At most 5 cases",
+        "height": 80,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "24c8a1a9-2c5b-4015-8567-10ffadfdf568",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "Prepares each case’s text: title, status, dates, reference",
+        "height": 80,
+        "width": 166,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        576,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "3c3cc9e7-e8fd-41ed-aa3f-bd838c21f8d0",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "Databricks query for the customer’s urgent tickets (kind = ticket), at most 5, filtered by order if given",
+        "height": 112,
+        "width": 198,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "578b246e-cbf7-42ef-a490-05c49843f374",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "Drops the blank placeholder row when there are no tickets",
+        "height": 80,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        144,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "692774df-6f4c-430f-9b47-bd292f4545ef",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "content": "Prepares each ticket’s text",
+        "height": 80,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        368,
+        672
+      ],
+      "typeVersion": 1,
+      "id": "76af04ef-f6d3-414f-9962-46dc321a4be5",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "content": "Combines cases, tickets and a “carrier” item, so the flow always completes even if both are empty",
+        "height": 96,
+        "width": 214,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        752,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "a65e9914-6e9c-4daa-b53b-dd1098c245d5",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "Turns each item into one sentence and translates the internal status into plain English",
+        "height": 96,
+        "width": 214,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1008,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "26971e15-65f4-4094-a696-a01f65a605fc",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "content": "Gathers all the sentences",
+        "height": 96,
+        "width": 150,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1264,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "e363b070-5358-43e4-99ae-422535f88a7c",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "content": "Returns found, count and summary to the agent",
+        "height": 96,
+        "width": 182,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1472,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "d8c1fb26-548a-4a9a-9c67-2a226cf270fd",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "Receives the inputs and starts two lookups at the same time",
+        "height": 96,
+        "width": 166,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -544,
+        544
+      ],
+      "typeVersion": 1,
+      "id": "b857c535-3eac-4c92-affd-09a2ae447b19",
+      "name": "Sticky Note12"
     }
   ],
   "connections": {
-    "Get Cases": {
+    "When Executed by Another Workflow": {
       "main": [
         [
           {
             "node": "Get Tickets",
             "type": "main",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "When Executed by Another Workflow": {
-      "main": [
-        [
+          },
           {
             "node": "Get Cases",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
             "type": "main",
             "index": 0
           }
@@ -131,7 +636,117 @@
       "main": [
         [
           {
-            "node": "Process and format data",
+            "node": "Has ticket",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Cases": {
+      "main": [
+        [
+          {
+            "node": "Match case number",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match case number": {
+      "main": [
+        [
+          {
+            "node": "Match order",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Case parts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has ticket": {
+      "main": [
+        [
+          {
+            "node": "Ticket parts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ticket parts": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Case parts": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Build line",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build line": {
+      "main": [
+        [
+          {
+            "node": "line",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "line": {
+      "main": [
+        [
+          {
+            "node": "Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Match order": {
+      "main": [
+        [
+          {
+            "node": "Limit",
             "type": "main",
             "index": 0
           }
@@ -149,7 +764,7 @@
     "When Executed by Another Workflow": [
       {
         "json": {
-          "customer_id": "C999",
+          "customer_id": "CUST-1005",
           "order_id": "",
           "case_number": ""
         }
@@ -170,30 +785,9 @@
     }
   ],
   "activeVersion": {
-    "versionId": "85ba906c-c567-4df1-b6aa-c9df95c20b72",
+    "versionId": "16d3cb08-7847-442c-9ff0-1ef03b9a9f18",
     "workflowId": "IfTHqCotpsGPa6em",
     "nodes": [
-      {
-        "parameters": {
-          "resource": "search",
-          "query": "=SELECT Id, CaseNumber, Subject, Description, Status, Priority, CreatedDate, LastModifiedDate FROM Case WHERE Customer_Id__c = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"\\\\'\") }}'"
-        },
-        "type": "n8n-nodes-base.salesforce",
-        "typeVersion": 1.1,
-        "position": [
-          224,
-          0
-        ],
-        "id": "85876f08-3243-4343-b7a6-3bd8d1175d42",
-        "name": "Get Cases",
-        "alwaysOutputData": true,
-        "credentials": {
-          "salesforceOAuth2Api": {
-            "id": "VlHF4T5DMFTy6KSY",
-            "name": "Mounika_Salesforce account"
-          }
-        }
-      },
       {
         "parameters": {
           "workflowInputs": {
@@ -213,8 +807,8 @@
         "type": "n8n-nodes-base.executeWorkflowTrigger",
         "typeVersion": 1.3,
         "position": [
-          0,
-          0
+          -512,
+          336
         ],
         "id": "1a89e677-fe2f-4a9e-bdf0-dd085efa7bf2",
         "name": "When Executed by Another Workflow"
@@ -223,12 +817,12 @@
         "parameters": {
           "warehouseId": {
             "__rl": true,
-            "value": "e81ec69db859d79b",
+            "value": "322f5fdc0a818d07",
             "mode": "list",
             "cachedResultName": "Serverless Starter Warehouse",
-            "cachedResultUrl": "https://dbc-d1e264cd-631f.cloud.databricks.com/sql/warehouses/e81ec69db859d79b"
+            "cachedResultUrl": "https://dbc-c445a5af-7020.cloud.databricks.com/sql/warehouses/322f5fdc0a818d07"
           },
-          "query": "=SELECT t.external_id, t.order_id, t.last_status, date_format(t.updated_at, 'dd MMM') AS updated\nFROM workspace.agentic_support.request_tracker t\nWHERE t.customer_id = :customer_id AND t.kind = 'ticket'\nORDER BY t.created_at DESC LIMIT 5",
+          "query": "=SELECT t.external_id, t.order_id, t.last_status, date_format(t.updated_at, 'dd MMM') AS updated\nFROM workspace.agentic_support.request_tracker t\nWHERE t.customer_id = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"''\") }}'\n  AND t.kind = 'ticket'\n  AND ('{{ String($('When Executed by Another Workflow').first().json.order_id ?? '').replace(/'/g, \"''\") }}' = ''\n       OR lower(t.order_id) = lower('{{ String($('When Executed by Another Workflow').first().json.order_id ?? '').replace(/'/g, \"''\") }}'))\nORDER BY t.created_at DESC LIMIT 5",
           "queryParameters": {
             "parameters": [
               {
@@ -241,12 +835,12 @@
         "type": "n8n-nodes-base.databricks",
         "typeVersion": 1,
         "position": [
-          448,
-          0
+          -64,
+          480
         ],
         "id": "8e30c76a-32ac-4f8f-a3d6-82ba6ad54ce1",
         "name": "Get Tickets",
-        "alwaysOutputData": true,
+        "alwaysOutputData": false,
         "credentials": {
           "databricksApi": {
             "id": "ZFuywACgqSLruVqu",
@@ -256,35 +850,353 @@
       },
       {
         "parameters": {
-          "jsCode": "const trig = $('When Executed by Another Workflow').first().json;\nconst str = (v) => (v === undefined || v === null) ? '' : String(v);\n\nlet cases = $('Get Cases').all().map(i => i.json).filter(x => x && x.Id);\nlet tickets = $input.all().map(i => i.json).filter(x =>\n  x && (x.external_id !== undefined || x.order_id !== undefined || x.last_status !== undefined));\n\nconst ref = str(trig.order_id).trim().toLowerCase();\nconst want = str(trig.case_number).trim().toLowerCase();\n\nif (want !== '') {\n  cases = cases.filter(x => str(x.CaseNumber).toLowerCase() === want || str(x.Id).toLowerCase() === want);\n}\nif (ref !== '') {\n  cases = cases.filter(x => (str(x.Subject) + ' ' + str(x.Description)).toLowerCase().includes(ref));\n  tickets = tickets.filter(x => str(x.order_id).toLowerCase() === ref);\n}\ncases = cases\n  .sort((a, b) => {\n    const p = str(a.LastModifiedDate), q = str(b.LastModifiedDate);\n    return p < q ? -1 : p > q ? 1 : 0;\n  })\n  .reverse()\n  .slice(0, 5);\n\nconst day = (t) => str(t).slice(0, 10);\nconst words = (st) => {\n  switch (str(st).toLowerCase()) {\n    case 'new': return 'received and waiting to be picked up by our team';\n    case 'working':\n    case 'in progress':\n    case 'escalated': return 'being worked on by our team';\n    case 'on hold':\n    case 'waiting':\n    case 'pending': return 'on hold while we wait for more information';\n    case 'closed':\n    case 'resolved':\n    case 'done': return 'resolved by our team';\n    default: return \"currently marked '\" + str(st) + \"'\";\n  }\n};\n\nconst lines = cases.map(x =>\n  'Request \"' + str(x.Subject) + '\": ' + words(x.Status) +\n  ' (opened ' + day(x.CreatedDate) + ', last update ' + day(x.LastModifiedDate) +\n  '; reference ' + str(x.CaseNumber) + ')'\n);\ntickets.forEach(x => {\n  lines.push('Urgent request for order ' + str(x.order_id) + ': ' + words(x.last_status) +\n    ' (last update ' + str(x.updated) + ')');\n});\n\nif (lines.length === 0) {\n  return [{ json: { found: 'false', count: '0', summary: 'No open requests are on record for this customer.' } }];\n}\nreturn [{ json: { found: 'true', count: String(lines.length), summary: lines.join('\\n') } }];"
+          "resource": "search",
+          "query": "=SELECT Id, CaseNumber, Subject, Description, Status, Priority, CreatedDate, LastModifiedDate\nFROM Case\nWHERE Customer_Id__c = '{{ String($('When Executed by Another Workflow').first().json.customer_id).replace(/'/g, \"\\\\'\") }}'\nORDER BY LastModifiedDate DESC"
         },
-        "type": "n8n-nodes-base.code",
-        "typeVersion": 2,
+        "type": "n8n-nodes-base.salesforce",
+        "typeVersion": 1.1,
         "position": [
-          672,
-          0
+          -288,
+          192
         ],
-        "id": "70b3a5d8-b277-428d-a609-2c71f2935e2f",
-        "name": "Process and format data"
+        "id": "59b78dc7-d273-4470-b76d-437c1c500cb1",
+        "name": "Get Cases",
+        "alwaysOutputData": false,
+        "credentials": {
+          "salesforceOAuth2Api": {
+            "id": "VlHF4T5DMFTy6KSY",
+            "name": "Mounika_Salesforce account"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "4b4720e4-5c88-45ac-b0a6-d6a0158e947a",
+                "leftValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+                "rightValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "7d6371ed-8031-4bad-9f70-1ffbb3a34917",
+                "leftValue": "={{ $json.CaseNumber }}",
+                "rightValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              },
+              {
+                "id": "6443da65-6d7f-43ef-b3e4-a489804e9440",
+                "leftValue": "={{ $json.Id }}",
+                "rightValue": "={{ $('When Executed by Another Workflow').first().json.case_number }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals",
+                  "name": "filter.operator.equals"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {
+            "ignoreCase": true
+          }
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.4,
+        "position": [
+          -64,
+          192
+        ],
+        "id": "4c907001-67ce-49a8-9f63-08e319422060",
+        "name": "Match case number"
+      },
+      {
+        "parameters": {
+          "maxItems": 5
+        },
+        "type": "n8n-nodes-base.limit",
+        "typeVersion": 1,
+        "position": [
+          384,
+          192
+        ],
+        "id": "3fbe6926-6ea7-42a8-870d-20237db7e0ce",
+        "name": "Limit"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "2c780ad3-0d47-4f21-acd3-f4167d48a02a",
+                "name": "head",
+                "value": "=Request \"{{ $json.Subject }}\"",
+                "type": "string"
+              },
+              {
+                "id": "594315b5-5605-4de1-8fca-6bffda5a46e4",
+                "name": "status",
+                "value": "={{ $json.Status }}",
+                "type": "string"
+              },
+              {
+                "id": "381451fa-8b7e-4a35-9df9-f23d8c2f5a1e",
+                "name": "tail",
+                "value": "=(opened {{ String($json.CreatedDate).slice(0,10) }}, last update {{ String($json.LastModifiedDate).slice(0,10) }}; reference {{ $json.CaseNumber }})",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          608,
+          192
+        ],
+        "id": "99b0c6c7-7a5e-471c-b910-0c7b2d9e74de",
+        "name": "Case parts"
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "0cbae374-85fd-4b37-9e63-816c3a327bd7",
+                "leftValue": "={{ $json.external_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "notEmpty",
+                  "singleValue": true
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.4,
+        "position": [
+          160,
+          480
+        ],
+        "id": "5eff76f6-6a56-473f-853f-f505cc09263b",
+        "name": "Has ticket"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "9efe6f97-c285-439b-acfd-0f455647956f",
+                "name": "head",
+                "value": "=Urgent request for order {{ $json.order_id }}",
+                "type": "string"
+              },
+              {
+                "id": "956a3370-941e-4c35-9fb9-7072ab9b9e1c",
+                "name": "status",
+                "value": "={{ $json.last_status }}",
+                "type": "string"
+              },
+              {
+                "id": "b194977a-afdf-429c-877b-84d931a10b4d",
+                "name": "tail",
+                "value": "=(last update {{ $json.updated }})",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          384,
+          480
+        ],
+        "id": "5d889369-87f4-4070-9744-d13d3c2b6729",
+        "name": "Ticket parts"
+      },
+      {
+        "parameters": {
+          "numberInputs": 3
+        },
+        "type": "n8n-nodes-base.merge",
+        "typeVersion": 3.2,
+        "position": [
+          832,
+          320
+        ],
+        "id": "527651e1-bb36-45df-95af-bcc1e0d1da04",
+        "name": "Merge",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "ba390708-b86e-4795-8c05-9e8fd9ec1783",
+                "name": "line",
+                "value": "={{ $json.head ? $json.head + ': ' + (({ 'new': 'received and waiting to be picked up by our team', 'working': 'being worked on by our team', 'in progress': 'being worked on by our team', 'escalated': 'being worked on by our team', 'on hold': 'on hold while we wait for more information', 'waiting': 'on hold while we wait for more information', 'pending': 'on hold while we wait for more information', 'closed': 'resolved by our team', 'resolved': 'resolved by our team', 'done': 'resolved by our team' })[String($json.status ?? '').toLowerCase()] ?? (\"currently marked '\" + ($json.status ?? '') + \"'\")) + ' ' + $json.tail : '' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1056,
+          336
+        ],
+        "id": "ce4061e5-d243-4214-8a95-a5e881277cb4",
+        "name": "Build line"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "8e712967-824f-4f7e-95e3-4f17c72a103a",
+                "name": "found",
+                "value": "={{ $json.line.filter(Boolean).length > 0 ? 'true' : 'false' }}",
+                "type": "string"
+              },
+              {
+                "id": "6c12f0ca-67e0-4a99-a957-3c85d2019208",
+                "name": "count",
+                "value": "={{ String($json.line.filter(Boolean).length) }}",
+                "type": "string"
+              },
+              {
+                "id": "aa7b4abc-f079-4b33-acde-ac0cceef8c83",
+                "name": "summary",
+                "value": "={{ $json.line.filter(Boolean).join('\\n') || 'No open requests are on record for this customer.' }}",
+                "type": "string"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          1504,
+          336
+        ],
+        "id": "6d8278c8-dc6c-4f90-b0a3-6558f2b4b34d",
+        "name": "Result"
+      },
+      {
+        "parameters": {
+          "fieldsToAggregate": {
+            "fieldToAggregate": [
+              {
+                "fieldToAggregate": "line"
+              }
+            ]
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.aggregate",
+        "typeVersion": 1,
+        "position": [
+          1280,
+          336
+        ],
+        "id": "727b1b8f-6d9a-4ec7-b671-12a41ecf8bce",
+        "name": "line",
+        "alwaysOutputData": true
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": false,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "a2c16cfb-fde5-4e25-aa9d-d265f91a61d7",
+                "leftValue": "={{ $('When Executed by Another Workflow').first().json.order_id }}",
+                "rightValue": "",
+                "operator": {
+                  "type": "string",
+                  "operation": "empty",
+                  "singleValue": true
+                }
+              },
+              {
+                "id": "468d74ce-db5b-44ea-9cb7-ba0776eb14b4",
+                "leftValue": "={{ ($json.Subject ?? '') + ' ' + ($json.Description ?? '') }}",
+                "rightValue": "={{ $('When Executed by Another Workflow').first().json.order_id }}",
+                "operator": {
+                  "type": "string",
+                  "operation": "contains"
+                }
+              }
+            ],
+            "combinator": "or"
+          },
+          "options": {
+            "ignoreCase": true
+          }
+        },
+        "type": "n8n-nodes-base.filter",
+        "typeVersion": 2.4,
+        "position": [
+          160,
+          192
+        ],
+        "id": "80f58d25-a6cd-4834-9505-2f81fd62b42d",
+        "name": "Match order"
       }
     ],
     "connections": {
-      "Get Cases": {
+      "When Executed by Another Workflow": {
         "main": [
           [
             {
               "node": "Get Tickets",
               "type": "main",
               "index": 0
-            }
-          ]
-        ]
-      },
-      "When Executed by Another Workflow": {
-        "main": [
-          [
+            },
             {
               "node": "Get Cases",
+              "type": "main",
+              "index": 0
+            },
+            {
+              "node": "Merge",
               "type": "main",
               "index": 0
             }
@@ -295,7 +1207,117 @@
         "main": [
           [
             {
-              "node": "Process and format data",
+              "node": "Has ticket",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Get Cases": {
+        "main": [
+          [
+            {
+              "node": "Match case number",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Match case number": {
+        "main": [
+          [
+            {
+              "node": "Match order",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Limit": {
+        "main": [
+          [
+            {
+              "node": "Case parts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Has ticket": {
+        "main": [
+          [
+            {
+              "node": "Ticket parts",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Ticket parts": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 2
+            }
+          ]
+        ]
+      },
+      "Case parts": {
+        "main": [
+          [
+            {
+              "node": "Merge",
+              "type": "main",
+              "index": 1
+            }
+          ]
+        ]
+      },
+      "Merge": {
+        "main": [
+          [
+            {
+              "node": "Build line",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Build line": {
+        "main": [
+          [
+            {
+              "node": "line",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "line": {
+        "main": [
+          [
+            {
+              "node": "Result",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Match order": {
+        "main": [
+          [
+            {
+              "node": "Limit",
               "type": "main",
               "index": 0
             }
@@ -305,10 +1327,10 @@
     },
     "nodeGroups": [],
     "authors": "Mounika Valasani",
-    "name": "V1",
-    "description": "Initial",
+    "name": "Version 16d3cb08",
+    "description": "Reduced the scripting",
     "autosaved": true,
-    "createdAt": "2026-11-04T05:58:22.503Z",
-    "updatedAt": "2026-11-04T06:26:06.000Z"
+    "createdAt": "2026-11-20T06:24:58.971Z",
+    "updatedAt": "2026-11-20T06:38:27.000Z"
   }
 }
