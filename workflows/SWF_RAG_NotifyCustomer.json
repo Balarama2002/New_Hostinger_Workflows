@@ -4,9 +4,9 @@
   "active": true,
   "activeVersionId": "ca971c32-b677-4608-9ba2-20ef61d06c03",
   "createdAt": "2026-08-20T11:19:57.531Z",
-  "updatedAt": "2026-11-03T17:43:02.831Z",
+  "updatedAt": "2026-11-25T18:03:43.280Z",
   "isArchived": false,
-  "versionId": "ca971c32-b677-4608-9ba2-20ef61d06c03",
+  "versionId": "8cdbe7b3-4e9f-4847-9f14-2ea1bbb28e09",
   "triggerCount": 1,
   "nodes": [
     {
@@ -47,7 +47,7 @@
     },
     {
       "parameters": {
-        "modelName": "models/gemini-3.1-flash-lite",
+        "modelName": "models/gemini-3.5-flash-lite",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
@@ -62,25 +62,6 @@
         "googlePalmApi": {
           "id": "KQBQgkPqPhjQnbPh",
           "name": "Google Gemini(PaLM) Api account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "options": {}
-      },
-      "type": "@n8n/n8n-nodes-langchain.lmChatMistralCloud",
-      "typeVersion": 1,
-      "position": [
-        672,
-        160
-      ],
-      "id": "29312926-20fb-482f-8c19-4db31621b147",
-      "name": "Mistral Cloud Chat Model1",
-      "credentials": {
-        "mistralCloudApi": {
-          "id": "mcrRnfTlEh6KCXvh",
-          "name": "Mistral Cloud account 2"
         }
       }
     },
@@ -643,6 +624,26 @@
       ],
       "id": "a45032d4-e476-484d-b312-ff55cb7d023e",
       "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "model": "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        656,
+        160
+      ],
+      "id": "d9990d15-1cf1-4e16-ae5d-afa3897db29b",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "QBYmsFldgsugA9Tf",
+          "name": "OpenRouter account"
+        }
+      }
     }
   ],
   "connections": {
@@ -676,17 +677,6 @@
             "node": "AI Agent",
             "type": "ai_languageModel",
             "index": 0
-          }
-        ]
-      ]
-    },
-    "Mistral Cloud Chat Model1": {
-      "ai_languageModel": [
-        [
-          {
-            "node": "AI Agent",
-            "type": "ai_languageModel",
-            "index": 1
           }
         ]
       ]
@@ -832,6 +822,17 @@
           }
         ]
       ]
+    },
+    "OpenRouter Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 1
+          }
+        ]
+      ]
     }
   },
   "nodeGroups": [],
@@ -941,10 +942,10 @@
     "Start": [
       {
         "json": {
-          "output_includes": "Status: Insufficient Data<br><br>Answer:<br>I am designed to assist with TGH HR policies and internal documentation. I may not have information outside this scope. <br><br>If EDI refers to an internal TGH HR policy, process, or software system, could you please provide a bit more context? Otherwise, I recommend reaching out to the relevant technical or IT team for assistance. <br><br>🎫 Support: A support ticket can be raised for the relevant team if you need further help with this topic.<br><br>👋 Let me know if you have any questions related to TGH HR policies, leave, attendance, or benefits!",
+          "output_includes": "Status: Insufficient Data<br><br>Answer: <br>I couldn't find specific information in the current TGH HR knowledge base regarding whether you can take 20 leaves in a single month. Please contact the HR team or refer to the latest Leave Policy documentation for clarification.<br><br>Additional Details: ℹ️ <br>The available documentation does not contain enough information regarding single-month leave limits. <br><br>Source:<br>Leave Policy<br><br>You may also ask:<br>• What is the maximum number of consecutive leaves allowed?<br>• How many paid leaves am I entitled to per quarter or year?<br>• What is the approval process for extended leave requests?",
           "from_user_displayName": "Cherukuri Bala Rama Krishna",
           "Chat Id": "19:4103cf02-cdbf-482b-ac9a-8d12c05ea963_b78da932-2796-4818-80d2-fdd6496dc824@unq.gbl.spaces",
-          "Message ID": "1792232032443"
+          "Message ID": "1795629263079"
         },
         "pairedItem": {
           "item": 0
