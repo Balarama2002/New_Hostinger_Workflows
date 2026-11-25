@@ -1,12 +1,12 @@
 {
-  "id": "89QkMFeKoovcS75A",
-  "name": "MWF_RAG_Ingestion",
+  "id": "2nVMEsiPpgAQVrqf",
+  "name": "MWF-RAG-Ingestion",
   "active": false,
   "activeVersionId": null,
-  "createdAt": "2026-10-24T06:57:27.981Z",
-  "updatedAt": "2026-10-24T08:49:32.363Z",
+  "createdAt": "2026-10-22T14:47:31.354Z",
+  "updatedAt": "2026-10-22T14:59:37.443Z",
   "isArchived": false,
-  "versionId": "004ab6a2-37ed-4c29-b143-ba47ca538acc",
+  "versionId": "b13174fb-d749-469e-b438-5335bd4aaec9",
   "triggerCount": 0,
   "nodes": [
     {
@@ -14,10 +14,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        0,
-        0
+        -128,
+        -64
       ],
-      "id": "f36b7660-5652-42cf-a327-fe7183ca82cd",
+      "id": "f4b64c7c-be92-4800-81cf-fef8e24970fe",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -25,24 +25,24 @@
         "operation": "download",
         "fileId": {
           "__rl": true,
-          "value": "1W4YuonsxN0x7breISBzKPf58P-YUWG47",
+          "value": "1CGaI2hmHZe3315B_wAgmE5JaIqRvhyOc",
           "mode": "list",
-          "cachedResultName": "Northwind_Employee_Handbook_2026.pdf",
-          "cachedResultUrl": "https://drive.google.com/file/d/1W4YuonsxN0x7breISBzKPf58P-YUWG47/view?usp=drivesdk"
+          "cachedResultName": "Night Shift Allowance Policy-TGH (1).pdf",
+          "cachedResultUrl": "https://drive.google.com/file/d/1CGaI2hmHZe3315B_wAgmE5JaIqRvhyOc/view?usp=drivesdk"
         },
         "options": {}
       },
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        224,
-        0
+        96,
+        -64
       ],
-      "id": "f8f77dc2-1ae4-460f-a1b3-0117031e0003",
+      "id": "0bb44347-fcbc-41cf-9a62-4730edd262e9",
       "name": "Download file",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "Y7QLXUEdSkAsrqeg",
+          "id": "DYhsSchTA1afdzus",
           "name": "Google Drive account"
         }
       }
@@ -55,10 +55,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1.2,
       "position": [
-        448,
-        0
+        320,
+        -64
       ],
-      "id": "3c16656a-7364-4f1a-98b5-c4129e81f8ad",
+      "id": "b7b7d9d4-f3b9-4748-8d0e-a2000e6d16be",
       "name": "Extract from File"
     },
     {
@@ -66,75 +66,70 @@
         "mode": "insert",
         "pineconeIndex": {
           "__rl": true,
-          "value": "n8n-hr-rag-v2",
+          "value": "allhrpolicydetails",
           "mode": "list",
-          "cachedResultName": "n8n-hr-rag-v2"
+          "cachedResultName": "allhrpolicydetails"
         },
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.vectorStorePinecone",
       "typeVersion": 1.3,
       "position": [
-        672,
-        0
+        544,
+        -64
       ],
-      "id": "28b3e343-505d-4595-9151-3f1de7b43905",
+      "id": "8618a10a-57b0-464f-871e-9a1f73930580",
       "name": "Pinecone Vector Store",
       "credentials": {
         "pineconeApi": {
-          "id": "rvXcY0IvECazWGW5",
-          "name": "Pinecone account - Usha"
+          "id": "ubFhaw4xfNfUylOC",
+          "name": "Pinecone account"
         }
       }
     },
     {
-      "parameters": {
-        "modelName": "models/gemini-embedding-2"
-      },
+      "parameters": {},
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        688,
-        240
+        464,
+        160
       ],
-      "id": "f4143cbd-f2b4-4603-a870-dd762fe4c1b8",
+      "id": "43a795e8-19e8-49fb-b6b8-df3df4a77177",
       "name": "Embeddings Google Gemini",
       "credentials": {
         "googlePalmApi": {
-          "id": "lhwsAdaNwU5PKVaE",
-          "name": "Google Gemini(PaLM) Api-Usha"
+          "id": "KQBQgkPqPhjQnbPh",
+          "name": "Google Gemini(PaLM) Api account"
         }
       }
     },
     {
       "parameters": {
-        "jsonMode": "expressionData",
-        "jsonData": "={{ $json.text }}",
         "textSplittingMode": "custom",
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1.1,
       "position": [
-        816,
-        240
+        736,
+        144
       ],
-      "id": "fac4cbc7-fe88-4ed7-87ff-a56c6179bfa9",
+      "id": "514f071d-58d9-4722-acc7-2c8b4a3c1ba1",
       "name": "Default Data Loader"
     },
     {
       "parameters": {
-        "chunkSize": 500,
-        "chunkOverlap": 200,
+        "chunkOverlap": 50,
         "options": {}
       },
       "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        864,
-        416
+        688,
+        304
       ],
-      "id": "fe5d5010-bdf8-41ba-985f-4cd2244eb78e",
+      "id": "9def63df-b324-474a-b775-0a53f1ece140",
       "name": "Recursive Character Text Splitter"
     }
   ],
@@ -220,10 +215,10 @@
   "shared": [
     {
       "role": "workflow:owner",
-      "workflowId": "89QkMFeKoovcS75A",
-      "projectId": "dKSv20LdJfBL9MnP",
-      "createdAt": "2026-10-24T06:57:27.982Z",
-      "updatedAt": "2026-10-24T06:57:27.982Z"
+      "workflowId": "2nVMEsiPpgAQVrqf",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-10-22T14:47:31.357Z",
+      "updatedAt": "2026-10-22T14:47:31.357Z"
     }
   ],
   "activeVersion": null
