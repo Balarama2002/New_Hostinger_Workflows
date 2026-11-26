@@ -4,9 +4,9 @@
   "active": true,
   "activeVersionId": "7840a424-48aa-45c7-a9ef-80931fb0e8c8",
   "createdAt": "2026-11-04T11:32:14.488Z",
-  "updatedAt": "2026-11-11T09:02:27.178Z",
+  "updatedAt": "2026-11-26T14:16:36.716Z",
   "isArchived": false,
-  "versionId": "7840a424-48aa-45c7-a9ef-80931fb0e8c8",
+  "versionId": "2c7f5c38-d167-4fc7-9ea5-8b630b979ecd",
   "triggerCount": 0,
   "nodes": [
     {
@@ -276,8 +276,8 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        1536,
-        -128
+        1568,
+        -96
       ],
       "id": "85dcac65-fba4-499c-9477-4f7af11e9207",
       "name": "Automatic Approval Response"
@@ -307,7 +307,7 @@
       "typeVersion": 3.5,
       "position": [
         1552,
-        304
+        320
       ],
       "id": "ec494c8d-8819-451b-a960-31b66e3ec68a",
       "name": "Decline Response"
