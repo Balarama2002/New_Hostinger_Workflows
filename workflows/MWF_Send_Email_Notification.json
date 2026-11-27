@@ -1,0 +1,542 @@
+{
+  "id": "9sBzfdzAz6mYV1Za",
+  "name": "MWF_Send Email Notification",
+  "active": true,
+  "activeVersionId": "776e4c22-3eb2-4fe6-b01e-7f7158fd8da6",
+  "createdAt": "2026-11-27T07:33:05.017Z",
+  "updatedAt": "2026-11-27T10:49:40.141Z",
+  "isArchived": false,
+  "versionId": "776e4c22-3eb2-4fe6-b01e-7f7158fd8da6",
+  "triggerCount": 1,
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "email-service",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "2f962b1a-032d-4616-a8b2-33b894b8f336",
+      "name": "Webhook",
+      "webhookId": "e29cd1d1-4156-4e34-a558-479d2eff943a"
+    },
+    {
+      "parameters": {
+        "html": "\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Welcome to TGH HR Agent</title>\n</head>\n<body style=\"margin:0; padding:0; width:100%; font-family:Arial,Helvetica,sans-serif; background:#ffffff;\">\n\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"\n         style=\"width:100%; border-collapse:collapse;\">\n\n    <!-- Full-width Header -->\n    <tr>\n      <td style=\"background:#ad5138; padding:28px 6%; color:#ffffff;\">\n        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n          <tr>\n            <td style=\"font-size:22px; font-weight:bold;\">\n              TGH HR AGENT\n            </td>\n            <td align=\"right\" style=\"font-size:12px; color:#ffe4d9;\">\n              A WARM WELCOME\n            </td>\n          </tr>\n        </table>\n      </td>\n    </tr>\n\n    <!-- Full-width Welcome Section -->\n    <tr>\n      <td style=\"background:#fbf0eb; padding:55px 6%;\">\n        <p style=\"color:#b34e35; font-size:13px; letter-spacing:2px;\">\n          ✨ YOUR HR EXPERIENCE STARTS HERE\n        </p>\n\n        <h1 style=\"color:#293550; font-size:38px; line-height:1.2; margin:20px 0;\">\n          Hey {{ $json.body.name }},<br>\n          you're in! 👋\n        </h1>\n\n        <p style=\"color:#68758d; font-size:16px; line-height:1.8; max-width:850px;\">\n          We've got some good news! You've been successfully added to the\n          <strong>TGH HR Agent</strong> platform. Your access is active,\n          and your new HR companion is ready to help.\n        </p>\n      </td>\n    </tr>\n\n    <!-- Main Content -->\n    <tr>\n      <td style=\"padding:45px 6%; background:#ffffff;\">\n\n        <h2 style=\"color:#293550; font-size:23px;\">\n          A little help goes a long way.\n        </h2>\n\n        <p style=\"color:#68758d; font-size:16px; line-height:1.8;\">\n          From finding HR policies to getting answers to everyday workplace\n          questions, your TGH HR Agent is here to make your HR experience\n          simpler and more convenient.\n        </p>\n\n        <p style=\"color:#293550; font-size:16px; line-height:1.8;\">\n          <strong>Your registered email:</strong> {{ $json.body.username }}\n        </p>\n\n        <p style=\"margin-top:35px;\">\n          <a href=\"http://200.234.36.24:3000/\"\n             style=\"display:inline-block; background:#ad5138;\n                    color:#ffffff; text-decoration:none;\n                    padding:17px 32px; font-size:16px;\n                    font-weight:bold; border-radius:5px;\">\n            Launch TGH HR Agent →\n          </a>\n        </p>\n\n        <p style=\"color:#68758d; font-size:14px; line-height:1.7; margin-top:30px;\">\n          Click the button above to access the platform and start exploring\n          your HR assistant.\n        </p>\n\n      </td>\n    </tr>\n\n    <!-- Full-width Footer -->\n    <tr>\n      <td style=\"background:#293550; padding:28px 6%; color:#ffffff;\">\n        <p style=\"font-size:15px; margin:0 0 8px;\">\n          TGH HR Agent\n        </p>\n        <p style=\"font-size:12px; color:#d4dbea; margin:0;\">\n          Your workplace HR companion. Always here to help.\n        </p>\n      </td>\n    </tr>\n\n  </table>\n</body>\n</html>\n"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        -96
+      ],
+      "id": "646a756a-b7be-4e19-8272-980d6bc3c874",
+      "name": "HTML"
+    },
+    {
+      "parameters": {
+        "authentication": "microsoftOAuth2Api",
+        "toRecipients": "={{ $('Webhook').item.json.body.email }}",
+        "subject": "={{ $('Edit Fields').isExecuted\n    ? $('Edit Fields').first().json.Subject\n    : $('Edit Fields1').first().json.Subject }}",
+        "bodyContent": "={{ $json.html }}",
+        "additionalFields": {
+          "bodyContentType": "html"
+        }
+      },
+      "type": "n8n-nodes-base.microsoftOutlook",
+      "typeVersion": 2,
+      "position": [
+        896,
+        0
+      ],
+      "id": "9082cbff-7161-44cc-b7d2-17c6047a5160",
+      "name": "Send a message",
+      "webhookId": "94267a10-155d-462c-bbf2-6187ce91ed22",
+      "credentials": {
+        "microsoftOAuth2Api": {
+          "id": "wds2Knq16u3pd4Yg",
+          "name": "TGHAI Sharepoint"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "41474d3e-0b38-423b-a0a3-e9a1ac332b35",
+              "leftValue": "={{ $json.query.action }}",
+              "rightValue": "account_activation",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        224,
+        0
+      ],
+      "id": "a0d6b67e-380d-419d-a639-3b5a516c17d3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>OTP Verification</title>\n</head>\n<body style=\"margin:0; padding:0; background-color:#f3f5f9; font-family:Arial, Helvetica, sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"\n       style=\"background-color:#f3f5f9; padding:35px 15px;\">\n    <tr>\n        <td align=\"center\">\n\n            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"\n                   style=\"max-width:580px; background:#ffffff; border-radius:14px; overflow:hidden;\">\n\n                <!-- Header -->\n                <tr>\n                    <td style=\"background:#172554; padding:32px 30px; text-align:center;\">\n                        <h1 style=\"margin:0; color:#ffffff; font-size:25px;\">\n                            TechyGeekHub\n                        </h1>\n                        <p style=\"margin:9px 0 0; color:#cbd5e1; font-size:13px;\">\n                            Secure Account Verification\n                        </p>\n                    </td>\n                </tr>\n\n                <!-- Main Content -->\n                <tr>\n                    <td style=\"padding:35px 35px 20px; color:#334155;\">\n\n                        <h2 style=\"margin:0 0 18px; color:#172554; font-size:22px;\">\n                            Hello {{ $json.body.fullName }},\n                        </h2>\n\n                        <p style=\"font-size:15px; line-height:1.7; margin:0 0 18px;\">\n                            We received a request to verify your account.\n                            Please use the One-Time Password (OTP) below\n                            to complete your authentication.\n                        </p>\n\n                        <!-- User Details -->\n                        <table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\"\n                               style=\"background:#f8fafc; border-radius:9px; margin:20px 0;\">\n                            <tr>\n                                <td style=\"color:#64748b; font-size:13px;\">Full Name :</td>\n                                <td align=\"right\" style=\"color:#1e293b; font-size:13px; font-weight:bold;\">\n                                    {{ $json.body.fullName }}\n                                </td>\n                            </tr>\n                            <tr>\n                                <td style=\"color:#64748b; font-size:13px;\">Email Address : </td>\n                                <td align=\"right\" style=\"color:#1e293b; font-size:13px;\">\n                                    {{ $json.body.email }}\n                                </td>\n                            </tr>\n                        </table>\n\n                        <!-- OTP Section -->\n                        <div style=\"text-align:center; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:25px 15px; margin:25px 0;\">\n\n                            <p style=\"margin:0 0 12px; color:#475569; font-size:13px; font-weight:bold; letter-spacing:1px;\">\n                                YOUR VERIFICATION CODE\n                            </p>\n\n                            <div style=\"font-size:36px; font-weight:bold; color:#1d4ed8; letter-spacing:10px;\">\n                                {{ $json.body.otp }}\n                            </div>\n\n                            <p style=\"margin:15px 0 0; color:#64748b; font-size:12px;\">\n                                This OTP expires in\n                                <strong>{{ $json.body.expiresInMinutes }} minutes</strong>.\n                            </p>\n                        </div>\n\n                        <!-- Security Notice -->\n                        <div style=\"background:#fff7ed; border-left:4px solid #f59e0b; padding:15px; margin:22px 0; border-radius:5px;\">\n                            <p style=\"margin:0; color:#9a3412; font-size:13px; line-height:1.6;\">\n                                <strong>Security Notice:</strong><br>\n                                Never share this OTP with anyone.\n                                Our team will never ask you to disclose\n                                your verification code.\n                            </p>\n                        </div>\n\n                        <p style=\"font-size:13px; color:#64748b; line-height:1.6;\">\n                            If you did not initiate this request, please\n                            ignore this email and contact your administrator\n                            if you suspect unauthorized activity.\n                        </p>\n\n                        <p style=\"font-size:13px; color:#64748b; margin-top:25px;\">\n                            Request Timestamp:<br>\n                            <strong style=\"color:#334155;\">\n                                {{ $json.body.timestamp }}\n                            </strong>\n                        </p>\n\n                    </td>\n                </tr>\n\n                <!-- Footer -->\n                <tr>\n                    <td style=\"background:#f8fafc; padding:24px 30px; text-align:center; border-top:1px solid #e2e8f0;\">\n\n                        <p style=\"margin:0 0 8px; color:#334155; font-size:13px; font-weight:bold;\">\n                            TechyGeekHub\n                        </p>\n\n                        <p style=\"margin:0; color:#94a3b8; font-size:11px; line-height:1.6;\">\n                            This is an automated email. Please do not reply to this message.\n                            <br>\n                            &copy; 2026 TechyGeekHub. All rights reserved.\n                        </p>\n\n                    </td>\n                </tr>\n\n            </table>\n\n        </td>\n    </tr>\n</table>\n\n</body>\n</html>"
+      },
+      "type": "n8n-nodes-base.html",
+      "typeVersion": 1.2,
+      "position": [
+        672,
+        96
+      ],
+      "id": "978e4b3d-9f89-4484-b131-d40be2251b23",
+      "name": "HTML1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b7ce5517-bee9-4197-b8dc-7f40ed368634",
+              "name": "Subject",
+              "value": "Welcome to TGH HR Agent – Your Access is Ready!",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        -96
+      ],
+      "id": "d034b9fc-1485-4dc7-94a2-388837ac6342",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "09c3be87-595c-41b9-9f73-d500568c3afa",
+              "name": "Subject",
+              "value": "One-Time Password (OTP) – Account Verification",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        448,
+        96
+      ],
+      "id": "8ae6e5b1-8112-4423-b7ad-01c08b4594af",
+      "name": "Edit Fields1"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTML1": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTML1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "nodeGroups": [],
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "staticData": null,
+  "pinData": {
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "n8n.srv1901759.hstgr.cloud",
+            "user-agent": "node",
+            "content-length": "370",
+            "accept": "*/*",
+            "accept-encoding": "br, gzip, deflate",
+            "accept-language": "*",
+            "content-type": "application/json",
+            "sec-fetch-mode": "cors",
+            "x-forwarded-for": "172.16.1.1",
+            "x-forwarded-host": "n8n.srv1901759.hstgr.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "5d266102faf5",
+            "x-real-ip": "172.16.1.1"
+          },
+          "params": {},
+          "query": {
+            "action": "account_activation",
+            "type": "account_activation"
+          },
+          "body": {
+            "action": "account_activation",
+            "type": "account_activation",
+            "event": "ACCOUNT_ACTIVATION",
+            "username": "tghai@techygeekhub.com",
+            "name": "TGH AI",
+            "email": "tghai@techygeekhub.com",
+            "full_name": "TGH AI",
+            "user_name": "tghai",
+            "username_prefix": "tghai",
+            "department": "Engineering & IT",
+            "role": "technical",
+            "created_at": "2026-11-27T10:30:37.369Z",
+            "timestamp": "2026-11-27T10:30:37.369Z"
+          },
+          "webhookUrl": "https://n8n.srv1901759.hstgr.cloud/webhook/email-service",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": [],
+  "shared": [
+    {
+      "role": "workflow:owner",
+      "workflowId": "9sBzfdzAz6mYV1Za",
+      "projectId": "2qHCdIvoXHur7xyh",
+      "createdAt": "2026-11-27T07:33:05.031Z",
+      "updatedAt": "2026-11-27T07:33:05.031Z"
+    }
+  ],
+  "activeVersion": {
+    "versionId": "776e4c22-3eb2-4fe6-b01e-7f7158fd8da6",
+    "workflowId": "9sBzfdzAz6mYV1Za",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "email-service",
+          "options": {}
+        },
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 2.2,
+        "position": [
+          0,
+          0
+        ],
+        "id": "2f962b1a-032d-4616-a8b2-33b894b8f336",
+        "name": "Webhook",
+        "webhookId": "e29cd1d1-4156-4e34-a558-479d2eff943a"
+      },
+      {
+        "parameters": {
+          "html": "\n<!DOCTYPE html>\n<html>\n<head>\n  <meta charset=\"UTF-8\">\n  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n  <title>Welcome to TGH HR Agent</title>\n</head>\n<body style=\"margin:0; padding:0; width:100%; font-family:Arial,Helvetica,sans-serif; background:#ffffff;\">\n\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"\n         style=\"width:100%; border-collapse:collapse;\">\n\n    <!-- Full-width Header -->\n    <tr>\n      <td style=\"background:#ad5138; padding:28px 6%; color:#ffffff;\">\n        <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\">\n          <tr>\n            <td style=\"font-size:22px; font-weight:bold;\">\n              TGH HR AGENT\n            </td>\n            <td align=\"right\" style=\"font-size:12px; color:#ffe4d9;\">\n              A WARM WELCOME\n            </td>\n          </tr>\n        </table>\n      </td>\n    </tr>\n\n    <!-- Full-width Welcome Section -->\n    <tr>\n      <td style=\"background:#fbf0eb; padding:55px 6%;\">\n        <p style=\"color:#b34e35; font-size:13px; letter-spacing:2px;\">\n          ✨ YOUR HR EXPERIENCE STARTS HERE\n        </p>\n\n        <h1 style=\"color:#293550; font-size:38px; line-height:1.2; margin:20px 0;\">\n          Hey {{ $json.body.name }},<br>\n          you're in! 👋\n        </h1>\n\n        <p style=\"color:#68758d; font-size:16px; line-height:1.8; max-width:850px;\">\n          We've got some good news! You've been successfully added to the\n          <strong>TGH HR Agent</strong> platform. Your access is active,\n          and your new HR companion is ready to help.\n        </p>\n      </td>\n    </tr>\n\n    <!-- Main Content -->\n    <tr>\n      <td style=\"padding:45px 6%; background:#ffffff;\">\n\n        <h2 style=\"color:#293550; font-size:23px;\">\n          A little help goes a long way.\n        </h2>\n\n        <p style=\"color:#68758d; font-size:16px; line-height:1.8;\">\n          From finding HR policies to getting answers to everyday workplace\n          questions, your TGH HR Agent is here to make your HR experience\n          simpler and more convenient.\n        </p>\n\n        <p style=\"color:#293550; font-size:16px; line-height:1.8;\">\n          <strong>Your registered email:</strong> {{ $json.body.username }}\n        </p>\n\n        <p style=\"margin-top:35px;\">\n          <a href=\"http://200.234.36.24:3000/\"\n             style=\"display:inline-block; background:#ad5138;\n                    color:#ffffff; text-decoration:none;\n                    padding:17px 32px; font-size:16px;\n                    font-weight:bold; border-radius:5px;\">\n            Launch TGH HR Agent →\n          </a>\n        </p>\n\n        <p style=\"color:#68758d; font-size:14px; line-height:1.7; margin-top:30px;\">\n          Click the button above to access the platform and start exploring\n          your HR assistant.\n        </p>\n\n      </td>\n    </tr>\n\n    <!-- Full-width Footer -->\n    <tr>\n      <td style=\"background:#293550; padding:28px 6%; color:#ffffff;\">\n        <p style=\"font-size:15px; margin:0 0 8px;\">\n          TGH HR Agent\n        </p>\n        <p style=\"font-size:12px; color:#d4dbea; margin:0;\">\n          Your workplace HR companion. Always here to help.\n        </p>\n      </td>\n    </tr>\n\n  </table>\n</body>\n</html>\n"
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          672,
+          -96
+        ],
+        "id": "646a756a-b7be-4e19-8272-980d6bc3c874",
+        "name": "HTML"
+      },
+      {
+        "parameters": {
+          "authentication": "microsoftOAuth2Api",
+          "toRecipients": "={{ $('Webhook').item.json.body.email }}",
+          "subject": "={{ $('Edit Fields').isExecuted\n    ? $('Edit Fields').first().json.Subject\n    : $('Edit Fields1').first().json.Subject }}",
+          "bodyContent": "={{ $json.html }}",
+          "additionalFields": {
+            "bodyContentType": "html"
+          }
+        },
+        "type": "n8n-nodes-base.microsoftOutlook",
+        "typeVersion": 2,
+        "position": [
+          896,
+          0
+        ],
+        "id": "9082cbff-7161-44cc-b7d2-17c6047a5160",
+        "name": "Send a message",
+        "webhookId": "94267a10-155d-462c-bbf2-6187ce91ed22",
+        "credentials": {
+          "microsoftOAuth2Api": {
+            "id": "wds2Knq16u3pd4Yg",
+            "name": "TGHAI Sharepoint"
+          }
+        }
+      },
+      {
+        "parameters": {
+          "conditions": {
+            "options": {
+              "caseSensitive": true,
+              "leftValue": "",
+              "typeValidation": "strict",
+              "version": 4
+            },
+            "conditions": [
+              {
+                "id": "41474d3e-0b38-423b-a0a3-e9a1ac332b35",
+                "leftValue": "={{ $json.query.action }}",
+                "rightValue": "account_activation",
+                "operator": {
+                  "type": "string",
+                  "operation": "equals"
+                }
+              }
+            ],
+            "combinator": "and"
+          },
+          "options": {}
+        },
+        "type": "n8n-nodes-base.if",
+        "typeVersion": 2.4,
+        "position": [
+          224,
+          0
+        ],
+        "id": "a0d6b67e-380d-419d-a639-3b5a516c17d3",
+        "name": "If"
+      },
+      {
+        "parameters": {
+          "html": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title>OTP Verification</title>\n</head>\n<body style=\"margin:0; padding:0; background-color:#f3f5f9; font-family:Arial, Helvetica, sans-serif;\">\n\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"\n       style=\"background-color:#f3f5f9; padding:35px 15px;\">\n    <tr>\n        <td align=\"center\">\n\n            <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" border=\"0\"\n                   style=\"max-width:580px; background:#ffffff; border-radius:14px; overflow:hidden;\">\n\n                <!-- Header -->\n                <tr>\n                    <td style=\"background:#172554; padding:32px 30px; text-align:center;\">\n                        <h1 style=\"margin:0; color:#ffffff; font-size:25px;\">\n                            TechyGeekHub\n                        </h1>\n                        <p style=\"margin:9px 0 0; color:#cbd5e1; font-size:13px;\">\n                            Secure Account Verification\n                        </p>\n                    </td>\n                </tr>\n\n                <!-- Main Content -->\n                <tr>\n                    <td style=\"padding:35px 35px 20px; color:#334155;\">\n\n                        <h2 style=\"margin:0 0 18px; color:#172554; font-size:22px;\">\n                            Hello {{ $json.body.fullName }},\n                        </h2>\n\n                        <p style=\"font-size:15px; line-height:1.7; margin:0 0 18px;\">\n                            We received a request to verify your account.\n                            Please use the One-Time Password (OTP) below\n                            to complete your authentication.\n                        </p>\n\n                        <!-- User Details -->\n                        <table width=\"100%\" cellpadding=\"10\" cellspacing=\"0\"\n                               style=\"background:#f8fafc; border-radius:9px; margin:20px 0;\">\n                            <tr>\n                                <td style=\"color:#64748b; font-size:13px;\">Full Name :</td>\n                                <td align=\"right\" style=\"color:#1e293b; font-size:13px; font-weight:bold;\">\n                                    {{ $json.body.fullName }}\n                                </td>\n                            </tr>\n                            <tr>\n                                <td style=\"color:#64748b; font-size:13px;\">Email Address : </td>\n                                <td align=\"right\" style=\"color:#1e293b; font-size:13px;\">\n                                    {{ $json.body.email }}\n                                </td>\n                            </tr>\n                        </table>\n\n                        <!-- OTP Section -->\n                        <div style=\"text-align:center; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:25px 15px; margin:25px 0;\">\n\n                            <p style=\"margin:0 0 12px; color:#475569; font-size:13px; font-weight:bold; letter-spacing:1px;\">\n                                YOUR VERIFICATION CODE\n                            </p>\n\n                            <div style=\"font-size:36px; font-weight:bold; color:#1d4ed8; letter-spacing:10px;\">\n                                {{ $json.body.otp }}\n                            </div>\n\n                            <p style=\"margin:15px 0 0; color:#64748b; font-size:12px;\">\n                                This OTP expires in\n                                <strong>{{ $json.body.expiresInMinutes }} minutes</strong>.\n                            </p>\n                        </div>\n\n                        <!-- Security Notice -->\n                        <div style=\"background:#fff7ed; border-left:4px solid #f59e0b; padding:15px; margin:22px 0; border-radius:5px;\">\n                            <p style=\"margin:0; color:#9a3412; font-size:13px; line-height:1.6;\">\n                                <strong>Security Notice:</strong><br>\n                                Never share this OTP with anyone.\n                                Our team will never ask you to disclose\n                                your verification code.\n                            </p>\n                        </div>\n\n                        <p style=\"font-size:13px; color:#64748b; line-height:1.6;\">\n                            If you did not initiate this request, please\n                            ignore this email and contact your administrator\n                            if you suspect unauthorized activity.\n                        </p>\n\n                        <p style=\"font-size:13px; color:#64748b; margin-top:25px;\">\n                            Request Timestamp:<br>\n                            <strong style=\"color:#334155;\">\n                                {{ $json.body.timestamp }}\n                            </strong>\n                        </p>\n\n                    </td>\n                </tr>\n\n                <!-- Footer -->\n                <tr>\n                    <td style=\"background:#f8fafc; padding:24px 30px; text-align:center; border-top:1px solid #e2e8f0;\">\n\n                        <p style=\"margin:0 0 8px; color:#334155; font-size:13px; font-weight:bold;\">\n                            TechyGeekHub\n                        </p>\n\n                        <p style=\"margin:0; color:#94a3b8; font-size:11px; line-height:1.6;\">\n                            This is an automated email. Please do not reply to this message.\n                            <br>\n                            &copy; 2026 TechyGeekHub. All rights reserved.\n                        </p>\n\n                    </td>\n                </tr>\n\n            </table>\n\n        </td>\n    </tr>\n</table>\n\n</body>\n</html>"
+        },
+        "type": "n8n-nodes-base.html",
+        "typeVersion": 1.2,
+        "position": [
+          672,
+          96
+        ],
+        "id": "978e4b3d-9f89-4484-b131-d40be2251b23",
+        "name": "HTML1"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "b7ce5517-bee9-4197-b8dc-7f40ed368634",
+                "name": "Subject",
+                "value": "Welcome to TGH HR Agent – Your Access is Ready!",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          448,
+          -96
+        ],
+        "id": "d034b9fc-1485-4dc7-94a2-388837ac6342",
+        "name": "Edit Fields"
+      },
+      {
+        "parameters": {
+          "assignments": {
+            "assignments": [
+              {
+                "id": "09c3be87-595c-41b9-9f73-d500568c3afa",
+                "name": "Subject",
+                "value": "One-Time Password (OTP) – Account Verification",
+                "type": "string"
+              }
+            ]
+          },
+          "includeOtherFields": true,
+          "options": {}
+        },
+        "type": "n8n-nodes-base.set",
+        "typeVersion": 3.5,
+        "position": [
+          448,
+          96
+        ],
+        "id": "8ae6e5b1-8112-4423-b7ad-01c08b4594af",
+        "name": "Edit Fields1"
+      }
+    ],
+    "connections": {
+      "Webhook": {
+        "main": [
+          [
+            {
+              "node": "If",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "If": {
+        "main": [
+          [
+            {
+              "node": "Edit Fields",
+              "type": "main",
+              "index": 0
+            }
+          ],
+          [
+            {
+              "node": "Edit Fields1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "HTML1": {
+        "main": [
+          [
+            {
+              "node": "Send a message",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields": {
+        "main": [
+          [
+            {
+              "node": "HTML",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      },
+      "Edit Fields1": {
+        "main": [
+          [
+            {
+              "node": "HTML1",
+              "type": "main",
+              "index": 0
+            }
+          ]
+        ]
+      }
+    },
+    "nodeGroups": [],
+    "authors": "Bala Rama Krishna Cherukuri",
+    "name": "Version 776e4c22",
+    "description": "",
+    "autosaved": true,
+    "createdAt": "2026-11-27T10:49:22.992Z",
+    "updatedAt": "2026-11-27T10:49:49.000Z"
+  }
+}
